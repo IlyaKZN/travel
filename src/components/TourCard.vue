@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import type { Tour } from '@/types'
-import { formatDateTime, formatPrice, locationTypeLabels } from '@/data/mock'
+import { formatDateTime, formatPrice, locationTypeLabels } from '@/utils/format'
 
 defineProps<{ tour: Tour }>()
 </script>

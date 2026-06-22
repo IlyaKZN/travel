@@ -12,6 +12,8 @@ dist
 dist-ssr
 server/dist
 server/.env
+deploy/github-actions-deploy
+deploy/github-actions-deploy.pub
 *.local
 
 # Editor directories and files

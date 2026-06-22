@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
 import { useStore } from '@/composables/useStore'
-import { formatDateTime, formatPrice, locationTypeLabels } from '@/data/mock'
+import { formatDateTime, formatPrice, locationTypeLabels } from '@/utils/format'
 import type { Tour } from '@/types'
 import { ApiError } from '@/api/client'
 

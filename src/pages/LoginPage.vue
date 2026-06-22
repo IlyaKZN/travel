@@ -73,8 +73,6 @@ async function submit() {
           {{ loading ? 'Вход…' : 'Войти' }}
         </button>
 
-        <p class="mt-3 text-center text-xs text-stone-400">Демо: alex@travels.ru / demo1234</p>
-
         <div class="mt-4 flex flex-col items-center gap-2 text-sm">
           <RouterLink to="/reset-password" class="text-brand-600 hover:underline">Забыли пароль?</RouterLink>
           <p class="text-slate-500 dark:text-slate-400">
