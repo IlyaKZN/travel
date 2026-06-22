@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum LocationType {
+  city
+  festival
+  nature
+}
+
+enum ConversationType {
+  dm
+  trip
+}
+
+model User {
+  id              String   @id @default(uuid())
+  contact         String   @unique
+  passwordHash    String
+  nickname        String   @default("")
+  firstName       String   @default("")
+  lastName        String   @default("")
+  patronymic      String?
+  birthDate       String   @default("")
+  avatar          String   @default("")
+  about           String?
+  showTours       Boolean  @default(true)
+  following       Int      @default(0)
+  followers       Int      @default(0)
+  profileComplete Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  posts                     Post[]
+  tours                     Tour[]
+  trips                     Trip[]
+  tourSignups               TourSignup[]
+  tripSignups               TripSignup[]
+  messages                  Message[]
+  conversationParticipants  ConversationParticipant[]
+}
+
+model PendingUser {
+  contact      String   @id
+  passwordHash String
+  confirmCode  String
+  expiresAt    DateTime
+}
+
+model Post {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  text      String
+  image     String?
+  views     Int      @default(0)
+  likes     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Tour {
+  id               String       @id @default(uuid())
+  creatorId        String
+  creator          User         @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  location         String
+  locationType     LocationType
+  shortDescription String
+  fullPlan         String
+  maxParticipants  Int
+  freeSpots        Int
+  price            Float
+  startDate        DateTime
+  endDate          DateTime
+  images           String[]
+  video            String?
+  isClosed         Boolean      @default(false)
+  isDraft          Boolean      @default(false)
+  createdAt        DateTime     @default(now())
+
+  signups TourSignup[]
+
+  @@index([creatorId])
+}
+
+model Trip {
+  id               String       @id @default(uuid())
+  creatorId        String
+  creator          User         @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  location         String
+  locationType     LocationType
+  shortDescription String
+  fullPlan         String
+  maxParticipants  Int
+  freeSpots        Int
+  price            Float
+  startDate        DateTime
+  endDate          DateTime
+  transport        String
+  images           String[]
+  video            String?
+  isClosed         Boolean      @default(false)
+  isDraft          Boolean      @default(false)
+  createdAt        DateTime     @default(now())
+
+  signups      TripSignup[]
+  conversation Conversation?
+
+  @@index([creatorId])
+}
+
+model TourSignup {
+  tourId String
+  userId String
+  tour   Tour   @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([tourId, userId])
+}
+
+model TripSignup {
+  tripId String
+  userId String
+  trip   Trip   @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([tripId, userId])
+}
+
+model Conversation {
+  id              String           @id @default(uuid())
+  type            ConversationType
+  tripId          String?          @unique
+  trip            Trip?            @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  lastMessageAt   DateTime         @default(now())
+  lastMessageText String?
+  createdAt       DateTime         @default(now())
+
+  participants ConversationParticipant[]
+  messages     Message[]
+}
+
+model ConversationParticipant {
+  conversationId String
+  userId         String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, userId])
+  @@index([userId])
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  text           String
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+}

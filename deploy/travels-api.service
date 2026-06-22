@@ -1,0 +1,15 @@
+[Unit]
+Description=Travels API Server
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/travels/server
+EnvironmentFile=/opt/travels/server/.env
+ExecStart=/usr/bin/node dist/index.js
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

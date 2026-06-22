@@ -1,0 +1,196 @@
+import type { WebSocket } from 'ws'
+import { z } from 'zod'
+import { prisma } from '../lib/prisma.js'
+import { conversationInclude, toDbConversation } from '../utils/serializers.js'
+import {
+  enrichConversation,
+  enrichMessage,
+  sendMessage,
+} from '../services/chat.service.js'
+import { verifyToken } from '../utils/helpers.js'
+
+export interface ChatClient {
+  ws: WebSocket
+  userId: string
+  conversationId?: string
+}
+
+const clients = new Set<ChatClient>()
+
+const joinSchema = z.object({
+  type: z.literal('join'),
+  conversationId: z.string(),
+})
+
+const sendSchema = z.object({
+  type: z.literal('send'),
+  text: z.string().min(1).max(2000),
+})
+
+const leaveSchema = z.object({
+  type: z.literal('leave'),
+})
+
+function sendJson(ws: WebSocket, data: unknown) {
+  if (ws.readyState === ws.OPEN) {
+    ws.send(JSON.stringify(data))
+  }
+}
+
+function sendError(ws: WebSocket, message: string) {
+  sendJson(ws, { type: 'error', message })
+}
+
+async function getConversationMessages(conversationId: string) {
+  const messages = await prisma.message.findMany({
+    where: { conversationId },
+    orderBy: { createdAt: 'asc' },
+  })
+  return Promise.all(
+    messages.map((m) =>
+      enrichMessage({
+        id: m.id,
+        conversationId: m.conversationId,
+        senderId: m.senderId,
+        text: m.text,
+        createdAt: m.createdAt.toISOString(),
+      }),
+    ),
+  )
+}
+
+function broadcastToParticipants(conversationId: string, participantIds: string[], data: unknown) {
+  for (const client of clients) {
+    if (
+      participantIds.includes(client.userId) &&
+      client.ws.readyState === client.ws.OPEN
+    ) {
+      sendJson(client.ws, data)
+    }
+  }
+}
+
+async function handleJoin(client: ChatClient, conversationId: string) {
+  const conversation = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    include: conversationInclude,
+  })
+  if (!conversation || !conversation.participants.some((p) => p.userId === client.userId)) {
+    sendError(client.ws, 'Чат не найден или нет доступа')
+    return
+  }
+
+  client.conversationId = conversationId
+  const dbConversation = toDbConversation(conversation)
+  sendJson(client.ws, {
+    type: 'joined',
+    conversation: await enrichConversation(dbConversation, client.userId),
+    messages: await getConversationMessages(conversationId),
+  })
+}
+
+async function handleSend(client: ChatClient, text: string) {
+  if (!client.conversationId) {
+    sendError(client.ws, 'Сначала подключитесь к чату')
+    return
+  }
+
+  try {
+    const message = await sendMessage(client.conversationId, client.userId, text)
+    const enriched = await enrichMessage(message)
+
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: client.conversationId },
+      include: conversationInclude,
+    })
+
+    if (!conversation) return
+
+    const participantIds = conversation.participants.map((p) => p.userId)
+    const dbConversation = toDbConversation(conversation)
+
+    broadcastToParticipants(client.conversationId, participantIds, {
+      type: 'message',
+      message: enriched,
+    })
+
+    broadcastToParticipants(client.conversationId, participantIds, {
+      type: 'conversation_updated',
+      conversation: await enrichConversation(dbConversation, client.userId),
+    })
+  } catch (e) {
+    if (e instanceof Error && e.message === 'NOT_FOUND') {
+      sendError(client.ws, 'Чат не найден')
+      return
+    }
+    if (e instanceof Error && e.message === 'FORBIDDEN') {
+      sendError(client.ws, 'Нет доступа к чату')
+      return
+    }
+    sendError(client.ws, 'Не удалось отправить сообщение')
+  }
+}
+
+function handleMessage(client: ChatClient, raw: string) {
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(raw)
+  } catch {
+    sendError(client.ws, 'Некорректный формат сообщения')
+    return
+  }
+
+  const join = joinSchema.safeParse(parsed)
+  if (join.success) {
+    void handleJoin(client, join.data.conversationId)
+    return
+  }
+
+  const send = sendSchema.safeParse(parsed)
+  if (send.success) {
+    void handleSend(client, send.data.text)
+    return
+  }
+
+  const leave = leaveSchema.safeParse(parsed)
+  if (leave.success) {
+    client.conversationId = undefined
+    return
+  }
+
+  sendError(client.ws, 'Неизвестный тип сообщения')
+}
+
+export function setupChatWebSocket() {
+  return {
+    handleConnection(ws: WebSocket, token: string | null) {
+      if (!token) {
+        ws.close(4401, 'Unauthorized')
+        return
+      }
+
+      const payload = verifyToken(token)
+      if (!payload) {
+        ws.close(4401, 'Unauthorized')
+        return
+      }
+
+      const client: ChatClient = { ws, userId: payload.userId }
+      clients.add(client)
+
+      ws.on('message', (data) => {
+        handleMessage(client, data.toString())
+      })
+
+      ws.on('close', () => {
+        clients.delete(client)
+      })
+
+      ws.on('error', () => {
+        clients.delete(client)
+      })
+
+      sendJson(ws, { type: 'connected', userId: payload.userId })
+    },
+  }
+}
