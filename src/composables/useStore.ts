@@ -2,6 +2,7 @@ import { ref, reactive } from 'vue'
 import type { User, Post, Tour, Trip } from '@/types'
 import { authApi, postsApi, toursApi, tripsApi, usersApi } from '@/api'
 import { getToken, setToken } from '@/api/client'
+import { getInitData } from '@/composables/useTelegram'
 
 const isAuthenticated = ref(false)
 const isLoading = ref(false)
@@ -43,6 +44,15 @@ export function useStore() {
   async function login(contact: string, password: string) {
     const { user: u } = await authApi.login(contact, password)
     applyUser(u)
+  }
+
+  async function loginTelegram() {
+    const initData = getInitData()
+    if (!initData) throw new Error('Telegram initData недоступен')
+
+    const res = await authApi.telegram(initData)
+    applyUser(res.user)
+    return { needsProfile: res.needsProfile ?? !res.user.profileComplete }
   }
 
   function logout() {
@@ -130,6 +140,7 @@ export function useStore() {
     trips,
     init,
     login,
+    loginTelegram,
     logout,
     updateUser,
     createProfile,

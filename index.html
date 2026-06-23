@@ -3,10 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Travels — путешествия и авторские туры</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
       (function () {
+        var tg = window.Telegram && window.Telegram.WebApp
+        if (tg && tg.initData) {
+          document.documentElement.classList.toggle('dark', tg.colorScheme === 'dark')
+          return
+        }
         var t = localStorage.getItem('travels-theme')
         if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
           document.documentElement.classList.add('dark')
@@ -16,7 +22,6 @@
   </head>
   <body>
     <div id="app"></div>
-    <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

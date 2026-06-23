@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useStore } from '@/composables/useStore'
+import { isTelegram } from '@/composables/useTelegram'
 
 defineProps<{ showAuth?: boolean }>()
 
@@ -21,7 +22,7 @@ function close() {
 function handleLogout() {
   logout()
   close()
-  router.push('/')
+  router.push(isTelegram.value ? '/tours' : '/')
 }
 
 function handleClickOutside(e: MouseEvent) {

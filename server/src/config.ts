@@ -6,4 +6,5 @@ export const config = {
   jwtExpiresIn: '7d',
   confirmCodeTtlMs: 15 * 60 * 1000,
   corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  telegramBotToken: process.env.TELEGRAM_BOT_TOKEN || '',
 }

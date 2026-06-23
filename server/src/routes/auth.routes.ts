@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import { v4 as uuid } from 'uuid'
+import crypto from 'crypto'
 import { prisma } from '../lib/prisma.js'
 import { toDbUser } from '../utils/serializers.js'
 import {
@@ -10,6 +11,7 @@ import {
   publicUser,
   signToken,
 } from '../utils/helpers.js'
+import { validateTelegramInitData, telegramContact } from '../utils/telegram.js'
 import { config } from '../config.js'
 import { authRequired } from '../middleware/auth.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
@@ -104,6 +106,56 @@ router.post('/login', asyncHandler(async (req, res) => {
   }
 
   res.json({ token: signToken(user.id), user: publicUser(toDbUser(user)) })
+}))
+
+router.post('/telegram', asyncHandler(async (req, res) => {
+  const { initData } = z.object({ initData: z.string().min(1) }).parse(req.body)
+
+  if (!config.telegramBotToken) {
+    res.status(503).json({ error: 'Telegram auth не настроен на сервере' })
+    return
+  }
+
+  const tgUser = validateTelegramInitData(initData, config.telegramBotToken)
+  if (!tgUser) {
+    res.status(401).json({ error: 'Неверные или устаревшие данные Telegram' })
+    return
+  }
+
+  const telegramId = String(tgUser.id)
+  let user = await prisma.user.findUnique({ where: { telegramId } })
+
+  if (!user) {
+    user = await prisma.user.create({
+      data: {
+        id: uuid(),
+        telegramId,
+        contact: telegramContact(telegramId),
+        passwordHash: await hashPassword(crypto.randomBytes(32).toString('hex')),
+        firstName: tgUser.first_name,
+        lastName: tgUser.last_name ?? '',
+        nickname: tgUser.username ?? `user${telegramId}`,
+        avatar: tgUser.photo_url ?? '',
+      },
+    })
+  } else {
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        firstName: tgUser.first_name,
+        lastName: tgUser.last_name ?? user.lastName,
+        ...(tgUser.photo_url && !user.avatar ? { avatar: tgUser.photo_url } : {}),
+        ...(tgUser.username && !user.nickname ? { nickname: tgUser.username } : {}),
+      },
+    })
+  }
+
+  const dbUser = toDbUser(user)
+  res.json({
+    token: signToken(user.id),
+    user: publicUser(dbUser),
+    needsProfile: !user.profileComplete,
+  })
 }))
 
 router.post('/reset-password', asyncHandler(async (req, res) => {

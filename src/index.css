@@ -6,6 +6,14 @@
   body {
     @apply bg-warm-50 text-stone-900 antialiased dark:bg-stone-950 dark:text-stone-100;
   }
+
+  body.telegram-mini-app {
+    background-color: var(--tg-bg, theme('colors.warm.50'));
+  }
+
+  body.telegram-mini-app.dark {
+    background-color: var(--tg-bg, theme('colors.stone.950'));
+  }
 }
 
 @layer components {

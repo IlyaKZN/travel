@@ -46,6 +46,16 @@ export const authApi = {
     })
   },
 
+  telegram(initData: string) {
+    return api<AuthResponse>('/auth/telegram', {
+      method: 'POST',
+      body: JSON.stringify({ initData }),
+    }).then((res) => {
+      setToken(res.token)
+      return res
+    })
+  },
+
   resetPassword(contact: string, password: string) {
     return api<{ message: string }>('/auth/reset-password', {
       method: 'POST',

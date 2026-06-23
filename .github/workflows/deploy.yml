@@ -16,12 +16,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure SSH
+      - name: Validate secrets
         run: |
-          install -m 700 -d ~/.ssh
-          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+          missing=0
+          if [ -z "${{ secrets.SSH_HOST }}" ]; then
+            echo "::error::Secret SSH_HOST is not set (Settings → Secrets and variables → Actions)"
+            missing=1
+          fi
+          if [ -z "${{ secrets.SSH_USER }}" ]; then
+            echo "::error::Secret SSH_USER is not set (e.g. root)"
+            missing=1
+          fi
+          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
+            echo "::error::Secret SSH_PRIVATE_KEY is not set (contents of deploy/github-actions-deploy)"
+            missing=1
+          fi
+          if [ "$missing" -eq 1 ]; then
+            exit 1
+          fi
+
+      - name: Setup SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known_hosts
+        run: ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
 
       - name: Sync project to server
         env:
@@ -35,7 +55,6 @@ jobs:
             --exclude dist \
             --exclude server/dist \
             --exclude server/.env \
-            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes" \
             ./ "${SSH_USER}@${SSH_HOST}:/opt/travels/"
 
       - name: Build and restart
@@ -43,6 +62,5 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
         run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes \
-            "${SSH_USER}@${SSH_HOST}" \
+          ssh -o StrictHostKeyChecking=yes "${SSH_USER}@${SSH_HOST}" \
             'chmod +x /opt/travels/deploy/deploy.sh && bash /opt/travels/deploy/deploy.sh'

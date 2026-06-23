@@ -10,6 +10,7 @@ export interface User {
   showTours: boolean
   following: number
   followers: number
+  profileComplete?: boolean
 }
 
 export interface Post {
