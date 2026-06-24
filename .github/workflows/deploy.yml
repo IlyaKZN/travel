@@ -48,7 +48,7 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
         run: |
-          rsync -avz \
+          rsync -avz --delete \
             --exclude .git \
             --exclude node_modules \
             --exclude server/node_modules \
