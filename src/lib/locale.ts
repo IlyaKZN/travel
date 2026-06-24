@@ -47,3 +47,15 @@ export function openSeatsLabel(min: number): string {
   if (min === 1) return 'минимум 1 свободное место'
   return `минимум ${min} свободных мест`
 }
+
+export function participantsLabel(count: number, max?: number): string {
+  const mod10 = count % 10
+  const mod100 = count % 100
+  let word: string
+  if (mod10 === 1 && mod100 !== 11) word = 'участник'
+  else if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) word = 'участника'
+  else word = 'участников'
+
+  if (max !== undefined) return `${count} из ${max} ${word}`
+  return `${count} ${word}`
+}

@@ -13,7 +13,7 @@ import { routeParam } from '../utils/routeParam.js'
 const router = Router()
 
 const LOCATION_MAX = 100
-const PARTICIPANTS_MAX = 999
+const PARTICIPANTS_MAX = 10
 const PRICE_MAX = 9_999_999
 
 const tripSchema = z.object({
