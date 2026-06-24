@@ -1174,11 +1174,10 @@ export default function App() {
   };
 
   const showMobileNav = !["onboarding", "detail", "request"].includes(screen);
-  const appFont = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 
   if (isDesktop) {
     return (
-      <div style={appFont}>
+      <div>
         <DesktopApp
           screen={screen === "onboarding" ? "home" : screen}
           setScreen={setScreen}
@@ -1190,7 +1189,7 @@ export default function App() {
   }
 
   return (
-    <div className="h-[100dvh] flex flex-col bg-[#FFF8F4] overflow-hidden" style={appFont}>
+    <div className="h-[100dvh] flex flex-col bg-[#FFF8F4] overflow-hidden">
       {screen !== "onboarding" && <StatusBar />}
       <div className="flex-1 overflow-hidden">
         {screen === "onboarding" && <OnboardingScreen onStart={handleOnboardingComplete} />}
