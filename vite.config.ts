@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
-import react from '@vitejs/plugin-react'
+import vue from '@vitejs/plugin-vue'
 
 function figmaAssetResolver() {
   return {
@@ -18,7 +18,7 @@ function figmaAssetResolver() {
 export default defineConfig({
   plugins: [
     figmaAssetResolver(),
-    react(),
+    vue(),
     tailwindcss(),
   ],
   resolve: {
