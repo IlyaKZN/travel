@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import {
-  ArrowRight, Calendar, Clock, Users, ChevronLeft, Plus, MapPin, Navigation, MessageSquare,
+  ArrowRight, Calendar, Users, ChevronLeft, Plus, MapPin, Navigation, MessageSquare,
 } from 'lucide-vue-next'
 import type { Trip } from '@/lib/mockData'
 import { transportLabel, participantsLabel } from '@/lib/locale'
@@ -20,12 +20,9 @@ const emit = defineEmits<{
 const seatsLeft = computed(() => props.trip.seats - props.trip.takenSeats)
 const totalParticipants = computed(() => tripTotalParticipants(props.trip))
 
-const dateItems = computed(() => [
-  { icon: 'calendar', label: props.trip.date, sub: 'Начало' },
-  { icon: 'clock', label: props.trip.time, sub: 'Отправление' },
-  { icon: 'calendar', label: props.trip.endDate, sub: 'Окончание' },
-  { icon: 'clock', label: props.trip.endTime, sub: 'Прибытие' },
-])
+const scheduleLabel = computed(
+  () => `${props.trip.date}, ${props.trip.time} → ${props.trip.endDate}, ${props.trip.endTime}`,
+)
 
 const sidebarRows = computed(() => [
   { icon: 'mappin', label: 'Откуда', value: props.trip.from },
@@ -63,27 +60,24 @@ const sidebarRows = computed(() => [
               <span class="desktop-trip-detail__city-full">{{ trip.from }}</span>
               <span class="desktop-trip-detail__city-full">{{ trip.to }}</span>
             </div>
-          </div>
 
-          <div class="desktop-trip-detail__grid-4">
-            <div v-for="(item, i) in dateItems" :key="i" class="info-tile info-tile--md">
-              <Calendar v-if="item.icon === 'calendar'" :size="18" class="info-tile__icon" />
-              <Clock v-else :size="18" class="info-tile__icon" />
-              <span class="info-tile__label" style="font-size: var(--text-sm)">{{ item.label }}</span>
-              <span class="info-tile__sub" style="font-size: var(--text-xs)">{{ item.sub }}</span>
-            </div>
-          </div>
-
-          <div class="desktop-trip-detail__grid-2">
-            <div class="info-tile info-tile--md">
-              <TransportIcon :type="trip.transport" :size="18" />
-              <span class="info-tile__label" style="font-size: var(--text-sm)">{{ transportLabel(trip.transport) }}</span>
-              <span class="info-tile__sub" style="font-size: var(--text-xs)">Транспорт</span>
-            </div>
-            <div class="info-tile info-tile--md">
-              <Users :size="18" class="info-tile__icon" />
-              <span class="info-tile__label" style="font-size: var(--text-sm)">{{ participantsLabel(totalParticipants, tripMaxParticipants(trip)) }}</span>
-              <span class="info-tile__sub" style="font-size: var(--text-xs)">Участники</span>
+            <div class="desktop-trip-detail__meta">
+              <div class="desktop-trip-detail__meta-item">
+                <Calendar :size="14" class="desktop-trip-detail__meta-icon" />
+                <span class="desktop-trip-detail__meta-text">{{ scheduleLabel }}</span>
+              </div>
+              <span class="desktop-trip-detail__meta-sep" aria-hidden="true" />
+              <div class="desktop-trip-detail__meta-item">
+                <TransportIcon :type="trip.transport" :size="14" />
+                <span class="desktop-trip-detail__meta-text">{{ transportLabel(trip.transport) }}</span>
+              </div>
+              <span class="desktop-trip-detail__meta-sep" aria-hidden="true" />
+              <div class="desktop-trip-detail__meta-item">
+                <Users :size="14" class="desktop-trip-detail__meta-icon" />
+                <span class="desktop-trip-detail__meta-text">
+                  {{ participantsLabel(totalParticipants, tripMaxParticipants(trip)) }}
+                </span>
+              </div>
             </div>
           </div>
 
