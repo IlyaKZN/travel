@@ -131,18 +131,16 @@ function TripCard({ trip, onSelect }: { trip: Trip; onSelect: () => void; horizo
   const maxParticipants = tripMaxParticipants(trip);
   return (
     <div onClick={onSelect} className="bg-white rounded-3xl overflow-hidden border border-orange-50 active:scale-[0.98] transition-transform cursor-pointer hover:shadow-md" style={{ boxShadow: "0 2px 16px rgba(249,115,22,0.08)" }}>
-      <div className="relative h-36">
-        <TripAvatar trip={trip} className="w-full h-full text-3xl" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-        <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm rounded-xl px-2.5 py-1.5">
-          <span className="text-orange-500"><TransportIcon type={trip.transport} size={13} /></span>
-          <span className="text-xs font-bold text-gray-700">{transportLabel(trip.transport)}</span>
-        </div>
-        <div className={`absolute bottom-3 right-3 px-2.5 py-1 rounded-lg text-xs font-bold ${seatsLeft <= 1 ? "bg-red-500" : "bg-orange-500"} text-white`}>
-          {seatsLeftLabel(seatsLeft)}
-        </div>
-      </div>
       <div className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-1.5 bg-orange-50 rounded-xl px-2.5 py-1.5">
+            <span className="text-orange-500"><TransportIcon type={trip.transport} size={13} /></span>
+            <span className="text-xs font-bold text-gray-700">{transportLabel(trip.transport)}</span>
+          </div>
+          <div className={`px-2.5 py-1 rounded-lg text-xs font-bold ${seatsLeft <= 1 ? "bg-red-500" : "bg-orange-500"} text-white`}>
+            {seatsLeftLabel(seatsLeft)}
+          </div>
+        </div>
         <div className="flex items-center gap-2 mb-3">
           <div className="flex flex-col items-center">
             <span className="text-base font-extrabold text-gray-900">{trip.fromShort}</span>
@@ -1108,9 +1106,13 @@ function DesktopProfile() {
             <h3 className="font-extrabold text-gray-900 mb-4 text-base">Мои поездки</h3>
             <div className="space-y-3">
               {upcomingTrips.map((trip) => (
-                <div key={trip.id} className="bg-white rounded-2xl overflow-hidden border border-orange-50" style={{ boxShadow: "0 1px 8px rgba(249,115,22,0.06)" }}>
-                  <div className="relative h-24"><TripAvatar trip={trip} className="w-full h-full text-2xl" /><div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" /><div className="absolute bottom-2 left-3 right-3 flex items-center justify-between"><span className="text-white font-extrabold">{trip.fromShort}</span><ArrowRight size={14} className="text-orange-300" /><span className="text-white font-extrabold">{trip.toShort}</span></div></div>
-                  <div className="p-3"><div className="flex items-center gap-2 text-xs text-gray-500"><Calendar size={11} className="text-orange-400" />{trip.date}<Clock size={11} className="text-orange-400 ml-1" />{trip.time}</div></div>
+                <div key={trip.id} className="bg-white rounded-2xl overflow-hidden border border-orange-50 p-3" style={{ boxShadow: "0 1px 8px rgba(249,115,22,0.06)" }}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-extrabold text-gray-900">{trip.fromShort}</span>
+                    <ArrowRight size={14} className="text-orange-400" />
+                    <span className="text-sm font-extrabold text-gray-900">{trip.toShort}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-gray-500"><Calendar size={11} className="text-orange-400" />{trip.date}<Clock size={11} className="text-orange-400 ml-1" />{trip.time}</div>
                 </div>
               ))}
               <button className="w-full py-2.5 text-sm font-bold text-orange-500 border border-orange-200 rounded-xl hover:bg-orange-50 transition-colors">Создать поездку</button>
