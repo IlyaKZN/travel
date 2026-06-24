@@ -99,7 +99,7 @@ function OnboardingScreen({ onStart }: { onStart: () => void }) {
           </div>
         </div>
       </div>
-      <div className="px-6 pt-7 pb-8 bg-[#FFF8F4]">
+      <div className="px-6 pt-7 pb-8 bg-background">
         <h1 className="text-[1.65rem] font-extrabold text-gray-900 leading-tight mb-2.5">
           Найдите <span className="text-orange-500">компанию</span> для каждого путешествия
         </h1>
@@ -119,7 +119,7 @@ function OnboardingScreen({ onStart }: { onStart: () => void }) {
         <button onClick={onStart} className="w-full py-4 bg-orange-500 text-white rounded-2xl font-bold text-base active:scale-95 transition-transform" style={{ boxShadow: "0 8px 24px rgba(249,115,22,0.35)" }}>
           Начать — бесплатно
         </button>
-        <p className="text-center text-xs text-gray-400 mt-4">Уже есть аккаунт? <span className="text-orange-500 font-medium">Войти</span></p>
+        <p className="text-center text-xs text-gray-400 mt-4">Уже есть аккаунт? <span className="text-orange-500 font-medium cursor-pointer">Войти</span></p>
       </div>
     </div>
   );
@@ -176,7 +176,7 @@ function HomeScreen({ onTripSelect }: { onTripSelect: (t: Trip) => void }) {
   const [activeFilter, setActiveFilter] = useState("all");
   const filteredTrips = activeFilter === "all" ? TRIPS : TRIPS.filter((t) => { if (activeFilter === "flight") return t.transport === "plane"; return t.transport === activeFilter; });
   return (
-    <div className="flex flex-col h-full bg-[#FFF8F4]">
+    <div className="flex flex-col h-full bg-background">
       <div className="px-5 pt-14 pb-3">
         <div className="flex items-center justify-between mb-1">
           <div><p className="text-xs text-gray-400 font-medium">Доброе утро,</p><h1 className="text-xl font-extrabold text-gray-900">Алексей Ч. 👋</h1></div>
@@ -205,7 +205,7 @@ function TripDetailScreen({ trip, onBack, onJoin }: { trip: Trip; onBack: () => 
   const seatsLeft = trip.seats - trip.takenSeats;
   const totalParticipants = tripTotalParticipants(trip);
   return (
-    <div className="flex flex-col h-full bg-[#FFF8F4]">
+    <div className="flex flex-col h-full bg-background">
       <div className="relative h-60 flex-shrink-0">
         <TripAvatar trip={trip} className="w-full h-full text-5xl" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
@@ -278,8 +278,8 @@ function CreateTripScreen({ onBack }: { onBack: () => void }) {
     label: t.label,
   }));
   return (
-    <div className="flex flex-col h-full bg-[#FFF8F4]">
-      <div className="flex items-center gap-3 px-5 pt-14 pb-5 bg-[#FFF8F4]">
+    <div className="flex flex-col h-full bg-background">
+      <div className="flex items-center gap-3 px-5 pt-14 pb-5 bg-background">
         <button onClick={onBack} className="w-9 h-9 bg-white rounded-xl flex items-center justify-center border border-orange-50 shadow-sm"><ChevronLeft size={20} className="text-gray-700" /></button>
         <h1 className="text-xl font-extrabold text-gray-900">Спланировать поездку</h1>
       </div>
@@ -287,28 +287,28 @@ function CreateTripScreen({ onBack }: { onBack: () => void }) {
         <div className="bg-white rounded-3xl p-4 border border-orange-50" style={{ boxShadow: "0 2px 12px rgba(249,115,22,0.07)" }}>
           <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">Маршрут</p>
           <div className="space-y-2">
-            <div className="flex items-center gap-3 bg-[#FFF8F4] rounded-2xl px-4 py-3"><div className="w-8 h-8 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0"><MapPin size={15} className="text-orange-500" /></div><input value={from} onChange={(e) => setFrom(e.target.value)} placeholder="Город отправления" className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none font-medium" /></div>
+            <div className="flex items-center gap-3 bg-input-background rounded-2xl px-4 py-3"><div className="w-8 h-8 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0"><MapPin size={15} className="text-orange-500" /></div><input value={from} onChange={(e) => setFrom(e.target.value)} placeholder="Город отправления" className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none font-medium" /></div>
             <div className="flex justify-center -my-0.5 relative z-10"><button className="w-8 h-8 rounded-xl bg-white border border-orange-100 flex items-center justify-center shadow-sm"><ArrowUpDown size={14} className="text-orange-500" /></button></div>
-            <div className="flex items-center gap-3 bg-[#FFF8F4] rounded-2xl px-4 py-3"><div className="w-8 h-8 rounded-xl bg-orange-500 flex items-center justify-center flex-shrink-0"><Navigation size={15} className="text-white" /></div><input value={to} onChange={(e) => setTo(e.target.value)} placeholder="Город назначения" className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none font-medium" /></div>
+            <div className="flex items-center gap-3 bg-input-background rounded-2xl px-4 py-3"><div className="w-8 h-8 rounded-xl bg-orange-500 flex items-center justify-center flex-shrink-0"><Navigation size={15} className="text-white" /></div><input value={to} onChange={(e) => setTo(e.target.value)} placeholder="Город назначения" className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none font-medium" /></div>
           </div>
         </div>
         <div className="bg-white rounded-3xl p-4 border border-orange-50" style={{ boxShadow: "0 2px 12px rgba(249,115,22,0.07)" }}>
           <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">Дата и время начала</p>
           <div className="grid grid-cols-2 gap-3">
-            <div className="flex items-center gap-2 bg-[#FFF8F4] rounded-2xl px-4 py-3"><Calendar size={15} className="text-orange-400 flex-shrink-0" /><input type="date" className="flex-1 bg-transparent text-xs text-gray-700 outline-none font-medium min-w-0" /></div>
-            <div className="flex items-center gap-2 bg-[#FFF8F4] rounded-2xl px-4 py-3"><Clock size={15} className="text-orange-400 flex-shrink-0" /><input type="time" className="flex-1 bg-transparent text-xs text-gray-700 outline-none font-medium min-w-0" /></div>
+            <div className="flex items-center gap-2 bg-input-background rounded-2xl px-4 py-3"><Calendar size={15} className="text-orange-400 flex-shrink-0" /><input type="date" className="flex-1 bg-transparent text-xs text-gray-700 outline-none font-medium min-w-0" /></div>
+            <div className="flex items-center gap-2 bg-input-background rounded-2xl px-4 py-3"><Clock size={15} className="text-orange-400 flex-shrink-0" /><input type="time" className="flex-1 bg-transparent text-xs text-gray-700 outline-none font-medium min-w-0" /></div>
           </div>
         </div>
         <div className="bg-white rounded-3xl p-4 border border-orange-50" style={{ boxShadow: "0 2px 12px rgba(249,115,22,0.07)" }}>
           <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">Дата и время окончания</p>
           <div className="grid grid-cols-2 gap-3">
-            <div className="flex items-center gap-2 bg-[#FFF8F4] rounded-2xl px-4 py-3"><Calendar size={15} className="text-orange-400 flex-shrink-0" /><input type="date" className="flex-1 bg-transparent text-xs text-gray-700 outline-none font-medium min-w-0" /></div>
-            <div className="flex items-center gap-2 bg-[#FFF8F4] rounded-2xl px-4 py-3"><Clock size={15} className="text-orange-400 flex-shrink-0" /><input type="time" className="flex-1 bg-transparent text-xs text-gray-700 outline-none font-medium min-w-0" /></div>
+            <div className="flex items-center gap-2 bg-input-background rounded-2xl px-4 py-3"><Calendar size={15} className="text-orange-400 flex-shrink-0" /><input type="date" className="flex-1 bg-transparent text-xs text-gray-700 outline-none font-medium min-w-0" /></div>
+            <div className="flex items-center gap-2 bg-input-background rounded-2xl px-4 py-3"><Clock size={15} className="text-orange-400 flex-shrink-0" /><input type="time" className="flex-1 bg-transparent text-xs text-gray-700 outline-none font-medium min-w-0" /></div>
           </div>
         </div>
         <div className="bg-white rounded-3xl p-4 border border-orange-50" style={{ boxShadow: "0 2px 12px rgba(249,115,22,0.07)" }}>
           <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">Тип транспорта</p>
-          <div className="grid grid-cols-4 gap-2">{transports.map((t) => <button key={t.type} onClick={() => setTransport(t.type)} className={`flex flex-col items-center gap-1.5 py-3.5 rounded-2xl transition-all font-bold text-xs ${transport === t.type ? "bg-orange-500 text-white" : "bg-[#FFF8F4] text-gray-600"}`} style={transport === t.type ? { boxShadow: "0 4px 12px rgba(249,115,22,0.35)" } : {}}>{t.icon}<span>{t.label}</span></button>)}</div>
+          <div className="grid grid-cols-4 gap-2">{transports.map((t) => <button key={t.type} onClick={() => setTransport(t.type)} className={`flex flex-col items-center gap-1.5 py-3.5 rounded-2xl transition-all font-bold text-xs ${transport === t.type ? "bg-orange-500 text-white" : "bg-secondary text-gray-600"}`} style={transport === t.type ? { boxShadow: "0 4px 12px rgba(249,115,22,0.35)" } : {}}>{t.icon}<span>{t.label}</span></button>)}</div>
         </div>
         <div className="bg-white rounded-3xl p-4 border border-orange-50" style={{ boxShadow: "0 2px 12px rgba(249,115,22,0.07)" }}>
           <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-4">Свободные места</p>
@@ -321,7 +321,7 @@ function CreateTripScreen({ onBack }: { onBack: () => void }) {
         </div>
         <div className="bg-white rounded-3xl p-4 border border-orange-50" style={{ boxShadow: "0 2px 12px rgba(249,115,22,0.07)" }}>
           <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">Описание</p>
-          <textarea value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Расскажите об атмосфере поездки, ожиданиях и что взять с собой..." rows={4} className="w-full bg-[#FFF8F4] rounded-2xl px-4 py-3 text-sm text-gray-700 placeholder-gray-400 outline-none resize-none" />
+          <textarea value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Расскажите об атмосфере поездки, ожиданиях и что взять с собой..." rows={4} className="w-full bg-input-background rounded-2xl px-4 py-3 text-sm text-gray-700 placeholder-gray-400 outline-none resize-none" />
           <p className="text-right text-xs text-gray-400 mt-1">{desc.length}/280</p>
         </div>
       </div>
@@ -335,7 +335,7 @@ function CreateTripScreen({ onBack }: { onBack: () => void }) {
 function ChatsListScreen({ onTripChat, onDmChat }: { onTripChat: (t: Trip) => void; onDmChat: (dm: DmConversation) => void }) {
   const [activeView, setActiveView] = useState<ChatView>("trip");
   return (
-    <div className="flex flex-col h-full bg-[#FFF8F4]">
+    <div className="flex flex-col h-full bg-background">
       <div className="px-5 pt-14 pb-4">
         <h1 className="text-xl font-extrabold text-gray-900 mb-4">Чаты</h1>
         <div className="flex gap-2">
@@ -383,9 +383,9 @@ function DmChatScreen({ dm, onBack }: { dm: DmConversation; onBack: () => void }
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
   };
   return (
-    <div className="flex flex-col h-full bg-[#FFF8F4]">
+    <div className="flex flex-col h-full bg-background">
       <div className="flex items-center gap-3 px-4 pt-14 pb-3.5 bg-white border-b border-orange-50 flex-shrink-0" style={{ boxShadow: "0 2px 8px rgba(249,115,22,0.06)" }}>
-        <button onClick={onBack} className="w-9 h-9 bg-[#FFF8F4] rounded-xl flex items-center justify-center"><ChevronLeft size={20} className="text-gray-700" /></button>
+        <button onClick={onBack} className="w-9 h-9 bg-input-background rounded-xl flex items-center justify-center"><ChevronLeft size={20} className="text-gray-700" /></button>
         <img src={dm.user.avatar} alt={dm.user.name} className="w-10 h-10 rounded-2xl object-cover flex-shrink-0" />
         <div className="flex-1 min-w-0"><p className="font-extrabold text-gray-900 text-sm truncate">{dm.user.name}</p><p className="text-xs text-gray-400">Личные сообщения</p></div>
       </div>
@@ -403,7 +403,7 @@ function DmChatScreen({ dm, onBack }: { dm: DmConversation; onBack: () => void }
       </div>
       <div className="px-4 pb-8 pt-3 bg-white border-t border-orange-50 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <div className="flex-1 flex items-center gap-2 bg-[#FFF8F4] rounded-2xl px-4 py-2.5"><input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder="Сообщение..." className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none" /></div>
+          <div className="flex-1 flex items-center gap-2 bg-input-background rounded-2xl px-4 py-2.5"><input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder="Сообщение..." className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none" /></div>
           <button onClick={sendMessage} className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center flex-shrink-0" style={{ boxShadow: "0 4px 12px rgba(249,115,22,0.4)" }}><Send size={15} className="text-white" /></button>
         </div>
       </div>
@@ -423,9 +423,9 @@ function ChatScreen({ trip, onBack }: { trip: Trip; onBack: () => void }) {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
   };
   return (
-    <div className="flex flex-col h-full bg-[#FFF8F4]">
+    <div className="flex flex-col h-full bg-background">
       <div className="flex items-center gap-3 px-4 pt-14 pb-3.5 bg-white border-b border-orange-50 flex-shrink-0" style={{ boxShadow: "0 2px 8px rgba(249,115,22,0.06)" }}>
-        <button onClick={onBack} className="w-9 h-9 bg-[#FFF8F4] rounded-xl flex items-center justify-center"><ChevronLeft size={20} className="text-gray-700" /></button>
+        <button onClick={onBack} className="w-9 h-9 bg-input-background rounded-xl flex items-center justify-center"><ChevronLeft size={20} className="text-gray-700" /></button>
         <TripAvatar trip={trip} className="w-10 h-10 rounded-2xl text-xs flex-shrink-0" />
         <div className="flex-1 min-w-0"><p className="font-extrabold text-gray-900 text-sm truncate">{trip.fromShort} → {trip.toShort}</p><p className="text-xs text-gray-400">{participantsLabel(totalParticipants)} · {trip.date}</p></div>
       </div>
@@ -446,7 +446,7 @@ function ChatScreen({ trip, onBack }: { trip: Trip; onBack: () => void }) {
       <div className="px-4 pb-8 pt-3 bg-white border-t border-orange-50 flex-shrink-0">
         <div className="flex items-center gap-2">
           <button className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center flex-shrink-0"><Camera size={17} className="text-orange-400" /></button>
-          <div className="flex-1 flex items-center gap-2 bg-[#FFF8F4] rounded-2xl px-4 py-2.5"><input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder="Сообщение для команды..." className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none" /></div>
+          <div className="flex-1 flex items-center gap-2 bg-input-background rounded-2xl px-4 py-2.5"><input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder="Сообщение для команды..." className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none" /></div>
           <button onClick={sendMessage} className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center flex-shrink-0" style={{ boxShadow: "0 4px 12px rgba(249,115,22,0.4)" }}><Send size={15} className="text-white" /></button>
         </div>
       </div>
@@ -465,7 +465,7 @@ function ProfileScreen() {
     { name: "Дмитрий С.", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop", text: "Отличный попутчик. Уважительный, весёлый — дорога пролетела незаметно.", date: "28 мая" },
   ];
   return (
-    <div className="flex flex-col h-full bg-[#FFF8F4]">
+    <div className="flex flex-col h-full bg-background">
       <div className="relative flex-shrink-0">
         <div className="h-36 bg-gradient-to-br from-orange-400 to-orange-600 overflow-hidden"><img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&h=288&fit=crop" alt="Обложка профиля" className="w-full h-full object-cover opacity-50 mix-blend-overlay" /></div>
         <button className="absolute top-12 right-4 w-9 h-9 bg-white/80 backdrop-blur-sm rounded-xl flex items-center justify-center shadow"><Settings size={17} className="text-gray-700" /></button>
@@ -554,7 +554,7 @@ function DesktopNavbar({ activeScreen, onNavigate, onCreateClick }: {
         <button onClick={onCreateClick} className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-xl text-sm font-bold flex-shrink-0" style={{ boxShadow: "0 4px 12px rgba(249,115,22,0.35)" }}>
           <Plus size={16} />Спланировать поездку
         </button>
-        <button className="relative w-9 h-9 bg-[#FFF8F4] rounded-xl flex items-center justify-center border border-orange-100 flex-shrink-0">
+        <button className="relative w-9 h-9 bg-input-background rounded-xl flex items-center justify-center border border-orange-100 flex-shrink-0">
           <Bell size={17} className="text-gray-600" /><div className="absolute top-2 right-2 w-1.5 h-1.5 bg-orange-500 rounded-full" />
         </button>
         <button onClick={() => onNavigate("profile")} className={`flex items-center gap-2 pl-1 pr-3 py-1 rounded-xl transition-all flex-shrink-0 ${activeScreen === "profile" ? "bg-orange-50 border border-orange-100" : "hover:bg-gray-50"}`}>
@@ -592,7 +592,7 @@ function DesktopHome({ onTripSelect }: { onTripSelect: (t: Trip) => void; onCrea
           <p className="text-sm font-extrabold text-gray-800 mb-3">Транспорт</p>
           <div className="space-y-1.5">
             {DESKTOP_TRANSPORT_FILTERS.map((t) => (
-              <button key={t.type} onClick={() => toggleTransport(t.type)} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${selectedTransports.includes(t.type) ? "bg-orange-500 text-white" : "bg-[#FFF8F4] text-gray-600 hover:bg-orange-50"}`}>
+              <button key={t.type} onClick={() => toggleTransport(t.type)} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${selectedTransports.includes(t.type) ? "bg-orange-500 text-white" : "bg-secondary text-gray-600 hover:bg-orange-50"}`}>
                 {t.type === "car" ? <Car size={14} /> : t.type === "train" ? <Train size={14} /> : t.type === "bus" ? <Bus size={14} /> : <Plane size={14} />}{t.label}{selectedTransports.includes(t.type) && <Check size={13} className="ml-auto" />}
               </button>
             ))}
@@ -638,22 +638,22 @@ function DesktopHome({ onTripSelect }: { onTripSelect: (t: Trip) => void; onCrea
             <p className="text-orange-200 text-sm font-medium mb-1 uppercase tracking-widest">Найдите следующее приключение</p>
             <h1 className="text-4xl font-extrabold text-white mb-1 leading-tight">Ваша команда<br />уже ждёт вас</h1>
             <p className="text-white/70 text-sm mb-5">Более {TRIPS.length * 20} предстоящих поездок по России</p>
-            <div className="flex items-center gap-0 bg-white rounded-2xl overflow-hidden max-w-2xl shadow-xl">
-              <div className="flex items-center gap-2.5 px-5 py-3.5 flex-1">
+            <div className="flex items-center bg-white rounded-2xl overflow-hidden max-w-2xl w-full shadow-xl">
+              <div className="flex items-center gap-2.5 px-4 py-3.5 flex-1 min-w-0">
                 <MapPin size={16} className="text-orange-400 flex-shrink-0" />
-                <input placeholder="Откуда..." className="flex-1 text-sm text-gray-700 placeholder-gray-400 outline-none font-medium min-w-0" />
+                <input placeholder="Откуда..." className="flex-1 text-sm text-gray-700 placeholder-gray-400 outline-none font-medium min-w-0 w-0" />
               </div>
-              <div className="w-px h-8 bg-orange-100" />
-              <div className="flex items-center gap-2.5 px-5 py-3.5 flex-1">
+              <div className="w-px h-8 bg-orange-100 flex-shrink-0" />
+              <div className="flex items-center gap-2.5 px-4 py-3.5 flex-1 min-w-0">
                 <Navigation size={16} className="text-orange-400 flex-shrink-0" />
-                <input placeholder="Куда..." className="flex-1 text-sm text-gray-700 placeholder-gray-400 outline-none font-medium min-w-0" />
+                <input placeholder="Куда..." className="flex-1 text-sm text-gray-700 placeholder-gray-400 outline-none font-medium min-w-0 w-0" />
               </div>
-              <div className="w-px h-8 bg-orange-100" />
-              <div className="flex items-center gap-2.5 px-5 py-3.5 flex-1">
+              <div className="w-px h-8 bg-orange-100 flex-shrink-0" />
+              <div className="flex items-center gap-2.5 px-4 py-3.5 flex-1 min-w-0">
                 <Calendar size={16} className="text-orange-400 flex-shrink-0" />
-                <input type="date" className="flex-1 text-sm text-gray-600 outline-none font-medium min-w-0 bg-transparent" />
+                <input type="date" className="flex-1 text-sm text-gray-600 outline-none font-medium min-w-0 w-0 bg-transparent" />
               </div>
-              <button className="px-6 py-3.5 bg-orange-500 text-white text-sm font-extrabold hover:bg-orange-600 transition-colors" style={{ boxShadow: "none" }}>Найти</button>
+              <button className="flex-shrink-0 px-5 py-3.5 bg-orange-500 text-white text-sm font-extrabold hover:bg-orange-600 transition-colors whitespace-nowrap">Найти</button>
             </div>
           </div>
         </div>
@@ -812,8 +812,8 @@ function DesktopCreateModal({ onClose }: { onClose: () => void }) {
   const [desc, setDesc] = useState("");
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-8" onClick={onClose}>
-      <div className="bg-[#FFF8F4] rounded-3xl w-full max-w-2xl max-h-[88vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-8 cursor-pointer" onClick={onClose}>
+      <div className="bg-background rounded-3xl w-full max-w-2xl max-h-[88vh] overflow-hidden flex flex-col shadow-2xl cursor-default" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-3 px-6 py-4 bg-white border-b border-orange-50">
           <h2 className="text-xl font-extrabold text-gray-900 flex-1">Новая поездка</h2>
           <button onClick={onClose} className="w-8 h-8 bg-gray-100 rounded-xl flex items-center justify-center hover:bg-gray-200 transition-colors"><X size={16} className="text-gray-600" /></button>
@@ -826,25 +826,25 @@ function DesktopCreateModal({ onClose }: { onClose: () => void }) {
               <div className="bg-white rounded-2xl p-4 border border-orange-50" style={{ boxShadow: "0 1px 8px rgba(249,115,22,0.06)" }}>
                 <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">Маршрут</p>
                 <div className="space-y-2">
-                  <div className="flex items-center gap-3 bg-[#FFF8F4] rounded-xl px-3 py-2.5"><div className="w-7 h-7 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0"><MapPin size={13} className="text-orange-500" /></div><input value={from} onChange={(e) => setFrom(e.target.value)} placeholder="Город отправления" className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none" /></div>
+                  <div className="flex items-center gap-3 bg-input-background rounded-xl px-3 py-2.5"><div className="w-7 h-7 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0"><MapPin size={13} className="text-orange-500" /></div><input value={from} onChange={(e) => setFrom(e.target.value)} placeholder="Город отправления" className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none" /></div>
                   <div className="flex justify-center"><button className="w-7 h-7 rounded-lg bg-white border border-orange-100 flex items-center justify-center shadow-sm"><ArrowUpDown size={12} className="text-orange-500" /></button></div>
-                  <div className="flex items-center gap-3 bg-[#FFF8F4] rounded-xl px-3 py-2.5"><div className="w-7 h-7 rounded-lg bg-orange-500 flex items-center justify-center flex-shrink-0"><Navigation size={13} className="text-white" /></div><input value={to} onChange={(e) => setTo(e.target.value)} placeholder="Город назначения" className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none" /></div>
+                  <div className="flex items-center gap-3 bg-input-background rounded-xl px-3 py-2.5"><div className="w-7 h-7 rounded-lg bg-orange-500 flex items-center justify-center flex-shrink-0"><Navigation size={13} className="text-white" /></div><input value={to} onChange={(e) => setTo(e.target.value)} placeholder="Город назначения" className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none" /></div>
                 </div>
               </div>
 
               <div className="bg-white rounded-2xl p-4 border border-orange-50" style={{ boxShadow: "0 1px 8px rgba(249,115,22,0.06)" }}>
                 <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">Дата и время начала</p>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="flex items-center gap-2 bg-[#FFF8F4] rounded-xl px-3 py-2.5"><Calendar size={13} className="text-orange-400 flex-shrink-0" /><input type="date" className="flex-1 bg-transparent text-xs text-gray-700 outline-none min-w-0" /></div>
-                  <div className="flex items-center gap-2 bg-[#FFF8F4] rounded-xl px-3 py-2.5"><Clock size={13} className="text-orange-400 flex-shrink-0" /><input type="time" className="flex-1 bg-transparent text-xs text-gray-700 outline-none min-w-0" /></div>
+                  <div className="flex items-center gap-2 bg-input-background rounded-xl px-3 py-2.5"><Calendar size={13} className="text-orange-400 flex-shrink-0" /><input type="date" className="flex-1 bg-transparent text-xs text-gray-700 outline-none min-w-0" /></div>
+                  <div className="flex items-center gap-2 bg-input-background rounded-xl px-3 py-2.5"><Clock size={13} className="text-orange-400 flex-shrink-0" /><input type="time" className="flex-1 bg-transparent text-xs text-gray-700 outline-none min-w-0" /></div>
                 </div>
               </div>
 
               <div className="bg-white rounded-2xl p-4 border border-orange-50" style={{ boxShadow: "0 1px 8px rgba(249,115,22,0.06)" }}>
                 <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">Дата и время окончания</p>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="flex items-center gap-2 bg-[#FFF8F4] rounded-xl px-3 py-2.5"><Calendar size={13} className="text-orange-400 flex-shrink-0" /><input type="date" className="flex-1 bg-transparent text-xs text-gray-700 outline-none min-w-0" /></div>
-                  <div className="flex items-center gap-2 bg-[#FFF8F4] rounded-xl px-3 py-2.5"><Clock size={13} className="text-orange-400 flex-shrink-0" /><input type="time" className="flex-1 bg-transparent text-xs text-gray-700 outline-none min-w-0" /></div>
+                  <div className="flex items-center gap-2 bg-input-background rounded-xl px-3 py-2.5"><Calendar size={13} className="text-orange-400 flex-shrink-0" /><input type="date" className="flex-1 bg-transparent text-xs text-gray-700 outline-none min-w-0" /></div>
+                  <div className="flex items-center gap-2 bg-input-background rounded-xl px-3 py-2.5"><Clock size={13} className="text-orange-400 flex-shrink-0" /><input type="time" className="flex-1 bg-transparent text-xs text-gray-700 outline-none min-w-0" /></div>
                 </div>
               </div>
 
@@ -852,7 +852,7 @@ function DesktopCreateModal({ onClose }: { onClose: () => void }) {
                 <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">Транспорт</p>
                 <div className="grid grid-cols-4 gap-1.5">
                   {TRANSPORT_FORM_OPTIONS.map((t) => (
-                    <button key={t.type} onClick={() => setTransport(t.type)} className={`flex flex-col items-center gap-1 py-2.5 rounded-xl text-xs font-bold transition-all ${transport === t.type ? "bg-orange-500 text-white" : "bg-[#FFF8F4] text-gray-600 hover:bg-orange-50"}`}>
+                    <button key={t.type} onClick={() => setTransport(t.type)} className={`flex flex-col items-center gap-1 py-2.5 rounded-xl text-xs font-bold transition-all ${transport === t.type ? "bg-orange-500 text-white" : "bg-secondary text-gray-600 hover:bg-orange-50"}`}>
                       {t.type === "car" ? <Car size={16} /> : t.type === "train" ? <Train size={16} /> : t.type === "bus" ? <Bus size={16} /> : <Plane size={16} />}<span>{t.label}</span>
                     </button>
                   ))}
@@ -874,7 +874,7 @@ function DesktopCreateModal({ onClose }: { onClose: () => void }) {
 
               <div className="bg-white rounded-2xl p-4 border border-orange-50 flex-1" style={{ boxShadow: "0 1px 8px rgba(249,115,22,0.06)" }}>
                 <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">Описание</p>
-                <textarea value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Расскажите об атмосфере, ожиданиях и месте встречи..." rows={5} className="w-full bg-[#FFF8F4] rounded-xl px-3 py-2.5 text-sm text-gray-700 placeholder-gray-400 outline-none resize-none" />
+                <textarea value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Расскажите об атмосфере, ожиданиях и месте встречи..." rows={5} className="w-full bg-input-background rounded-xl px-3 py-2.5 text-sm text-gray-700 placeholder-gray-400 outline-none resize-none" />
                 <p className="text-right text-xs text-gray-400 mt-1">{desc.length}/280</p>
               </div>
 
@@ -940,13 +940,13 @@ function DesktopChat({ trip, selectedDm, onSelectTrip, onSelectDm }: {
           <h3 className="font-extrabold text-gray-900 text-sm mb-3">Чаты</h3>
           <div className="flex gap-1.5">
             {([{ id: "trip" as const, label: "Поездки" }, { id: "personal" as const, label: "Личные" }]).map((tab) => (
-              <button key={tab.id} onClick={() => setChatView(tab.id)} className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-bold transition-all ${chatView === tab.id ? "bg-orange-500 text-white" : "bg-[#FFF8F4] text-gray-600"}`}>{tab.label}</button>
+              <button key={tab.id} onClick={() => setChatView(tab.id)} className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-bold transition-all ${chatView === tab.id ? "bg-orange-500 text-white" : "bg-secondary text-gray-600"}`}>{tab.label}</button>
             ))}
           </div>
         </div>
         <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
           {chatView === "trip" ? TRIPS.map((t, i) => (
-            <button key={t.id} onClick={() => { onSelectTrip(t); setChatView("trip"); }} className={`w-full flex items-center gap-3 px-4 py-3.5 border-b border-orange-50 transition-colors text-left ${t.id === activeTrip.id && !selectedDm ? "bg-orange-50" : "hover:bg-[#FFF8F4]"}`}>
+            <button key={t.id} onClick={() => { onSelectTrip(t); setChatView("trip"); }} className={`w-full flex items-center gap-3 px-4 py-3.5 border-b border-orange-50 transition-colors text-left ${t.id === activeTrip.id && !selectedDm ? "bg-orange-50" : "hover:bg-background"}`}>
               <TripAvatar trip={t} className="w-10 h-10 rounded-2xl text-xs flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-gray-800 truncate">{t.fromShort} → {t.toShort}</p>
@@ -955,7 +955,7 @@ function DesktopChat({ trip, selectedDm, onSelectTrip, onSelectDm }: {
               {i === 0 && <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0"><span className="text-[9px] font-extrabold text-white">2</span></div>}
             </button>
           )) : DM_CONVERSATIONS.map((dm) => (
-            <button key={dm.id} onClick={() => { onSelectDm(dm); setChatView("personal"); }} className={`w-full flex items-center gap-3 px-4 py-3.5 border-b border-orange-50 transition-colors text-left ${dm.id === activeDm.id ? "bg-orange-50" : "hover:bg-[#FFF8F4]"}`}>
+            <button key={dm.id} onClick={() => { onSelectDm(dm); setChatView("personal"); }} className={`w-full flex items-center gap-3 px-4 py-3.5 border-b border-orange-50 transition-colors text-left ${dm.id === activeDm.id ? "bg-orange-50" : "hover:bg-background"}`}>
               <img src={dm.user.avatar} alt={dm.user.name} className="w-10 h-10 rounded-2xl object-cover flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-gray-800 truncate">{dm.user.name}</p>
@@ -999,7 +999,7 @@ function DesktopChat({ trip, selectedDm, onSelectTrip, onSelectDm }: {
         <div className="px-5 py-3.5 bg-white border-t border-orange-50 flex-shrink-0">
           <div className="flex items-center gap-3">
             <button className="w-9 h-9 bg-orange-50 rounded-xl flex items-center justify-center flex-shrink-0"><Camera size={16} className="text-orange-400" /></button>
-            <div className="flex-1 flex items-center gap-2 bg-[#FFF8F4] rounded-2xl px-4 py-2.5 border border-orange-50">
+            <div className="flex-1 flex items-center gap-2 bg-input-background rounded-2xl px-4 py-2.5 border border-orange-50">
               <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder={chatView === "personal" ? "Личное сообщение..." : "Сообщение для команды..."} className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none" />
             </div>
             <button onClick={sendMessage} className="w-9 h-9 bg-orange-500 rounded-xl flex items-center justify-center flex-shrink-0" style={{ boxShadow: "0 4px 12px rgba(249,115,22,0.4)" }}><Send size={15} className="text-white" /></button>
@@ -1147,7 +1147,7 @@ function DesktopApp({ screen, setScreen, selectedTrip, setSelectedTrip }: {
   const [selectedDm, setSelectedDm] = useState<DmConversation | null>(null);
 
   return (
-    <div className="flex flex-col h-screen bg-[#FFF8F4] overflow-hidden">
+    <div className="flex flex-col h-screen bg-background overflow-hidden">
       <DesktopNavbar
         activeScreen={screen}
         onNavigate={(s) => setScreen(s)}
@@ -1223,7 +1223,7 @@ export default function App() {
   }
 
   return (
-    <div className="h-[100dvh] flex flex-col bg-[#FFF8F4] overflow-hidden">
+    <div className="h-[100dvh] flex flex-col bg-background overflow-hidden">
       {screen !== "onboarding" && <StatusBar />}
       <div className="flex-1 overflow-hidden">
         {screen === "onboarding" && <OnboardingScreen onStart={handleOnboardingComplete} />}

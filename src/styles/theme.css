@@ -3,7 +3,7 @@
 :root {
   --font-size: 16px;
   --app-font: 'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --background: #FFF8F4;
+  --background: #F9F1EC;
   --foreground: #1C1917;
   --card: #FFFFFF;
   --card-foreground: #1C1917;
@@ -11,17 +11,17 @@
   --popover-foreground: #1C1917;
   --primary: #F97316;
   --primary-foreground: #FFFFFF;
-  --secondary: #FFF1E8;
+  --secondary: #F7E9DE;
   --secondary-foreground: #7C2D12;
-  --muted: #FEF3EC;
+  --muted: #F7ECE4;
   --muted-foreground: #78716C;
   --accent: #FDBA74;
   --accent-foreground: #7C2D12;
   --destructive: #EF4444;
   --destructive-foreground: #FFFFFF;
-  --border: rgba(249, 115, 22, 0.12);
+  --border: rgba(249, 115, 22, 0.13);
   --input: transparent;
-  --input-background: #FFF8F4;
+  --input-background: #FCF4EE;
   --switch-background: #FDBA74;
   --font-weight-medium: 600;
   --font-weight-normal: 400;
@@ -163,6 +163,21 @@
     font-size: var(--text-base);
     font-weight: var(--font-weight-medium);
     line-height: 1.5;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  a[href],
+  label[for],
+  summary,
+  select:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  input[type="range"]:not(:disabled),
+  input[type="submit"]:not(:disabled),
+  input[type="reset"]:not(:disabled),
+  input[type="button"]:not(:disabled) {
+    cursor: pointer;
   }
 
   button {
