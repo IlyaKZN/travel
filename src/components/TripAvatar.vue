@@ -4,7 +4,7 @@ import { getTripAvatarColors, getTripAvatarLetters } from '@/lib/tripAvatar'
 
 const props = defineProps<{
   trip: Trip
-  class?: string
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'banner' | 'full'
 }>()
 
 const { bg, text } = getTripAvatarColors(props.trip.from, props.trip.to)
@@ -13,8 +13,8 @@ const letters = getTripAvatarLetters(props.trip.fromShort, props.trip.toShort)
 
 <template>
   <div
-    class="flex items-center justify-center font-extrabold tracking-tight"
-    :class="props.class"
+    class="trip-avatar"
+    :class="size ? `trip-avatar--${size}` : ''"
     :style="{ backgroundColor: bg, color: text }"
   >
     {{ letters }}

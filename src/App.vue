@@ -59,8 +59,8 @@ function handleOnboardingComplete() {
     v-model:selected-trip="selectedTrip"
   />
 
-  <div v-else class="h-[100dvh] flex flex-col bg-background overflow-hidden">
-    <div class="flex-1 overflow-hidden">
+  <div v-else class="app">
+    <div class="app__content">
       <OnboardingScreen v-if="screen === 'onboarding'" @start="handleOnboardingComplete" />
       <HomeScreen
         v-else-if="screen === 'home'"

@@ -28,80 +28,77 @@ function transportIcon(type: TransportType) {
 </script>
 
 <template>
-  <div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-8 cursor-pointer" @click="emit('close')">
-    <div
-      class="bg-background rounded-3xl w-full max-w-2xl max-h-[88vh] overflow-hidden flex flex-col shadow-2xl cursor-default"
-      @click.stop
-    >
-      <div class="flex items-center gap-3 px-6 py-4 bg-white border-b border-orange-50">
-        <h2 class="text-xl font-extrabold text-gray-900 flex-1">Новая поездка</h2>
-        <button class="w-8 h-8 bg-gray-100 rounded-xl flex items-center justify-center hover:bg-gray-200 transition-colors" @click="emit('close')">
-          <X :size="16" class="text-gray-600" />
+  <div class="desktop-modal" @click="emit('close')">
+    <div class="desktop-modal__dialog" @click.stop>
+      <div class="desktop-modal__header">
+        <h2 class="desktop-modal__title">Новая поездка</h2>
+        <button class="desktop-modal__close" @click="emit('close')">
+          <X :size="16" class="icon--gray-dark" />
         </button>
       </div>
 
-      <div class="flex-1 overflow-y-auto p-6 space-y-5" style="scrollbar-width: thin">
-        <div class="grid grid-cols-2 gap-5">
-          <div class="space-y-4">
-            <div class="bg-white rounded-2xl p-4 border border-orange-50" style="box-shadow: 0 1px 8px rgba(249,115,22,0.06)">
-              <p class="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">Маршрут</p>
-              <div class="space-y-2">
-                <div class="flex items-center gap-3 bg-input-background rounded-xl px-3 py-2.5">
-                  <div class="w-7 h-7 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
-                    <MapPin :size="13" class="text-orange-500" />
+      <div class="desktop-modal__body">
+        <div class="desktop-modal__grid">
+          <div class="desktop-modal__column">
+            <div class="card card--shadow desktop-modal__card">
+              <p class="section-label">Маршрут</p>
+              <div class="desktop-modal__route">
+                <div class="input-row desktop-modal__input-row--sm">
+                  <div class="input-row__icon input-row__icon--muted">
+                    <MapPin :size="13" />
                   </div>
-                  <input v-model="from" placeholder="Город отправления" class="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none">
+                  <input v-model="from" placeholder="Город отправления" class="input-row__field">
                 </div>
-                <div class="flex justify-center">
-                  <button class="w-7 h-7 rounded-lg bg-white border border-orange-100 flex items-center justify-center shadow-sm">
-                    <ArrowUpDown :size="12" class="text-orange-500" />
+                <div style="display: flex; justify-content: center">
+                  <button class="create-trip__swap-btn" style="width: 1.75rem; height: 1.75rem; border-radius: 0.5rem">
+                    <ArrowUpDown :size="12" class="icon--orange-dark" />
                   </button>
                 </div>
-                <div class="flex items-center gap-3 bg-input-background rounded-xl px-3 py-2.5">
-                  <div class="w-7 h-7 rounded-lg bg-orange-500 flex items-center justify-center flex-shrink-0">
-                    <Navigation :size="13" class="text-white" />
+                <div class="input-row desktop-modal__input-row--sm">
+                  <div class="input-row__icon input-row__icon--primary">
+                    <Navigation :size="13" />
                   </div>
-                  <input v-model="to" placeholder="Город назначения" class="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none">
+                  <input v-model="to" placeholder="Город назначения" class="input-row__field">
                 </div>
               </div>
             </div>
 
-            <div class="bg-white rounded-2xl p-4 border border-orange-50" style="box-shadow: 0 1px 8px rgba(249,115,22,0.06)">
-              <p class="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">Дата и время начала</p>
-              <div class="grid grid-cols-2 gap-2">
-                <div class="flex items-center gap-2 bg-input-background rounded-xl px-3 py-2.5">
-                  <Calendar :size="13" class="text-orange-400 flex-shrink-0" />
-                  <input type="date" class="flex-1 bg-transparent text-xs text-gray-700 outline-none min-w-0">
+            <div class="card card--shadow desktop-modal__card">
+              <p class="section-label">Дата и время начала</p>
+              <div class="create-trip__grid-2" style="gap: 0.5rem">
+                <div class="input-row desktop-modal__input-row--sm">
+                  <Calendar :size="13" class="icon--orange" />
+                  <input type="date" class="input-row__field input-row__field--xs">
                 </div>
-                <div class="flex items-center gap-2 bg-input-background rounded-xl px-3 py-2.5">
-                  <Clock :size="13" class="text-orange-400 flex-shrink-0" />
-                  <input type="time" class="flex-1 bg-transparent text-xs text-gray-700 outline-none min-w-0">
-                </div>
-              </div>
-            </div>
-
-            <div class="bg-white rounded-2xl p-4 border border-orange-50" style="box-shadow: 0 1px 8px rgba(249,115,22,0.06)">
-              <p class="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">Дата и время окончания</p>
-              <div class="grid grid-cols-2 gap-2">
-                <div class="flex items-center gap-2 bg-input-background rounded-xl px-3 py-2.5">
-                  <Calendar :size="13" class="text-orange-400 flex-shrink-0" />
-                  <input type="date" class="flex-1 bg-transparent text-xs text-gray-700 outline-none min-w-0">
-                </div>
-                <div class="flex items-center gap-2 bg-input-background rounded-xl px-3 py-2.5">
-                  <Clock :size="13" class="text-orange-400 flex-shrink-0" />
-                  <input type="time" class="flex-1 bg-transparent text-xs text-gray-700 outline-none min-w-0">
+                <div class="input-row desktop-modal__input-row--sm">
+                  <Clock :size="13" class="icon--orange" />
+                  <input type="time" class="input-row__field input-row__field--xs">
                 </div>
               </div>
             </div>
 
-            <div class="bg-white rounded-2xl p-4 border border-orange-50" style="box-shadow: 0 1px 8px rgba(249,115,22,0.06)">
-              <p class="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">Транспорт</p>
-              <div class="grid grid-cols-4 gap-1.5">
+            <div class="card card--shadow desktop-modal__card">
+              <p class="section-label">Дата и время окончания</p>
+              <div class="create-trip__grid-2" style="gap: 0.5rem">
+                <div class="input-row desktop-modal__input-row--sm">
+                  <Calendar :size="13" class="icon--orange" />
+                  <input type="date" class="input-row__field input-row__field--xs">
+                </div>
+                <div class="input-row desktop-modal__input-row--sm">
+                  <Clock :size="13" class="icon--orange" />
+                  <input type="time" class="input-row__field input-row__field--xs">
+                </div>
+              </div>
+            </div>
+
+            <div class="card card--shadow desktop-modal__card">
+              <p class="section-label">Транспорт</p>
+              <div class="desktop-modal__transport-grid">
                 <button
                   v-for="t in TRANSPORT_FORM_OPTIONS"
                   :key="t.type"
-                  class="flex flex-col items-center gap-1 py-2.5 rounded-xl text-xs font-bold transition-all"
-                  :class="transport === t.type ? 'bg-orange-500 text-white' : 'bg-secondary text-gray-600 hover:bg-orange-50'"
+                  class="transport-option transport-option--hover desktop-modal__transport-btn"
+                  :class="{ 'transport-option--active': transport === t.type }"
                   @click="transport = t.type"
                 >
                   <component :is="transportIcon(t.type)" :size="16" />
@@ -111,64 +108,56 @@ function transportIcon(type: TransportType) {
             </div>
           </div>
 
-          <div class="space-y-4">
-            <div class="bg-white rounded-2xl p-4 border border-orange-50" style="box-shadow: 0 1px 8px rgba(249,115,22,0.06)">
-              <p class="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">Свободные места</p>
-              <div class="flex items-center gap-3">
-                <button class="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center font-extrabold text-xl" @click="seats = Math.max(1, seats - 1)">−</button>
-                <div class="flex-1 text-center">
-                  <span class="text-3xl font-extrabold text-gray-900">{{ seats }}</span>
-                  <p class="text-xs text-gray-400">мест</p>
+          <div class="desktop-modal__column">
+            <div class="card card--shadow desktop-modal__card">
+              <p class="section-label">Свободные места</p>
+              <div class="create-trip__seats" style="gap: 0.75rem">
+                <button class="create-trip__seats-btn desktop-modal__seats-btn create-trip__seats-btn--minus" @click="seats = Math.max(1, seats - 1)">−</button>
+                <div class="create-trip__seats-value">
+                  <span class="create-trip__seats-count desktop-modal__seats-count">{{ seats }}</span>
+                  <p class="create-trip__seats-label">мест</p>
                 </div>
-                <button
-                  class="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center font-extrabold text-xl"
-                  style="box-shadow: 0 4px 8px rgba(249,115,22,0.35)"
-                  @click="seats = Math.min(PARTICIPANTS_LIMIT, seats + 1)"
-                >
-                  +
-                </button>
+                <button class="create-trip__seats-btn desktop-modal__seats-btn create-trip__seats-btn--plus" @click="seats = Math.min(PARTICIPANTS_LIMIT, seats + 1)">+</button>
               </div>
-              <div class="flex gap-1 mt-3 justify-center">
-                <div v-for="i in seats" :key="i" class="w-7 h-7 rounded-lg bg-orange-100 flex items-center justify-center">
-                  <User :size="12" class="text-orange-400" />
+              <div class="create-trip__seats-icons" style="margin-top: 0.75rem">
+                <div v-for="i in seats" :key="i" class="create-trip__seat-icon desktop-modal__seat-icon">
+                  <User :size="12" class="icon--orange" />
                 </div>
               </div>
             </div>
 
-            <div class="bg-white rounded-2xl p-4 border border-orange-50 flex-1" style="box-shadow: 0 1px 8px rgba(249,115,22,0.06)">
-              <p class="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">Описание</p>
+            <div class="card card--shadow desktop-modal__card" style="flex: 1">
+              <p class="section-label">Описание</p>
               <textarea
                 v-model="desc"
                 placeholder="Расскажите об атмосфере, ожиданиях и месте встречи..."
                 rows="5"
-                class="w-full bg-input-background rounded-xl px-3 py-2.5 text-sm text-gray-700 placeholder-gray-400 outline-none resize-none"
+                class="create-trip__textarea"
+                style="border-radius: 0.75rem; padding: 0.625rem 0.75rem"
               />
-              <p class="text-right text-xs text-gray-400 mt-1">{{ desc.length }}/280</p>
+              <p class="create-trip__char-count">{{ desc.length }}/280</p>
             </div>
 
-            <div v-if="from || to" class="bg-orange-500 rounded-2xl p-4 text-white">
-              <p class="text-[10px] font-extrabold uppercase tracking-widest opacity-70 mb-2">Превью</p>
-              <div class="flex items-center gap-2">
-                <span class="font-extrabold text-lg">{{ from.slice(0, 3).toUpperCase() || '???' }}</span>
-                <ArrowRight :size="16" class="opacity-70" />
-                <span class="font-extrabold text-lg">{{ to.slice(0, 3).toUpperCase() || '???' }}</span>
+            <div v-if="from || to" class="desktop-modal__preview">
+              <p class="desktop-modal__preview-label">Превью</p>
+              <div class="desktop-modal__preview-route">
+                <span class="desktop-modal__preview-city">{{ from.slice(0, 3).toUpperCase() || '???' }}</span>
+                <ArrowRight :size="16" style="opacity: 0.7" />
+                <span class="desktop-modal__preview-city">{{ to.slice(0, 3).toUpperCase() || '???' }}</span>
               </div>
-              <div class="flex items-center gap-3 mt-2 text-xs opacity-80">
-                <span class="flex items-center gap-1">
+              <div class="desktop-modal__preview-meta">
+                <span class="desktop-modal__preview-meta-item">
                   <TransportIcon :type="transport" :size="11" />{{ transportLabel(transport) }}
                 </span>
-                <span class="flex items-center gap-1"><Users :size="11" />{{ seats }} мест</span>
+                <span class="desktop-modal__preview-meta-item"><Users :size="11" />{{ seats }} мест</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="px-6 pb-6 pt-3 bg-white border-t border-orange-50">
-        <button
-          class="w-full py-3.5 bg-orange-500 text-white rounded-2xl font-extrabold text-base active:scale-95 transition-transform"
-          style="box-shadow: 0 8px 24px rgba(249,115,22,0.35)"
-        >
+      <div class="desktop-modal__footer">
+        <button class="btn btn--primary btn--primary-sm">
           Опубликовать поездку ✈︎
         </button>
       </div>

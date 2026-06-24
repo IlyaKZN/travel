@@ -15,57 +15,53 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div
-    class="bg-white rounded-3xl overflow-hidden border border-orange-50 active:scale-[0.98] transition-transform cursor-pointer hover:shadow-md"
-    style="box-shadow: 0 2px 16px rgba(249,115,22,0.08)"
-    @click="emit('select')"
-  >
-    <div class="p-4">
-      <div class="flex items-center justify-between mb-3">
-        <div class="flex items-center gap-1.5 bg-orange-50 rounded-xl px-2.5 py-1.5">
-          <span class="text-orange-500">
+  <div class="trip-card" @click="emit('select')">
+    <div class="trip-card__body">
+      <div class="trip-card__header">
+        <div class="trip-card__transport">
+          <span class="icon--orange-dark">
             <TransportIcon :type="trip.transport" :size="13" />
           </span>
-          <span class="text-xs font-bold text-gray-700">{{ transportLabel(trip.transport) }}</span>
+          <span class="trip-card__transport-label">{{ transportLabel(trip.transport) }}</span>
         </div>
         <div
-          class="px-2.5 py-1 rounded-lg text-xs font-bold text-white"
-          :class="trip.seats - trip.takenSeats <= 1 ? 'bg-red-500' : 'bg-orange-500'"
+          class="trip-card__seats"
+          :class="trip.seats - trip.takenSeats <= 1 ? 'trip-card__seats--warning' : 'trip-card__seats--ok'"
         >
           {{ seatsLeftLabel(trip.seats - trip.takenSeats) }}
         </div>
       </div>
-      <div class="flex items-center gap-2 mb-3">
-        <div class="flex flex-col items-center">
-          <span class="text-base font-extrabold text-gray-900">{{ trip.fromShort }}</span>
-          <span class="text-[10px] text-gray-400">{{ trip.from }}</span>
+      <div class="trip-card__route">
+        <div class="trip-card__city">
+          <span class="trip-card__city-short">{{ trip.fromShort }}</span>
+          <span class="trip-card__city-full">{{ trip.from }}</span>
         </div>
-        <div class="flex-1 flex items-center gap-1">
-          <div class="flex-1 border-t-2 border-dashed border-orange-200" />
-          <div class="w-6 h-6 rounded-full bg-orange-50 flex items-center justify-center">
-            <ArrowRight :size="11" class="text-orange-400" />
+        <div class="route-connector">
+          <div class="route-connector__line" />
+          <div class="route-connector__arrow">
+            <ArrowRight :size="11" />
           </div>
-          <div class="flex-1 border-t-2 border-dashed border-orange-200" />
+          <div class="route-connector__line" />
         </div>
-        <div class="flex flex-col items-center">
-          <span class="text-base font-extrabold text-gray-900">{{ trip.toShort }}</span>
-          <span class="text-[10px] text-gray-400">{{ trip.to }}</span>
-        </div>
-      </div>
-      <div class="flex items-center gap-4 mb-3">
-        <div class="flex items-center gap-1.5">
-          <Calendar :size="12" class="text-orange-400" />
-          <span class="text-xs font-medium text-gray-600">{{ trip.date }}</span>
-        </div>
-        <div class="flex items-center gap-1.5">
-          <Clock :size="12" class="text-orange-400" />
-          <span class="text-xs font-medium text-gray-600">{{ trip.time }}</span>
+        <div class="trip-card__city">
+          <span class="trip-card__city-short">{{ trip.toShort }}</span>
+          <span class="trip-card__city-full">{{ trip.to }}</span>
         </div>
       </div>
-      <div class="flex items-center justify-between">
-        <p class="text-xs font-bold text-gray-800">{{ trip.host.name }}</p>
-        <div class="flex items-center gap-1.5 text-[11px] text-gray-500 font-medium">
-          <Users :size="12" class="text-orange-400" />
+      <div class="trip-card__meta">
+        <div class="trip-card__meta-item">
+          <Calendar :size="12" class="icon--orange" />
+          <span class="trip-card__meta-text">{{ trip.date }}</span>
+        </div>
+        <div class="trip-card__meta-item">
+          <Clock :size="12" class="icon--orange" />
+          <span class="trip-card__meta-text">{{ trip.time }}</span>
+        </div>
+      </div>
+      <div class="trip-card__footer">
+        <p class="trip-card__host">{{ trip.host.name }}</p>
+        <div class="trip-card__participants">
+          <Users :size="12" class="icon--orange" />
           <span>{{ participantsLabel(tripTotalParticipants(trip), tripMaxParticipants(trip)) }}</span>
         </div>
       </div>

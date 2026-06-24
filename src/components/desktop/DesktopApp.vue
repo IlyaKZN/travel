@@ -16,14 +16,14 @@ const selectedDm = ref<DmConversation | null>(null)
 </script>
 
 <template>
-  <div class="flex flex-col h-screen bg-background overflow-hidden">
+  <div class="desktop-app">
     <DesktopNavbar
       :active-screen="screen"
       @navigate="screen = $event"
       @create-click="showCreate = true"
     />
 
-    <div class="flex flex-1 overflow-hidden">
+    <div class="desktop-app__content">
       <DesktopHome
         v-if="screen === 'home'"
         @trip-select="(t) => { selectedTrip = t; screen = 'detail' }"

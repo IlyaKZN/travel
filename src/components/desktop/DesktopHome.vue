@@ -62,118 +62,111 @@ function transportIcon(type: string) {
 </script>
 
 <template>
-  <div class="flex flex-1 overflow-hidden">
-    <aside class="w-60 flex-shrink-0 bg-white border-r border-orange-50 overflow-y-auto p-5" style="scrollbar-width: none">
-      <h3 class="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-1.5">
+  <div class="desktop-home">
+    <aside class="desktop-home__sidebar">
+      <h3 class="desktop-home__filter-title">
         <Filter :size="11" />Фильтры
       </h3>
 
-      <div class="mb-5">
-        <p class="text-sm font-extrabold text-gray-800 mb-3">Транспорт</p>
-        <div class="space-y-1.5">
+      <div class="desktop-home__section">
+        <p class="desktop-home__section-title">Транспорт</p>
+        <div class="desktop-home__transport-list">
           <button
             v-for="t in DESKTOP_TRANSPORT_FILTERS"
             :key="t.type"
-            class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all"
-            :class="selectedTransports.includes(t.type) ? 'bg-orange-500 text-white' : 'bg-secondary text-gray-600 hover:bg-orange-50'"
+            class="desktop-home__transport-btn"
+            :class="{ 'desktop-home__transport-btn--active': selectedTransports.includes(t.type) }"
             @click="toggleTransport(t.type)"
           >
             <component :is="transportIcon(t.type)" :size="14" />
             {{ t.label }}
-            <Check v-if="selectedTransports.includes(t.type)" :size="13" class="ml-auto" />
+            <Check v-if="selectedTransports.includes(t.type)" :size="13" style="margin-left: auto" />
           </button>
         </div>
       </div>
 
-      <div class="mb-5">
-        <p class="text-sm font-extrabold text-gray-800 mb-1">Мин. мест</p>
-        <p class="text-xs text-gray-400 mb-3">{{ openSeatsLabel(minSeats) }}</p>
-        <input v-model.number="minSeats" type="range" min="1" max="6" class="w-full accent-orange-500">
-        <div class="flex justify-between text-xs text-gray-400 mt-1"><span>1</span><span>6</span></div>
+      <div class="desktop-home__section">
+        <p class="desktop-home__section-title">Мин. мест</p>
+        <p class="desktop-home__section-hint">{{ openSeatsLabel(minSeats) }}</p>
+        <input v-model.number="minSeats" type="range" min="1" max="6" class="desktop-home__range">
+        <div class="desktop-home__range-labels"><span>1</span><span>6</span></div>
       </div>
 
       <button
         v-if="selectedTransports.length > 0 || minSeats > 1"
-        class="w-full py-2 text-xs font-bold text-orange-500 border border-orange-200 rounded-xl hover:bg-orange-50 transition-colors mb-5"
+        class="desktop-home__reset"
         @click="resetFilters"
       >
         Сбросить фильтры
       </button>
 
-      <div class="pt-4 border-t border-orange-50">
-        <p class="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+      <div class="desktop-home__popular">
+        <p class="desktop-home__filter-title">
           <TrendingUp :size="11" />Популярные маршруты
         </p>
-        <div class="space-y-1">
-          <div
-            v-for="(r, i) in popularRoutes"
-            :key="i"
-            class="flex items-center gap-2 text-sm text-gray-600 py-1.5 px-2 rounded-lg hover:bg-orange-50 cursor-pointer transition-colors"
-          >
-            <span class="font-bold text-gray-800 text-xs">{{ r.from }}</span>
-            <ArrowRight :size="11" class="text-orange-400" />
-            <span class="font-bold text-gray-800 text-xs">{{ r.to }}</span>
-            <span class="ml-auto text-[10px] text-gray-400 bg-orange-50 px-1.5 py-0.5 rounded-md">{{ r.count }}</span>
+        <div class="desktop-home__popular-list">
+          <div v-for="(r, i) in popularRoutes" :key="i" class="desktop-home__popular-item">
+            <span class="desktop-home__popular-city">{{ r.from }}</span>
+            <ArrowRight :size="11" class="icon--orange" />
+            <span class="desktop-home__popular-city">{{ r.to }}</span>
+            <span class="desktop-home__popular-count">{{ r.count }}</span>
           </div>
         </div>
       </div>
     </aside>
 
-    <main class="flex-1 overflow-y-auto" style="scrollbar-width: thin">
-      <div class="relative h-56 bg-orange-200 overflow-hidden">
-        <img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1400&h=448&fit=crop" alt="Путешествие" class="w-full h-full object-cover">
-        <div class="absolute inset-0 bg-gradient-to-r from-orange-700/75 via-orange-500/50 to-transparent" />
-        <div class="absolute inset-0 flex flex-col justify-center px-10">
-          <p class="text-orange-200 text-sm font-medium mb-1 uppercase tracking-widest">Найдите следующее приключение</p>
-          <h1 class="text-4xl font-extrabold text-white mb-1 leading-tight">Ваша команда<br>уже ждёт вас</h1>
-          <p class="text-white/70 text-sm mb-5">Более {{ TRIPS.length * 20 }} предстоящих поездок по России</p>
-          <div class="flex items-center bg-white rounded-2xl overflow-hidden max-w-2xl w-full shadow-xl">
-            <div class="flex items-center gap-2.5 px-4 py-3.5 flex-1 min-w-0">
-              <MapPin :size="16" class="text-orange-400 flex-shrink-0" />
-              <input placeholder="Откуда..." class="flex-1 text-sm text-gray-700 placeholder-gray-400 outline-none font-medium min-w-0 w-0">
+    <main class="desktop-home__main">
+      <div class="desktop-home__hero">
+        <img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1400&h=448&fit=crop" alt="Путешествие" class="desktop-home__hero-img">
+        <div class="desktop-home__hero-overlay" />
+        <div class="desktop-home__hero-content">
+          <p class="desktop-home__hero-sub">Найдите следующее приключение</p>
+          <h1 class="desktop-home__hero-title">Ваша команда<br>уже ждёт вас</h1>
+          <p class="desktop-home__hero-desc">Более {{ TRIPS.length * 20 }} предстоящих поездок по России</p>
+          <div class="desktop-home__search">
+            <div class="desktop-home__search-field">
+              <MapPin :size="16" class="icon--orange" />
+              <input placeholder="Откуда..." class="desktop-home__search-input">
             </div>
-            <div class="w-px h-8 bg-orange-100 flex-shrink-0" />
-            <div class="flex items-center gap-2.5 px-4 py-3.5 flex-1 min-w-0">
-              <Navigation :size="16" class="text-orange-400 flex-shrink-0" />
-              <input placeholder="Куда..." class="flex-1 text-sm text-gray-700 placeholder-gray-400 outline-none font-medium min-w-0 w-0">
+            <div class="desktop-home__search-divider" />
+            <div class="desktop-home__search-field">
+              <Navigation :size="16" class="icon--orange" />
+              <input placeholder="Куда..." class="desktop-home__search-input">
             </div>
-            <div class="w-px h-8 bg-orange-100 flex-shrink-0" />
-            <div class="flex items-center gap-2.5 px-4 py-3.5 flex-1 min-w-0">
-              <Calendar :size="16" class="text-orange-400 flex-shrink-0" />
-              <input type="date" class="flex-1 text-sm text-gray-600 outline-none font-medium min-w-0 w-0 bg-transparent">
+            <div class="desktop-home__search-divider" />
+            <div class="desktop-home__search-field">
+              <Calendar :size="16" class="icon--orange" />
+              <input type="date" class="desktop-home__search-input">
             </div>
-            <button class="flex-shrink-0 px-5 py-3.5 bg-orange-500 text-white text-sm font-extrabold hover:bg-orange-600 transition-colors whitespace-nowrap">
-              Найти
-            </button>
+            <button class="desktop-home__search-btn">Найти</button>
           </div>
         </div>
       </div>
 
-      <div class="px-6 py-5">
-        <div class="flex items-center gap-2 mb-5 flex-wrap">
+      <div class="desktop-home__content">
+        <div class="desktop-home__chips">
           <button
             v-for="f in TRANSPORT_FILTERS"
             :key="f.id"
-            class="px-4 py-2 rounded-xl text-sm font-bold transition-all"
-            :class="activeChip === f.id ? 'bg-orange-500 text-white' : 'bg-white text-gray-600 border border-gray-100 hover:border-orange-200'"
-            :style="activeChip === f.id ? { boxShadow: '0 4px 12px rgba(249,115,22,0.3)' } : {}"
+            class="chip chip--md"
+            :class="activeChip === f.id ? 'chip--active' : 'chip--outline'"
             @click="activeChip = f.id"
           >
             {{ f.label }}
           </button>
-          <div v-if="hasActiveFilters" class="ml-auto text-sm text-gray-400 font-medium">
-            <span class="font-extrabold text-gray-800">{{ filteredTrips.length }}</span> поездок найдено
+          <div v-if="hasActiveFilters" class="desktop-home__results">
+            <span class="desktop-home__results-count">{{ filteredTrips.length }}</span> поездок найдено
           </div>
         </div>
 
-        <div v-if="filteredTrips.length === 0" class="flex flex-col items-center py-20">
-          <MapPin :size="48" class="mb-4 text-orange-200" />
-          <p class="text-base text-gray-400 font-medium">Нет поездок по вашим фильтрам</p>
-          <button class="mt-3 text-orange-500 text-sm font-bold hover:underline" @click="resetFilters">
+        <div v-if="filteredTrips.length === 0" class="empty-state empty-state--lg">
+          <MapPin :size="48" class="empty-state__icon empty-state__icon--lg" />
+          <p class="empty-state__text empty-state__text--base">Нет поездок по вашим фильтрам</p>
+          <button class="desktop-home__reset-link" @click="resetFilters">
             Сбросить все фильтры
           </button>
         </div>
-        <div v-else class="grid grid-cols-2 xl:grid-cols-3 gap-5">
+        <div v-else class="desktop-home__grid">
           <TripCard
             v-for="trip in filteredTrips"
             :key="trip.id"

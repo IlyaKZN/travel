@@ -1,0 +1,13 @@
+.desktop-app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--background);
+  overflow: hidden;
+}
+
+.desktop-app__content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}

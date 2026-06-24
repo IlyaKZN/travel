@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite'
 import path from 'path'
-import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
 
 function figmaAssetResolver() {
@@ -19,7 +18,6 @@ export default defineConfig({
   plugins: [
     figmaAssetResolver(),
     vue(),
-    tailwindcss(),
   ],
   resolve: {
     alias: {

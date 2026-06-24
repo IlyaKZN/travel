@@ -19,23 +19,20 @@ const navItems: { label: string; screen: Screen }[] = [
 </script>
 
 <template>
-  <header
-    class="bg-white border-b border-orange-50 px-6 h-16 flex items-center gap-4 flex-shrink-0 z-40"
-    style="box-shadow: 0 2px 12px rgba(249,115,22,0.07)"
-  >
-    <div class="flex items-center gap-2.5 flex-shrink-0">
-      <div class="w-9 h-9 rounded-xl bg-orange-500 flex items-center justify-center">
-        <Navigation :size="17" class="text-white" />
+  <header class="desktop-navbar">
+    <div class="desktop-navbar__logo">
+      <div class="desktop-navbar__logo-icon">
+        <Navigation :size="17" class="icon--white" />
       </div>
-      <span class="text-xl font-extrabold text-gray-900 tracking-tight">waymate</span>
+      <span class="desktop-navbar__logo-text">waymate</span>
     </div>
 
-    <nav class="hidden lg:flex items-center gap-1">
+    <nav class="desktop-navbar__nav">
       <button
         v-for="item in navItems"
         :key="item.screen"
-        class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all"
-        :class="activeScreen === item.screen ? 'bg-orange-50 text-orange-600' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'"
+        class="desktop-navbar__nav-item"
+        :class="{ 'desktop-navbar__nav-item--active': activeScreen === item.screen }"
         @click="emit('navigate', item.screen)"
       >
         <Home v-if="item.screen === 'home'" :size="16" />
@@ -45,25 +42,21 @@ const navItems: { label: string; screen: Screen }[] = [
       </button>
     </nav>
 
-    <div class="flex items-center gap-2 ml-auto flex-shrink-0">
-      <button
-        class="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-xl text-sm font-bold flex-shrink-0"
-        style="box-shadow: 0 4px 12px rgba(249,115,22,0.35)"
-        @click="emit('create-click')"
-      >
+    <div class="desktop-navbar__actions">
+      <button class="desktop-navbar__create" @click="emit('create-click')">
         <Plus :size="16" />Спланировать поездку
       </button>
-      <button class="relative w-9 h-9 bg-input-background rounded-xl flex items-center justify-center border border-orange-100 flex-shrink-0">
-        <Bell :size="17" class="text-gray-600" />
-        <div class="absolute top-2 right-2 w-1.5 h-1.5 bg-orange-500 rounded-full" />
+      <button class="btn btn--icon desktop-navbar__bell">
+        <Bell :size="17" class="icon--gray-dark" />
+        <div class="desktop-navbar__bell-dot" />
       </button>
       <button
-        class="flex items-center gap-2 pl-1 pr-3 py-1 rounded-xl transition-all flex-shrink-0"
-        :class="activeScreen === 'profile' ? 'bg-orange-50 border border-orange-100' : 'hover:bg-gray-50'"
+        class="desktop-navbar__profile"
+        :class="{ 'desktop-navbar__profile--active': activeScreen === 'profile' }"
         @click="emit('navigate', 'profile')"
       >
-        <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop" alt="Алексей" class="w-8 h-8 rounded-xl object-cover">
-        <span class="text-sm font-bold text-gray-800 hidden xl:block">Алексей Ч.</span>
+        <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop" alt="Алексей" class="desktop-navbar__profile-avatar">
+        <span class="desktop-navbar__profile-name">Алексей Ч.</span>
       </button>
     </div>
   </header>

@@ -1,0 +1,313 @@
+.desktop-trip-detail {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.desktop-trip-detail__back-row {
+  padding: 1.25rem 2rem 0.25rem;
+}
+
+.desktop-trip-detail__back {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: var(--text-sm);
+  color: var(--color-gray-500);
+  font-weight: 500;
+  background: none;
+  border: none;
+  transition: color 0.15s ease;
+}
+
+.desktop-trip-detail__back:hover {
+  color: var(--color-orange-500);
+}
+
+.desktop-trip-detail__content {
+  padding: 0 2rem 3rem;
+}
+
+.desktop-trip-detail__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  align-items: start;
+}
+
+.desktop-trip-detail__main {
+  grid-column: span 2;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.desktop-trip-detail__route-card {
+  align-self: flex-start;
+  width: 100%;
+  max-width: 22rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.desktop-trip-detail__hero-cities {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.desktop-trip-detail__city-short {
+  color: var(--color-gray-900);
+  font-size: var(--text-2xl);
+  font-weight: 800;
+}
+
+.desktop-trip-detail__city-full {
+  color: var(--color-gray-500);
+  font-size: var(--text-sm);
+}
+
+.desktop-trip-detail__city-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.desktop-trip-detail__grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+}
+
+.desktop-trip-detail__grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.desktop-trip-detail__card {
+  padding: 1.25rem;
+}
+
+.desktop-trip-detail__card-title {
+  font-weight: 800;
+  color: var(--color-gray-900);
+  font-size: var(--text-base);
+  margin-bottom: 1rem;
+}
+
+.desktop-trip-detail__card-title--sm {
+  margin-bottom: 0.75rem;
+}
+
+.desktop-trip-detail__host {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.desktop-trip-detail__host-avatar {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 1rem;
+  object-fit: cover;
+}
+
+.desktop-trip-detail__host-name {
+  font-weight: 800;
+  color: var(--color-gray-900);
+  font-size: var(--text-lg);
+}
+
+.desktop-trip-detail__host-role {
+  font-size: var(--text-sm);
+  color: var(--color-gray-400);
+  margin-top: 0.25rem;
+}
+
+.desktop-trip-detail__host-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.desktop-trip-detail__btn-outline {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-orange-200);
+  color: var(--color-orange-500);
+  border-radius: 0.75rem;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+.desktop-trip-detail__btn-outline:hover {
+  background: var(--color-orange-50);
+}
+
+.desktop-trip-detail__btn-muted {
+  padding: 0.5rem 1rem;
+  background: var(--color-orange-50);
+  color: var(--color-orange-600);
+  border-radius: 0.75rem;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  transition: background 0.15s ease;
+}
+
+.desktop-trip-detail__btn-muted:hover {
+  background: var(--color-orange-100);
+}
+
+.desktop-trip-detail__description {
+  color: var(--color-gray-600);
+  line-height: 1.625;
+  font-size: var(--text-sm);
+}
+
+.desktop-trip-detail__participants-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.desktop-trip-detail__seats-left {
+  font-size: var(--text-sm);
+  color: var(--color-orange-500);
+  font-weight: 700;
+}
+
+.desktop-trip-detail__participants {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.desktop-trip-detail__participant {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.desktop-trip-detail__participant-avatar {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 1rem;
+  object-fit: cover;
+}
+
+.desktop-trip-detail__participant-avatar--host {
+  box-shadow: 0 0 0 2px var(--color-white), 0 0 0 4px var(--color-orange-400);
+}
+
+.desktop-trip-detail__participant-label {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--color-orange-500);
+}
+
+.desktop-trip-detail__participant-name {
+  font-size: var(--text-xs);
+  color: var(--color-gray-500);
+  font-weight: 500;
+}
+
+.desktop-trip-detail__empty-slot {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 1rem;
+  border: 2px dashed var(--color-orange-200);
+  background: var(--color-orange-50);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-orange-300);
+}
+
+.desktop-trip-detail__sidebar {
+  grid-column: span 1;
+}
+
+.desktop-trip-detail__sticky {
+  position: sticky;
+  top: 1rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 4px 24px rgba(249, 115, 22, 0.12);
+}
+
+.desktop-trip-detail__sidebar-title {
+  font-size: var(--text-lg);
+  font-weight: 800;
+  color: var(--color-gray-900);
+}
+
+.desktop-trip-detail__sidebar-sub {
+  font-size: var(--text-sm);
+  color: var(--color-gray-400);
+  margin-top: 0.125rem;
+}
+
+.desktop-trip-detail__info-rows {
+  background: var(--color-orange-50);
+  border-radius: 1rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.desktop-trip-detail__info-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.desktop-trip-detail__info-label {
+  font-size: var(--text-xs);
+  color: var(--color-gray-400);
+  width: 5rem;
+  flex-shrink: 0;
+}
+
+.desktop-trip-detail__info-value {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-gray-800);
+  margin-left: auto;
+  text-align: right;
+}
+
+.desktop-trip-detail__host-mini {
+  border-top: 1px solid var(--color-orange-50);
+  padding-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.desktop-trip-detail__host-mini-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  object-fit: cover;
+}
+
+.desktop-trip-detail__host-mini-name {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-gray-900);
+}
+
+.desktop-trip-detail__host-mini-role {
+  font-size: var(--text-xs);
+  color: var(--color-gray-400);
+}
