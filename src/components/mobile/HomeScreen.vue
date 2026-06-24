@@ -24,7 +24,7 @@ const filteredTrips = computed(() =>
 
 <template>
   <div class="flex flex-col h-full bg-background">
-    <div class="px-5 pt-14 pb-3">
+    <div class="px-5 pt-5 pb-3">
       <div class="flex items-center justify-between mb-1">
         <div>
           <p class="text-xs text-gray-400 font-medium">Доброе утро,</p>

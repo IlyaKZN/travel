@@ -6,7 +6,6 @@ import type { Screen, Tab } from '@/types'
 import { DESKTOP_BREAKPOINT } from '@/types'
 import { useIsDesktop } from '@/composables/useIsDesktop'
 import DesktopApp from '@/components/desktop/DesktopApp.vue'
-import StatusBar from '@/components/StatusBar.vue'
 import BottomNav from '@/components/BottomNav.vue'
 import OnboardingScreen from '@/components/mobile/OnboardingScreen.vue'
 import HomeScreen from '@/components/mobile/HomeScreen.vue'
@@ -61,7 +60,6 @@ function handleOnboardingComplete() {
   />
 
   <div v-else class="h-[100dvh] flex flex-col bg-background overflow-hidden">
-    <StatusBar v-if="screen !== 'onboarding'" />
     <div class="flex-1 overflow-hidden">
       <OnboardingScreen v-if="screen === 'onboarding'" @start="handleOnboardingComplete" />
       <HomeScreen

@@ -20,7 +20,7 @@ const tabs: { id: ChatView; label: string }[] = [
 
 <template>
   <div class="flex flex-col h-full bg-background">
-    <div class="px-5 pt-14 pb-4">
+    <div class="px-5 pt-5 pb-4">
       <h1 class="text-xl font-extrabold text-gray-900 mb-4">Чаты</h1>
       <div class="flex gap-2">
         <button

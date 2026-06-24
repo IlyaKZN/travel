@@ -32,7 +32,7 @@ async function sendMessage() {
 <template>
   <div class="flex flex-col h-full bg-background">
     <div
-      class="flex items-center gap-3 px-4 pt-14 pb-3.5 bg-white border-b border-orange-50 flex-shrink-0"
+      class="flex items-center gap-3 px-4 pt-5 pb-3.5 bg-white border-b border-orange-50 flex-shrink-0"
       style="box-shadow: 0 2px 8px rgba(249,115,22,0.06)"
     >
       <button class="w-9 h-9 bg-input-background rounded-xl flex items-center justify-center" @click="emit('back')">

@@ -28,7 +28,7 @@ function transportIcon(type: TransportType) {
 
 <template>
   <div class="flex flex-col h-full bg-background">
-    <div class="flex items-center gap-3 px-5 pt-14 pb-5 bg-background">
+    <div class="flex items-center gap-3 px-5 pt-5 pb-5 bg-background">
       <button
         class="w-9 h-9 bg-white rounded-xl flex items-center justify-center border border-orange-50 shadow-sm"
         @click="emit('back')"

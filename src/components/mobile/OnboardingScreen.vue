@@ -27,7 +27,7 @@ const features = [
         class="w-full h-full object-cover"
       >
       <div class="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/10" />
-      <div class="absolute top-14 left-6 flex items-center gap-2.5">
+      <div class="absolute top-6 left-6 flex items-center gap-2.5">
         <div class="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center shadow-lg">
           <Navigation :size="19" class="text-white" />
         </div>

@@ -43,7 +43,7 @@ const stats = [{ value: '48', label: 'Отзывов' }, { value: '23', label: '
         </div>
       </div>
     </div>
-    <div class="pt-14 px-5 pb-4 bg-white flex-shrink-0">
+    <div class="pt-5 px-5 pb-4 bg-white flex-shrink-0">
       <div class="flex items-start justify-between">
         <div>
           <h2 class="text-xl font-extrabold text-gray-900">Алексей Ч.</h2>

@@ -35,7 +35,7 @@ const infoItems = computed(() => [
       <TripAvatar :trip="trip" class="w-full h-full text-5xl" />
       <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
       <button
-        class="absolute top-14 left-4 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-xl flex items-center justify-center shadow"
+        class="absolute top-4 left-4 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-xl flex items-center justify-center shadow"
         @click="emit('back')"
       >
         <ChevronLeft :size="20" class="text-gray-800" />
