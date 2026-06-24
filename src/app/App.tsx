@@ -101,7 +101,7 @@ function OnboardingScreen({ onStart }: { onStart: () => void }) {
         <button onClick={onStart} className="w-full py-4 bg-orange-500 text-white rounded-2xl font-bold text-base active:scale-95 transition-transform" style={{ boxShadow: "0 8px 24px rgba(249,115,22,0.35)" }}>
           Начать — бесплатно
         </button>
-        <p className="text-center text-xs text-gray-400 mt-4">Уже есть аккаунт? <span className="text-orange-500 font-semibold">Войти</span></p>
+        <p className="text-center text-xs text-gray-400 mt-4">Уже есть аккаунт? <span className="text-orange-500 font-medium">Войти</span></p>
       </div>
     </div>
   );
@@ -143,11 +143,11 @@ function TripCard({ trip, onSelect }: { trip: Trip; onSelect: () => void; horizo
           </div>
         </div>
         <div className="flex items-center gap-4 mb-3">
-          <div className="flex items-center gap-1.5"><Calendar size={12} className="text-orange-400" /><span className="text-xs font-semibold text-gray-600">{trip.date}</span></div>
-          <div className="flex items-center gap-1.5"><Clock size={12} className="text-orange-400" /><span className="text-xs font-semibold text-gray-600">{trip.time}</span></div>
+          <div className="flex items-center gap-1.5"><Calendar size={12} className="text-orange-400" /><span className="text-xs font-medium text-gray-600">{trip.date}</span></div>
+          <div className="flex items-center gap-1.5"><Clock size={12} className="text-orange-400" /><span className="text-xs font-medium text-gray-600">{trip.time}</span></div>
         </div>
         <div className="flex gap-1.5 mb-3 flex-wrap">
-          {trip.tags.map((tag) => <span key={tag} className="px-2 py-0.5 bg-orange-50 text-orange-600 rounded-lg text-[11px] font-semibold">{tag}</span>)}
+          {trip.tags.map((tag) => <span key={tag} className="px-2 py-0.5 bg-orange-50 text-orange-600 rounded-lg text-[11px] font-medium">{tag}</span>)}
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -388,7 +388,7 @@ function ChatScreen({ trip, onBack }: { trip: Trip; onBack: () => void }) {
           <div key={msg.id} className={`flex items-end gap-2 ${msg.isMe ? "flex-row-reverse" : ""}`}>
             {!msg.isMe && <img src={msg.avatar} alt="" className="w-7 h-7 rounded-full flex-shrink-0 mb-1 object-cover" />}
             <div className={`max-w-[76%] flex flex-col gap-0.5 ${msg.isMe ? "items-end" : "items-start"}`}>
-              {!msg.isMe && <span className="text-[11px] text-gray-400 font-semibold ml-1">{msg.sender}</span>}
+              {!msg.isMe && <span className="text-[11px] text-gray-400 font-medium ml-1">{msg.sender}</span>}
               <div className={`px-4 py-2.5 text-sm leading-relaxed font-medium ${msg.isMe ? "bg-orange-500 text-white rounded-2xl rounded-br-sm" : "bg-white text-gray-800 rounded-2xl rounded-bl-sm"}`} style={!msg.isMe ? { boxShadow: "0 1px 6px rgba(0,0,0,0.06)" } : {}}>{msg.text}</div>
               <span className="text-[10px] text-gray-400 mx-1">{msg.time}</span>
             </div>
@@ -506,7 +506,7 @@ function DesktopNavbar({ activeScreen, onNavigate, onCreateClick }: {
           { label: "Чаты", screen: "chat" as Screen, icon: <MessageSquare size={16} /> },
           { label: "Профиль", screen: "profile" as Screen, icon: <User size={16} /> },
         ]).map((item) => (
-          <button key={item.screen} onClick={() => onNavigate(item.screen)} className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold transition-all ${activeScreen === item.screen ? "bg-orange-50 text-orange-600" : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"}`}>
+          <button key={item.screen} onClick={() => onNavigate(item.screen)} className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all ${activeScreen === item.screen ? "bg-orange-50 text-orange-600" : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"}`}>
             {item.icon}{item.label}
           </button>
         ))}
@@ -552,7 +552,7 @@ function DesktopHome({ onTripSelect }: { onTripSelect: (t: Trip) => void; onCrea
           <p className="text-sm font-extrabold text-gray-800 mb-3">Транспорт</p>
           <div className="space-y-1.5">
             {DESKTOP_TRANSPORT_FILTERS.map((t) => (
-              <button key={t.type} onClick={() => toggleTransport(t.type)} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${selectedTransports.includes(t.type) ? "bg-orange-500 text-white" : "bg-[#FFF8F4] text-gray-600 hover:bg-orange-50"}`}>
+              <button key={t.type} onClick={() => toggleTransport(t.type)} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${selectedTransports.includes(t.type) ? "bg-orange-500 text-white" : "bg-[#FFF8F4] text-gray-600 hover:bg-orange-50"}`}>
                 {t.type === "car" ? <Car size={14} /> : t.type === "train" ? <Train size={14} /> : t.type === "bus" ? <Bus size={14} /> : <Plane size={14} />}{t.label}{selectedTransports.includes(t.type) && <Check size={13} className="ml-auto" />}
               </button>
             ))}
@@ -604,7 +604,7 @@ function DesktopHome({ onTripSelect }: { onTripSelect: (t: Trip) => void; onCrea
           <img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1400&h=448&fit=crop" alt="Путешествие" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-r from-orange-700/75 via-orange-500/50 to-transparent" />
           <div className="absolute inset-0 flex flex-col justify-center px-10">
-            <p className="text-orange-200 text-sm font-semibold mb-1 uppercase tracking-widest">Найдите следующее приключение</p>
+            <p className="text-orange-200 text-sm font-medium mb-1 uppercase tracking-widest">Найдите следующее приключение</p>
             <h1 className="text-4xl font-extrabold text-white mb-1 leading-tight">Ваша команда<br />уже ждёт вас</h1>
             <p className="text-white/70 text-sm mb-5">Более {TRIPS.length * 20} предстоящих поездок по России</p>
             <div className="flex items-center gap-0 bg-white rounded-2xl overflow-hidden max-w-2xl shadow-xl">
@@ -659,7 +659,7 @@ function DesktopTripDetail({ trip, onBack, onJoin }: { trip: Trip; onBack: () =>
   return (
     <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "thin" }}>
       <div className="px-8 pt-5 pb-1">
-        <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-gray-500 font-semibold hover:text-orange-500 transition-colors">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-gray-500 font-medium hover:text-orange-500 transition-colors">
           <ChevronLeft size={16} />Назад к поездкам
         </button>
       </div>
@@ -751,7 +751,7 @@ function DesktopTripDetail({ trip, onBack, onJoin }: { trip: Trip; onBack: () =>
               <p className="text-center text-xs text-gray-400">Организатор рассмотрит запрос в течение 24 ч</p>
               <div className="border-t border-orange-50 pt-4 flex items-center gap-3">
                 <img src={trip.host.avatar} alt="" className="w-10 h-10 rounded-xl object-cover" />
-                <div><p className="text-sm font-bold text-gray-900">{trip.host.name}</p><div className="flex items-center gap-1"><Star size={11} className="fill-orange-400 text-orange-400" /><span className="text-xs font-semibold text-gray-600">{trip.host.rating}</span><span className="text-xs text-gray-400">· Проверен</span></div></div>
+                <div><p className="text-sm font-bold text-gray-900">{trip.host.name}</p><div className="flex items-center gap-1"><Star size={11} className="fill-orange-400 text-orange-400" /><span className="text-xs font-medium text-gray-600">{trip.host.rating}</span><span className="text-xs text-gray-400">· Проверен</span></div></div>
               </div>
               <div className="flex gap-2 flex-wrap pt-1">{[{ icon: <Shield size={11} />, label: "Проверен" }, { icon: <Star size={11} />, label: "Топ рейтинг" }, { icon: <Check size={11} />, label: "Документы" }].map((b, i) => <div key={i} className="flex items-center gap-1 bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-lg text-xs font-bold">{b.icon}{b.label}</div>)}</div>
             </div>
@@ -910,7 +910,7 @@ function DesktopChat({ trip }: { trip: Trip }) {
             <div key={msg.id} className={`flex items-end gap-2 ${msg.isMe ? "flex-row-reverse" : ""}`}>
               {!msg.isMe && <img src={msg.avatar} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0 mb-1" />}
               <div className={`max-w-[65%] flex flex-col gap-0.5 ${msg.isMe ? "items-end" : "items-start"}`}>
-                {!msg.isMe && <span className="text-xs text-gray-400 font-semibold ml-1">{msg.sender}</span>}
+                {!msg.isMe && <span className="text-xs text-gray-400 font-medium ml-1">{msg.sender}</span>}
                 <div className={`px-4 py-2.5 text-sm leading-relaxed font-medium ${msg.isMe ? "bg-orange-500 text-white rounded-2xl rounded-br-sm" : "bg-white text-gray-800 rounded-2xl rounded-bl-sm"}`} style={!msg.isMe ? { boxShadow: "0 1px 6px rgba(0,0,0,0.06)" } : {}}>{msg.text}</div>
                 <span className="text-[10px] text-gray-400 mx-1">{msg.time}</span>
               </div>
