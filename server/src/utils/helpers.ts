@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
+import jwt, { type SignOptions } from 'jsonwebtoken'
 import type { DbUser } from '../types/index.js'
 import { config } from '../config.js'
 
@@ -11,8 +11,8 @@ export async function comparePassword(password: string, hash: string): Promise<b
   return bcrypt.compare(password, hash)
 }
 
-export function signToken(userId: string): string {
-  return jwt.sign({ sub: userId }, config.jwtSecret, { expiresIn: '7d' })
+export function signToken(userId: string, expiresIn: SignOptions['expiresIn'] = '7d'): string {
+  return jwt.sign({ sub: userId }, config.jwtSecret, { expiresIn })
 }
 
 export function verifyToken(token: string): { userId: string } | null {
@@ -36,7 +36,7 @@ export function publicUser(user: DbUser) {
     lastName: user.lastName,
     patronymic: user.patronymic,
     birthDate: user.birthDate,
-    avatar: user.avatar,
+    avatar: user.avatar || unsplashAvatar('1507003211169-0a1dd7228f2d'),
     about: user.about,
     showTours: user.showTours,
     following: user.following,
@@ -71,4 +71,9 @@ export function unsplash(id: string, w = 800, h = 500): string {
 
 export function unsplashAvatar(id: string, size = 150): string {
   return `https://images.unsplash.com/photo-${id}?w=${size}&h=${size}&fit=crop&crop=faces&q=80&auto=format`
+}
+
+export function tripDisplayNumber(id: string, ordinal: number): number {
+  if (/^\d+$/.test(id)) return parseInt(id, 10)
+  return ordinal
 }

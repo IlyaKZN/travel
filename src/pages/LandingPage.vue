@@ -1,6 +1,18 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
+import { useStore } from '@/composables/useStore'
+
+const { isAuthenticated } = useStore()
+const authPath = computed(() => (isAuthenticated.value ? '/trips' : '/auth/login'))
+const registerPath = computed(() => (isAuthenticated.value ? '/trips' : '/auth/register'))
+
+const aboutItems = [
+  'Создавайте авторские туры и делитесь маршрутами',
+  'Находите попутчиков для совместных поездок',
+  'Ведите блог путешественника с фото и заметками',
+]
 
 const features = [
   { icon: '🗺️', title: 'Авторские туры', desc: 'Создавайте и находите уникальные маршруты с опытными гидами' },
@@ -12,7 +24,7 @@ const features = [
 
 <template>
   <div class="min-h-screen bg-warm-50 dark:bg-stone-950">
-    <AppHeader show-auth />
+    <AppHeader :info-menu="!isAuthenticated" :show-auth="!isAuthenticated" />
 
     <section class="hero-sunny">
       <div class="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-brand-300/40 blur-3xl" />
@@ -28,18 +40,30 @@ const features = [
             Находите единомышленников и открывайте новые места.
           </p>
           <div class="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <RouterLink to="/register" class="btn-primary w-full sm:w-auto !bg-white !text-brand-800 !shadow-md hover:!bg-warm-50">
-              Регистрация
-            </RouterLink>
-            <RouterLink to="/login" class="btn-secondary w-full sm:w-auto !border-white/40 !bg-white/10 !text-white hover:!bg-white/20">
-              Войти
+            <RouterLink :to="authPath" class="btn-primary w-full sm:w-auto !bg-white !text-brand-800 !shadow-md hover:!bg-warm-50">
+              {{ isAuthenticated ? 'Поездки' : 'Регистрация / Авторизация' }}
             </RouterLink>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="page-container py-12 sm:py-20">
+    <section class="page-container py-12 sm:py-16">
+      <div class="card mx-auto max-w-3xl p-6 sm:p-8">
+        <h2 class="text-center text-2xl font-bold text-stone-900 dark:text-stone-100">О проекте</h2>
+        <p class="mt-4 text-center text-stone-600 dark:text-stone-300">
+          Travels объединяет путешественников: создавайте туры, ищите попутчиков и ведите блог о своих приключениях.
+        </p>
+        <ul class="mt-6 space-y-3">
+          <li v-for="item in aboutItems" :key="item" class="flex items-start gap-3 text-sm text-stone-600 dark:text-stone-400">
+            <span class="mt-0.5 text-brand-500">✓</span>
+            {{ item }}
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="page-container pb-12 sm:pb-20">
       <h2 class="text-center text-2xl font-bold text-stone-900 dark:text-stone-100 sm:text-3xl">Возможности платформы</h2>
       <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <div v-for="f in features" :key="f.title" class="card p-6 text-center">
@@ -54,7 +78,9 @@ const features = [
       <div class="page-container text-center">
         <h2 class="text-2xl font-bold text-stone-900 dark:text-stone-100">Готовы к приключениям?</h2>
         <p class="mt-2 text-stone-500 dark:text-stone-400">Присоединяйтесь к сообществу путешественников уже сегодня</p>
-        <RouterLink to="/register" class="btn-primary mt-6 inline-flex">Создать аккаунт</RouterLink>
+        <RouterLink :to="registerPath" class="btn-primary mt-6 inline-flex">
+          {{ isAuthenticated ? 'Перейти к поездкам' : 'Создать аккаунт' }}
+        </RouterLink>
       </div>
     </section>
   </div>

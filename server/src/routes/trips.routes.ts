@@ -5,18 +5,22 @@ import type { Trip } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
 import { toDbTrip } from '../utils/serializers.js'
 import { authOptional, authRequired } from '../middleware/auth.js'
-import { creatorLabel, detectLocationType, unsplash } from '../utils/helpers.js'
+import { creatorLabel, detectLocationType, tripDisplayNumber, unsplash, unsplashAvatar } from '../utils/helpers.js'
 import { addUserToTripChat, createTripConversation } from '../services/chat.service.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { routeParam } from '../utils/routeParam.js'
 
 const router = Router()
 
+const LOCATION_MAX = 100
+const PARTICIPANTS_MAX = 999
+const PRICE_MAX = 9_999_999
+
 const tripSchema = z.object({
-  location: z.string().min(1),
+  location: z.string().min(1).max(LOCATION_MAX),
   shortDescription: z.string().min(1),
-  maxParticipants: z.number().int().positive(),
-  price: z.number().nonnegative(),
+  maxParticipants: z.number().int().positive().max(PARTICIPANTS_MAX),
+  price: z.number().nonnegative().max(PRICE_MAX),
   fullPlan: z.string().min(1),
   startDate: z.string().min(1),
   endDate: z.string().min(1),
@@ -27,13 +31,28 @@ const tripSchema = z.object({
   isDraft: z.boolean().default(false),
 })
 
-async function enrichTrip(trip: Trip) {
+const tripOrder = [{ createdAt: 'asc' as const }, { id: 'asc' as const }]
+
+async function buildTripNumberMap(): Promise<Map<string, number>> {
+  const allTrips = await prisma.trip.findMany({
+    where: { isDraft: false },
+    orderBy: tripOrder,
+    select: { id: true },
+  })
+  const map = new Map<string, number>()
+  allTrips.forEach((t, index) => map.set(t.id, tripDisplayNumber(t.id, index + 1)))
+  return map
+}
+
+async function enrichTrip(trip: Trip, tripNumbers?: Map<string, number>) {
   const creator = await prisma.user.findUnique({ where: { id: trip.creatorId } })
   const dbTrip = toDbTrip(trip)
+  const numbers = tripNumbers ?? await buildTripNumberMap()
   return {
     ...dbTrip,
+    tripNumber: numbers.get(trip.id) ?? tripDisplayNumber(trip.id, 0),
     creatorName: creator ? creatorLabel(creator) : 'Неизвестно',
-    creatorAvatar: creator?.avatar ?? '',
+    creatorAvatar: creator?.avatar || unsplashAvatar('1507003211169-0a1dd7228f2d'),
   }
 }
 
@@ -50,6 +69,7 @@ router.get('/', authOptional, asyncHandler(async (req, res) => {
       ...(creatorId ? { creatorId } : {}),
       ...(maxPrice !== undefined && !Number.isNaN(maxPrice) ? { price: { lte: maxPrice } } : {}),
     },
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
   })
 
   if (search) {
@@ -61,7 +81,8 @@ router.get('/', authOptional, asyncHandler(async (req, res) => {
     )
   }
 
-  res.json(await Promise.all(trips.map(enrichTrip)))
+  const tripNumbers = await buildTripNumberMap()
+  res.json(await Promise.all(trips.map((t) => enrichTrip(t, tripNumbers))))
 }))
 
 router.get('/:id', asyncHandler(async (req, res) => {
@@ -78,6 +99,18 @@ router.get('/:id', asyncHandler(async (req, res) => {
 
 router.post('/', authRequired, asyncHandler(async (req, res) => {
   const data = tripSchema.parse(req.body)
+
+  const start = new Date(data.startDate)
+  const end = new Date(data.endDate)
+  if (start < new Date()) {
+    res.status(400).json({ error: 'Дата начала не может быть в прошлом' })
+    return
+  }
+  if (end < start) {
+    res.status(400).json({ error: 'Дата окончания не может быть раньше даты начала' })
+    return
+  }
+
   const trip = await prisma.trip.create({
     data: {
       id: uuid(),
@@ -89,8 +122,8 @@ router.post('/', authRequired, asyncHandler(async (req, res) => {
       maxParticipants: data.maxParticipants,
       freeSpots: data.maxParticipants,
       price: data.price,
-      startDate: new Date(data.startDate),
-      endDate: new Date(data.endDate),
+      startDate: start,
+      endDate: end,
       transport: data.transport,
       images: data.images.length ? data.images : [unsplash('1488646953015-85cb44e25828')],
       video: data.video,

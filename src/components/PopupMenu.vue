@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useStore } from '@/composables/useStore'
 import { isTelegram } from '@/composables/useTelegram'
@@ -9,7 +9,9 @@ defineProps<{ showAuth?: boolean }>()
 const router = useRouter()
 const open = ref(false)
 const menuRef = ref<HTMLElement | null>(null)
-const { logout } = useStore()
+const { logout, user } = useStore()
+
+const profilePath = computed(() => (user.id ? `/profile/${user.id}` : '/profile/me'))
 
 function toggle() {
   open.value = !open.value
@@ -39,7 +41,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
   <div ref="menuRef" class="relative">
     <button
       type="button"
-      class="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 bg-white text-slate-600 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+      class="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
       aria-label="Меню"
       @click.stop="toggle"
     >
@@ -58,18 +60,21 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
     >
       <div
         v-if="open"
-        class="absolute right-0 z-50 mt-2 w-56 origin-top-right rounded-xl border border-slate-200 dark:border-slate-700 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+        class="absolute right-0 z-50 mt-2 w-56 origin-top-right rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
       >
-        <RouterLink to="/chats" class="menu-item" @click="close">Сообщения</RouterLink>
-        <RouterLink to="/profile" class="menu-item" @click="close">Профиль</RouterLink>
-        <RouterLink to="/tours" class="menu-item" @click="close">Авторские туры</RouterLink>
-        <RouterLink to="/trips" class="menu-item" @click="close">Поездки</RouterLink>
-        <RouterLink to="/profile/settings" class="menu-item" @click="close">Настройки</RouterLink>
-        <hr class="my-1 border-slate-100 dark:border-slate-800 dark:border-slate-800" />
-        <RouterLink v-if="showAuth" to="/login" class="menu-item" @click="close">Войти</RouterLink>
-        <button v-else type="button" class="menu-item w-full text-left text-red-600 dark:text-red-400" @click="handleLogout">
-          Выйти
-        </button>
+        <template v-if="showAuth">
+          <RouterLink to="/auth/login" class="menu-item" @click="close">Войти</RouterLink>
+        </template>
+        <template v-else>
+          <RouterLink :to="profilePath" class="menu-item" @click="close">Профиль</RouterLink>
+          <RouterLink to="/tours" class="menu-item" @click="close">Авторские туры</RouterLink>
+          <RouterLink to="/trips" class="menu-item" @click="close">Поездки</RouterLink>
+          <RouterLink to="/chats" class="menu-item" @click="close">Чаты</RouterLink>
+          <hr class="my-1 border-slate-100 dark:border-slate-800" />
+          <button type="button" class="menu-item w-full text-left text-red-600 dark:text-red-400" @click="handleLogout">
+            Выйти
+          </button>
+        </template>
       </div>
     </Transition>
   </div>

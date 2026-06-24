@@ -18,10 +18,10 @@ async function bootstrapTelegramAuth() {
   try {
     const { needsProfile } = await loginTelegram()
     if (needsProfile) {
-      if (route.path !== '/create-profile') await router.replace('/create-profile')
+      if (route.path !== '/profile/create') await router.replace('/profile/create')
       return
     }
-    if (['/login', '/register', '/'].includes(route.path)) {
+    if (['/', '/auth/login', '/auth/register'].includes(route.path)) {
       await router.replace('/tours')
     }
   } catch {

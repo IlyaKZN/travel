@@ -30,7 +30,7 @@ async function submit() {
   loading.value = true
   try {
     await authApi.register(contact.value, password.value)
-    router.push('/confirm')
+    router.push('/auth/verify')
   } catch (e) {
     error.value = e instanceof ApiError ? e.message : 'Ошибка регистрации'
   } finally {
@@ -71,7 +71,7 @@ async function submit() {
 
         <p class="mt-4 text-center text-sm text-slate-500 dark:text-slate-400">
           Уже есть аккаунт?
-          <RouterLink to="/login" class="font-medium text-brand-600 hover:underline">Войти</RouterLink>
+          <RouterLink to="/auth/login" class="font-medium text-brand-600 hover:underline">Войти</RouterLink>
         </p>
       </form>
     </div>

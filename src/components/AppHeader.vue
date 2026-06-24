@@ -2,6 +2,7 @@
 import { watch, onUnmounted } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import PopupMenu from './PopupMenu.vue'
+import InfoDropdown from './InfoDropdown.vue'
 import ThemeToggle from './ThemeToggle.vue'
 import { isTelegram, setupBackButton } from '@/composables/useTelegram'
 
@@ -9,6 +10,7 @@ const props = defineProps<{
   title?: string
   showAuth?: boolean
   showBack?: boolean
+  infoMenu?: boolean
 }>()
 
 const router = useRouter()
@@ -54,7 +56,8 @@ onUnmounted(() => cleanupBack?.())
       </div>
       <div class="flex items-center gap-2">
         <ThemeToggle v-if="!isTelegram" />
-        <PopupMenu :show-auth="showAuth" />
+        <InfoDropdown v-if="infoMenu" />
+        <PopupMenu v-else :show-auth="showAuth" />
       </div>
     </div>
   </header>

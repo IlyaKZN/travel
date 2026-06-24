@@ -36,10 +36,10 @@ export const authApi = {
     })
   },
 
-  login(contact: string, password: string) {
+  login(contact: string, password: string, remember = false) {
     return api<AuthResponse>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ contact, password }),
+      body: JSON.stringify({ contact, password, remember }),
     }).then((res) => {
       setToken(res.token)
       return res
@@ -69,6 +69,10 @@ export const authApi = {
 }
 
 export const usersApi = {
+  get(id: string) {
+    return api<User>(`/users/${encodeURIComponent(id)}`)
+  },
+
   createProfile(data: {
     nickname: string
     firstName: string

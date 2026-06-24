@@ -9,20 +9,23 @@ import { routeParam } from '../utils/routeParam.js'
 
 const router = Router()
 
+const NICKNAME_MAX = 15
+const ABOUT_MAX = 200
+
 const profileSchema = z.object({
-  nickname: z.string().min(2),
+  nickname: z.string().min(1).max(NICKNAME_MAX),
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   patronymic: z.string().optional(),
   birthDate: z.string().min(1),
   avatar: z.string().optional(),
-  about: z.string().optional(),
+  about: z.string().max(ABOUT_MAX).optional(),
 })
 
 const settingsSchema = z.object({
-  nickname: z.string().min(2).optional(),
+  nickname: z.string().min(1).max(NICKNAME_MAX).optional(),
   avatar: z.string().optional(),
-  about: z.string().optional(),
+  about: z.string().max(ABOUT_MAX).optional(),
   showTours: z.boolean().optional(),
 })
 
@@ -56,7 +59,7 @@ router.post('/profile', authRequired, asyncHandler(async (req, res) => {
     where: { nickname: data.nickname, NOT: { id: user.id } },
   })
   if (nicknameTaken) {
-    res.status(409).json({ error: 'Никнейм уже занят' })
+    res.status(409).json({ error: 'Имя уже занято' })
     return
   }
 
@@ -84,14 +87,19 @@ router.patch('/me', authRequired, asyncHandler(async (req, res) => {
       where: { nickname: data.nickname, NOT: { id: user.id } },
     })
     if (nicknameTaken) {
-      res.status(409).json({ error: 'Никнейм уже занят' })
+      res.status(409).json({ error: 'Имя уже занято' })
       return
     }
   }
 
   const updated = await prisma.user.update({
     where: { id: user.id },
-    data,
+    data: {
+      ...data,
+      ...(data.avatar !== undefined && !data.avatar
+        ? { avatar: unsplashAvatar('1507003211169-0a1dd7228f2d') }
+        : {}),
+    },
   })
   res.json(publicUser(toDbUser(updated)))
 }))

@@ -44,6 +44,7 @@ export interface Tour {
 
 export interface Trip {
   id: string
+  tripNumber?: number
   creatorId: string
   creatorName: string
   creatorAvatar: string

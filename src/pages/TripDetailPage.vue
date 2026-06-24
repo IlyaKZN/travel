@@ -3,10 +3,11 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
 import { useStore } from '@/composables/useStore'
-import { formatDateTime, formatPrice, locationTypeLabels } from '@/utils/format'
+import { formatDateTime, formatPrice, formatSpots, locationTypeLabels } from '@/utils/format'
 import type { Trip } from '@/types'
 import { ApiError, getToken } from '@/api/client'
 import { chatsApi } from '@/api'
+import { defaultAvatar } from '@/utils/unsplash'
 
 const route = useRoute()
 const router = useRouter()
@@ -40,7 +41,7 @@ async function signUp() {
 async function openTripChat() {
   if (!trip.value) return
   if (!getToken()) {
-    router.push('/login')
+    router.push('/auth/login')
     return
   }
   error.value = ''
@@ -55,7 +56,7 @@ async function openTripChat() {
 
 <template>
   <div v-if="trip" class="page-shell">
-    <AppHeader :title="`Поездка №${trip.id}`" show-back />
+    <AppHeader :title="`Поездка №${trip.tripNumber ?? trip.id}`" show-back />
 
     <div class="page-container py-6">
       <div v-if="error" class="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">{{ error }}</div>
@@ -71,6 +72,10 @@ async function openTripChat() {
             class="aspect-[16/10] w-full object-cover"
             :class="i === 0 && trip.images.length > 1 ? 'sm:col-span-2' : ''"
           />
+        </div>
+
+        <div v-if="trip.video" class="border-t border-slate-100 dark:border-stone-800">
+          <video :src="trip.video" controls class="aspect-video w-full bg-black" />
         </div>
 
         <div class="p-6 sm:p-8">
@@ -89,12 +94,12 @@ async function openTripChat() {
             </div>
             <div class="text-right">
               <div class="text-2xl font-bold text-brand-600">{{ formatPrice(trip.price) }}</div>
-              <div class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ trip.freeSpots }}/{{ trip.maxParticipants }} мест</div>
+              <div class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ formatSpots(trip.freeSpots, trip.maxParticipants) }}</div>
             </div>
           </div>
 
           <div class="mt-6 flex items-center gap-3 border-t border-slate-100 pt-6 dark:border-stone-800">
-            <img :src="trip.creatorAvatar" :alt="trip.creatorName" class="h-10 w-10 rounded-full" />
+            <img :src="trip.creatorAvatar || defaultAvatar()" :alt="trip.creatorName" class="h-10 w-10 rounded-full object-cover" />
             <div>
               <div class="text-sm font-medium text-slate-900 dark:text-slate-100">{{ trip.creatorName }}</div>
               <div class="text-xs text-slate-500 dark:text-slate-400">Организатор поездки</div>

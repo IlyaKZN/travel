@@ -13,7 +13,7 @@ export function createApp() {
   const app = express()
 
   app.use(cors({ origin: config.corsOrigin, credentials: true }))
-  app.use(express.json({ limit: '10mb' }))
+  app.use(express.json({ limit: '50mb' }))
 
   app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() })

@@ -16,13 +16,13 @@ const loading = ref(false)
 
 onMounted(() => {
   contact.value = getPendingContact() || ''
-  if (!contact.value) router.replace('/register')
+  if (!contact.value) router.replace('/auth/register')
 })
 
 async function submit() {
   error.value = ''
-  if (code.value.length < 4) {
-    error.value = 'Введите код подтверждения (минимум 4 символа)'
+  if (code.value.length < 6) {
+    error.value = 'Введите 6-значный код подтверждения'
     return
   }
 
@@ -30,7 +30,7 @@ async function submit() {
   try {
     const res = await authApi.confirm(contact.value, code.value)
     await init()
-    router.push(res.needsProfile ? '/create-profile' : '/profile')
+    router.push(res.needsProfile ? '/profile/create' : '/profile/me')
   } catch (e) {
     error.value = e instanceof ApiError ? e.message : 'Ошибка подтверждения'
   } finally {
@@ -67,6 +67,7 @@ async function resend() {
           <input
             v-model="code"
             type="text"
+            inputmode="numeric"
             class="input-field text-center text-lg tracking-widest"
             placeholder="• • • • • •"
             maxlength="6"

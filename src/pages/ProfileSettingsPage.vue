@@ -4,26 +4,39 @@ import { useRouter } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
 import { useStore } from '@/composables/useStore'
 import { ApiError } from '@/api/client'
+import { fileToDataUrl, isGifFile } from '@/utils/files'
+import { defaultAvatar } from '@/utils/unsplash'
 
 const router = useRouter()
 const { user, updateUser } = useStore()
 
+const NICKNAME_MAX = 15
+const ABOUT_MAX = 200
+
 const nickname = ref(user.nickname)
 const about = ref(user.about || '')
 const showTours = ref(user.showTours)
-const avatarPreview = ref(user.avatar)
+const avatarPreview = ref(user.avatar || defaultAvatar())
 const error = ref('')
 const loading = ref(false)
 
-function onPhotoChange(e: Event) {
+async function onPhotoChange(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
-  if (file) {
-    avatarPreview.value = URL.createObjectURL(file)
+  if (!file) return
+  if (isGifFile(file)) {
+    error.value = 'GIF-файлы не поддерживаются. Используйте JPEG или PNG'
+    return
   }
+  error.value = ''
+  avatarPreview.value = await fileToDataUrl(file)
 }
 
 async function submit() {
   error.value = ''
+  if (nickname.value.length > NICKNAME_MAX) {
+    error.value = `Имя не должно превышать ${NICKNAME_MAX} символов`
+    return
+  }
   loading.value = true
   try {
     await updateUser({
@@ -32,7 +45,7 @@ async function submit() {
       showTours: showTours.value,
       avatar: avatarPreview.value,
     })
-    router.push('/profile')
+    router.push('/profile/me')
   } catch (e) {
     error.value = e instanceof ApiError ? e.message : 'Ошибка сохранения'
   } finally {
@@ -49,40 +62,45 @@ async function submit() {
       <form class="card mx-auto max-w-lg p-6 sm:p-8" @submit.prevent="submit">
         <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Настройки профиля</h1>
 
+        <div v-if="error" class="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">{{ error }}</div>
+
         <div class="mt-6 space-y-5">
-          <div class="flex flex-col items-center gap-3 sm:flex-row">
+          <div class="flex justify-center">
             <div class="relative">
               <img :src="avatarPreview" alt="Аватар" class="h-20 w-20 rounded-full object-cover ring-4 ring-slate-100" />
               <label class="absolute bottom-0 right-0 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-brand-600 text-white shadow">
                 <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
-                <input type="file" accept="image/*" class="hidden" @change="onPhotoChange" />
+                <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="onPhotoChange" />
               </label>
             </div>
-            <p class="text-sm text-slate-500 dark:text-slate-400">Изменить фото</p>
           </div>
 
           <div>
-            <label class="label-field">Никнейм</label>
-            <input v-model="nickname" type="text" class="input-field" required />
+            <label class="label-field">Имя</label>
+            <input v-model="nickname" type="text" class="input-field" :maxlength="NICKNAME_MAX" required />
+            <p class="mt-1 text-xs text-slate-400">{{ nickname.length }}/{{ NICKNAME_MAX }}</p>
           </div>
 
           <div>
             <label class="label-field">О себе</label>
-            <textarea v-model="about" rows="3" class="input-field resize-none" placeholder="Расскажите о себе..." />
+            <textarea v-model="about" rows="3" :maxlength="ABOUT_MAX" class="input-field resize-none" placeholder="Расскажите о себе..." />
+            <p class="mt-1 text-xs text-slate-400">{{ about.length }}/{{ ABOUT_MAX }}</p>
           </div>
 
           <label class="flex items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
             <input v-model="showTours" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500" />
             <div>
-              <div class="text-sm font-medium text-slate-900 dark:text-slate-100">Показывать мои туры</div>
-              <div class="text-xs text-slate-500 dark:text-slate-400">Туры будут видны в вашем профиле</div>
+              <div class="text-sm font-medium text-slate-900 dark:text-slate-100">Показывать мои поездки</div>
+              <div class="text-xs text-slate-500 dark:text-slate-400">Поездки будут видны в вашем профиле</div>
             </div>
           </label>
         </div>
 
-        <button type="submit" class="btn-primary mt-6 w-full">Сохранить</button>
+        <button type="submit" class="btn-primary mt-6 w-full" :disabled="loading">
+          {{ loading ? 'Сохранение…' : 'Сохранить изменения' }}
+        </button>
       </form>
     </div>
   </div>

@@ -41,8 +41,8 @@ export function useStore() {
     }
   }
 
-  async function login(contact: string, password: string) {
-    const { user: u } = await authApi.login(contact, password)
+  async function login(contact: string, password: string, remember = false) {
+    const { user: u } = await authApi.login(contact, password, remember)
     applyUser(u)
   }
 
@@ -103,6 +103,13 @@ export function useStore() {
     posts.value = posts.value.filter((p) => p.id !== id)
   }
 
+  async function updatePost(id: string, data: { text: string; image?: string }) {
+    const updated = await postsApi.update(id, data)
+    const idx = posts.value.findIndex((p) => p.id === id)
+    if (idx !== -1) posts.value[idx] = updated
+    return updated
+  }
+
   async function addTour(tour: Parameters<typeof toursApi.create>[0]) {
     const created = await toursApi.create(tour)
     tours.value.unshift(created)
@@ -149,6 +156,7 @@ export function useStore() {
     fetchTrips,
     addPost,
     deletePost,
+    updatePost,
     addTour,
     addTrip,
     getTour,

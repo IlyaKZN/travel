@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
 import { useStore } from '@/composables/useStore'
 import { ApiError } from '@/api/client'
 
 const router = useRouter()
+const route = useRoute()
 const { login } = useStore()
 
 const contact = ref('')
@@ -15,11 +16,9 @@ const error = ref('')
 const loading = ref(false)
 
 onMounted(() => {
-  const saved = localStorage.getItem('travels_remember')
+  const saved = localStorage.getItem('travels_remember_contact')
   if (saved) {
-    const data = JSON.parse(saved)
-    contact.value = data.contact || ''
-    password.value = data.password || ''
+    contact.value = saved
     remember.value = true
   }
 })
@@ -29,12 +28,13 @@ async function submit() {
   loading.value = true
   try {
     if (remember.value) {
-      localStorage.setItem('travels_remember', JSON.stringify({ contact: contact.value, password: password.value }))
+      localStorage.setItem('travels_remember_contact', contact.value)
     } else {
-      localStorage.removeItem('travels_remember')
+      localStorage.removeItem('travels_remember_contact')
     }
-    await login(contact.value, password.value)
-    router.push('/profile')
+    await login(contact.value, password.value, remember.value)
+    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/profile/me'
+    router.push(redirect)
   } catch (e) {
     error.value = e instanceof ApiError ? e.message : 'Ошибка входа'
   } finally {
@@ -65,7 +65,7 @@ async function submit() {
           </div>
           <label class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
             <input v-model="remember" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500" />
-            Запомнить почту и пароль
+            Запомнить меня
           </label>
         </div>
 
@@ -74,10 +74,10 @@ async function submit() {
         </button>
 
         <div class="mt-4 flex flex-col items-center gap-2 text-sm">
-          <RouterLink to="/reset-password" class="text-brand-600 hover:underline">Забыли пароль?</RouterLink>
+          <RouterLink to="/auth/recover" class="text-brand-600 hover:underline">Забыли пароль?</RouterLink>
           <p class="text-slate-500 dark:text-slate-400">
             Нет аккаунта?
-            <RouterLink to="/register" class="font-medium text-brand-600 hover:underline">Зарегистрироваться</RouterLink>
+            <RouterLink to="/auth/register" class="font-medium text-brand-600 hover:underline">Зарегистрироваться</RouterLink>
           </p>
         </div>
       </form>

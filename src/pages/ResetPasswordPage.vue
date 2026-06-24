@@ -30,7 +30,7 @@ async function submit() {
   loading.value = true
   try {
     await authApi.resetPassword(contact.value, password.value)
-    router.push('/login')
+    router.push('/auth/login')
   } catch (e) {
     error.value = e instanceof ApiError ? e.message : 'Ошибка сброса пароля'
   } finally {
@@ -66,7 +66,7 @@ async function submit() {
         </div>
 
         <button type="submit" class="btn-primary mt-6 w-full" :disabled="loading">
-          {{ loading ? 'Сохранение…' : 'Сохранить пароль' }}
+          {{ loading ? 'Сброс…' : 'Сбросить пароль' }}
         </button>
       </form>
     </div>

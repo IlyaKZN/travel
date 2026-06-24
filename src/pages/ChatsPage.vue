@@ -66,7 +66,7 @@ onMounted(() => {
 
 <template>
   <div class="page-shell">
-    <AppHeader title="Сообщения" show-back />
+    <AppHeader title="Чаты" show-back />
 
     <div class="page-container max-w-2xl">
       <div class="mb-4 flex items-center justify-between">
@@ -80,7 +80,7 @@ onMounted(() => {
 
       <div v-else-if="!conversations.length" class="card py-16 text-center">
         <p class="text-4xl">💬</p>
-        <p class="mt-3 text-stone-500 dark:text-stone-400">Пока нет сообщений</p>
+        <p class="mt-3 text-stone-500 dark:text-stone-400">Пока нет чатов</p>
         <button type="button" class="btn-primary mt-4" @click="showNewChat = true">Начать переписку</button>
       </div>
 
@@ -102,22 +102,20 @@ onMounted(() => {
             <div
               v-else
               class="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-brand-500 text-lg text-white"
+              :class="conv.type === 'trip' ? 'rounded-xl' : 'rounded-full'"
             >
               {{ conv.type === 'trip' ? '🚌' : '👤' }}
             </div>
-            <span
-              v-if="conv.type === 'trip'"
-              class="absolute -bottom-1 -right-1 rounded-full bg-brand-500 px-1.5 py-0.5 text-[10px] font-medium text-white"
-            >
-              {{ conv.participantCount }}
-            </span>
           </div>
           <div class="min-w-0 flex-1">
             <div class="flex items-center justify-between gap-2">
               <h3 class="truncate font-semibold text-stone-900 dark:text-stone-100">{{ conv.title }}</h3>
               <span class="shrink-0 text-xs text-stone-400">{{ formatPreview(conv.lastMessageAt) }}</span>
             </div>
-            <p v-if="conv.subtitle" class="truncate text-xs text-stone-500 dark:text-stone-400">{{ conv.subtitle }}</p>
+            <p v-if="conv.type === 'trip' && conv.participantCount" class="truncate text-xs text-stone-500 dark:text-stone-400">
+              {{ conv.participantCount }} участников
+            </p>
+            <p v-else-if="conv.subtitle" class="truncate text-xs text-stone-500 dark:text-stone-400">{{ conv.subtitle }}</p>
             <p v-if="conv.lastMessage" class="truncate text-sm text-stone-500 dark:text-stone-400">{{ conv.lastMessage }}</p>
           </div>
         </RouterLink>
@@ -129,7 +127,7 @@ onMounted(() => {
         <div v-if="showNewChat" class="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center" @click.self="showNewChat = false">
           <div class="flex max-h-[80vh] w-full max-w-md flex-col rounded-t-2xl bg-white dark:bg-stone-900 sm:rounded-2xl">
             <div class="border-b border-stone-200 p-4 dark:border-stone-700">
-              <h3 class="text-lg font-semibold text-stone-900 dark:text-stone-100">Новое сообщение</h3>
+              <h3 class="text-lg font-semibold text-stone-900 dark:text-stone-100">Новый чат</h3>
               <input
                 v-model="userSearch"
                 type="text"

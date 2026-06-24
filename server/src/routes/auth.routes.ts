@@ -31,6 +31,7 @@ const confirmSchema = z.object({
 const loginSchema = z.object({
   contact: z.string().min(3),
   password: z.string().min(1),
+  remember: z.boolean().optional(),
 })
 
 const resetSchema = z.object({
@@ -96,7 +97,7 @@ router.post('/confirm', asyncHandler(async (req, res) => {
 }))
 
 router.post('/login', asyncHandler(async (req, res) => {
-  const { contact, password } = loginSchema.parse(req.body)
+  const { contact, password, remember } = loginSchema.parse(req.body)
   const normalized = contact.trim().toLowerCase()
   const user = await prisma.user.findUnique({ where: { contact: normalized } })
 
@@ -105,7 +106,8 @@ router.post('/login', asyncHandler(async (req, res) => {
     return
   }
 
-  res.json({ token: signToken(user.id), user: publicUser(toDbUser(user)) })
+  const expiresIn = remember ? '30d' : '7d'
+  res.json({ token: signToken(user.id, expiresIn), user: publicUser(toDbUser(user)) })
 }))
 
 router.post('/telegram', asyncHandler(async (req, res) => {

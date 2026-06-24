@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
 import { useStore } from '@/composables/useStore'
 import { defaultAvatar } from '@/utils/unsplash'
+import { fileToDataUrl, isGifFile } from '@/utils/files'
 import { ApiError } from '@/api/client'
 
 const router = useRouter()
-const { createProfile } = useStore()
+const { createProfile, user } = useStore()
 
+const NICKNAME_MAX = 15
+const ABOUT_MAX = 200
 const nickname = ref('')
 const lastName = ref('')
 const firstName = ref('')
@@ -19,17 +22,32 @@ const avatarPreview = ref('')
 const error = ref('')
 const loading = ref(false)
 
+onMounted(() => {
+  if (user.profileComplete) {
+    router.replace('/profile/me')
+  }
+})
+
 function onPhotoChange(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
-  if (file) {
-    avatarPreview.value = URL.createObjectURL(file)
+  if (!file) return
+  if (isGifFile(file)) {
+    error.value = 'GIF-файлы не поддерживаются. Используйте JPEG или PNG'
+    return
   }
+  fileToDataUrl(file).then((url) => {
+    avatarPreview.value = url
+  })
 }
 
 async function submit() {
   error.value = ''
-  if (!nickname.value || !lastName.value || !firstName.value || !birthDate.value) {
+  if (!nickname.value || nickname.value.length < 1 || !lastName.value || !firstName.value || !birthDate.value) {
     error.value = 'Заполните обязательные поля'
+    return
+  }
+  if (nickname.value.length > NICKNAME_MAX) {
+    error.value = `Имя не должно превышать ${NICKNAME_MAX} символов`
     return
   }
   loading.value = true
@@ -43,7 +61,7 @@ async function submit() {
       about: about.value || undefined,
       avatar: avatarPreview.value || defaultAvatar(),
     })
-    router.push('/profile')
+    router.push('/profile/me')
   } catch (e) {
     error.value = e instanceof ApiError ? e.message : 'Ошибка сохранения профиля'
   } finally {
@@ -76,15 +94,16 @@ async function submit() {
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                <input type="file" accept="image/*" class="hidden" @change="onPhotoChange" />
+                <input type="file" accept="image/jpeg,image/png" class="hidden" @change="onPhotoChange" />
               </label>
             </div>
             <p class="text-sm text-slate-500 dark:text-slate-400">Загрузите фото профиля</p>
           </div>
 
           <div>
-            <label class="label-field">Никнейм *</label>
-            <input v-model="nickname" type="text" class="input-field" placeholder="@username" required />
+            <label class="label-field">Имя в профиле *</label>
+            <input v-model="nickname" type="text" class="input-field" placeholder="Как вас называть" :maxlength="NICKNAME_MAX" required />
+            <p class="mt-1 text-xs text-slate-400">{{ nickname.length }}/{{ NICKNAME_MAX }}</p>
           </div>
           <div class="grid gap-4 sm:grid-cols-2">
             <div>
@@ -106,7 +125,8 @@ async function submit() {
           </div>
           <div>
             <label class="label-field">О себе</label>
-            <textarea v-model="about" rows="3" class="input-field resize-none" placeholder="Расскажите о себе..." />
+            <textarea v-model="about" rows="3" :maxlength="ABOUT_MAX" class="input-field resize-none" placeholder="Расскажите о себе..." />
+            <p class="mt-1 text-xs text-slate-400">{{ about.length }}/{{ ABOUT_MAX }}</p>
           </div>
         </div>
 
