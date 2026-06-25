@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs'
 import jwt, { type SignOptions } from 'jsonwebtoken'
 import type { DbUser } from '../types/index.js'
 import { config } from '../config.js'
+import { publicFrontendUser } from './frontendAdapters.js'
 
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 10)
@@ -29,19 +30,17 @@ export function generateConfirmCode(): string {
 }
 
 export function publicUser(user: DbUser) {
+  const frontendUser = publicFrontendUser(user)
   return {
     id: user.id,
     nickname: user.nickname,
-    firstName: user.firstName,
+    firstName: frontendUser.firstName,
     lastName: user.lastName,
-    patronymic: user.patronymic,
-    birthDate: user.birthDate,
-    avatar: user.avatar || unsplashAvatar('1507003211169-0a1dd7228f2d'),
-    about: user.about,
-    showTours: user.showTours,
-    following: user.following,
-    followers: user.followers,
-    profileComplete: user.profileComplete,
+    avatarColor: frontendUser.avatarColor,
+    bio: frontendUser.bio,
+    location: frontendUser.location,
+    joinedYear: frontendUser.joinedYear,
+    email: frontendUser.email,
   }
 }
 

@@ -3,12 +3,13 @@ import { z } from 'zod'
 import { v4 as uuid } from 'uuid'
 import type { Trip } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
-import { toDbTrip } from '../utils/serializers.js'
 import { authOptional, authRequired } from '../middleware/auth.js'
-import { creatorLabel, detectLocationType, tripDisplayNumber, unsplash, unsplashAvatar } from '../utils/helpers.js'
+import { detectLocationType, publicUser, unsplash } from '../utils/helpers.js'
 import { addUserToTripChat, createTripConversation } from '../services/chat.service.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { routeParam } from '../utils/routeParam.js'
+import { normalizeTransport, splitTripLocation } from '../utils/frontendAdapters.js'
+import { toDbUser } from '../utils/serializers.js'
 
 const router = Router()
 
@@ -17,42 +18,54 @@ const PARTICIPANTS_MAX = 10
 const PRICE_MAX = 9_999_999
 
 const tripSchema = z.object({
-  location: z.string().min(1).max(LOCATION_MAX),
-  shortDescription: z.string().min(1),
-  maxParticipants: z.number().int().positive().max(PARTICIPANTS_MAX),
-  price: z.number().nonnegative().max(PRICE_MAX),
-  fullPlan: z.string().min(1),
-  startDate: z.string().min(1),
-  endDate: z.string().min(1),
+  from: z.string().min(1).max(LOCATION_MAX),
+  to: z.string().min(1).max(LOCATION_MAX),
+  startAt: z.string().min(1),
+  endAt: z.string().min(1),
   transport: z.string().min(1),
+  seats: z.number().int().positive().max(PARTICIPANTS_MAX),
+  budget: z.number().nonnegative().max(PRICE_MAX).default(0),
+  description: z.string().min(1),
+  info: z.string().optional(),
   images: z.array(z.string()).max(10).default([]),
   video: z.string().optional(),
   isClosed: z.boolean().default(false),
   isDraft: z.boolean().default(false),
 })
 
-const tripOrder = [{ createdAt: 'asc' as const }, { id: 'asc' as const }]
+async function toFrontendTrip(trip: Trip) {
+  const [organizer, signups] = await Promise.all([
+    prisma.user.findUnique({ where: { id: trip.creatorId } }),
+    prisma.tripSignup.findMany({
+      where: { tripId: trip.id },
+      include: { user: true },
+    }),
+  ])
+  const { from, to } = splitTripLocation(trip.location)
+  const participantIds = [trip.creatorId, ...signups.map((signup) => signup.userId)]
+  const participants = [
+    ...(organizer ? [publicUser(toDbUser(organizer))] : []),
+    ...signups.map((signup) => publicUser(toDbUser(signup.user))),
+  ]
+  const seats = trip.maxParticipants
+  const taken = Math.min(seats, Math.max(participantIds.length, seats - trip.freeSpots))
 
-async function buildTripNumberMap(): Promise<Map<string, number>> {
-  const allTrips = await prisma.trip.findMany({
-    where: { isDraft: false },
-    orderBy: tripOrder,
-    select: { id: true },
-  })
-  const map = new Map<string, number>()
-  allTrips.forEach((t, index) => map.set(t.id, tripDisplayNumber(t.id, index + 1)))
-  return map
-}
-
-async function enrichTrip(trip: Trip, tripNumbers?: Map<string, number>) {
-  const creator = await prisma.user.findUnique({ where: { id: trip.creatorId } })
-  const dbTrip = toDbTrip(trip)
-  const numbers = tripNumbers ?? await buildTripNumberMap()
   return {
-    ...dbTrip,
-    tripNumber: numbers.get(trip.id) ?? tripDisplayNumber(trip.id, 0),
-    creatorName: creator ? creatorLabel(creator) : 'Неизвестно',
-    creatorAvatar: creator?.avatar || unsplashAvatar('1507003211169-0a1dd7228f2d'),
+    id: trip.id,
+    from,
+    to,
+    startAt: trip.startDate.toISOString(),
+    endAt: trip.endDate.toISOString(),
+    transport: normalizeTransport(trip.transport),
+    seats,
+    taken,
+    budget: trip.price,
+    organizerId: trip.creatorId,
+    organizer: organizer ? publicUser(toDbUser(organizer)) : undefined,
+    participantIds,
+    participants,
+    description: trip.shortDescription,
+    info: trip.fullPlan,
   }
 }
 
@@ -81,8 +94,7 @@ router.get('/', authOptional, asyncHandler(async (req, res) => {
     )
   }
 
-  const tripNumbers = await buildTripNumberMap()
-  res.json(await Promise.all(trips.map((t) => enrichTrip(t, tripNumbers))))
+  res.json(await Promise.all(trips.map(toFrontendTrip)))
 }))
 
 router.get('/:id', asyncHandler(async (req, res) => {
@@ -94,14 +106,15 @@ router.get('/:id', asyncHandler(async (req, res) => {
     res.status(404).json({ error: 'Поездка не найдена' })
     return
   }
-  res.json(await enrichTrip(trip))
+  res.json(await toFrontendTrip(trip))
 }))
 
 router.post('/', authRequired, asyncHandler(async (req, res) => {
   const data = tripSchema.parse(req.body)
+  const location = `${data.from.trim()} → ${data.to.trim()}`
 
-  const start = new Date(data.startDate)
-  const end = new Date(data.endDate)
+  const start = new Date(data.startAt)
+  const end = new Date(data.endAt)
   if (start < new Date()) {
     res.status(400).json({ error: 'Дата начала не может быть в прошлом' })
     return
@@ -115,16 +128,16 @@ router.post('/', authRequired, asyncHandler(async (req, res) => {
     data: {
       id: uuid(),
       creatorId: req.userId!,
-      location: data.location,
-      locationType: detectLocationType(data.location),
-      shortDescription: data.shortDescription,
-      fullPlan: data.fullPlan,
-      maxParticipants: data.maxParticipants,
-      freeSpots: data.maxParticipants,
-      price: data.price,
+      location,
+      locationType: detectLocationType(location),
+      shortDescription: data.description,
+      fullPlan: data.info?.trim() || data.description,
+      maxParticipants: data.seats,
+      freeSpots: Math.max(0, data.seats - 1),
+      price: data.budget,
       startDate: start,
       endDate: end,
-      transport: data.transport,
+      transport: normalizeTransport(data.transport),
       images: data.images.length ? data.images : [unsplash('1488646953015-85cb44e25828')],
       video: data.video,
       isClosed: data.isClosed,
@@ -132,7 +145,7 @@ router.post('/', authRequired, asyncHandler(async (req, res) => {
     },
   })
   await createTripConversation(trip.id)
-  res.status(201).json(await enrichTrip(trip))
+  res.status(201).json(await toFrontendTrip(trip))
 }))
 
 router.post('/:id/signup', authRequired, asyncHandler(async (req, res) => {
@@ -166,7 +179,7 @@ router.post('/:id/signup', authRequired, asyncHandler(async (req, res) => {
   ])
 
   await addUserToTripChat(trip.id, req.userId!)
-  res.json({ message: 'Вы записаны на поездку', trip: await enrichTrip(updatedTrip) })
+  res.json(await toFrontendTrip(updatedTrip))
 }))
 
 export default router

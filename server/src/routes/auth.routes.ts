@@ -19,8 +19,11 @@ import { asyncHandler } from '../utils/asyncHandler.js'
 const router = Router()
 
 const registerSchema = z.object({
-  contact: z.string().min(3),
+  contact: z.string().min(3).optional(),
+  email: z.string().min(3).optional(),
   password: z.string().min(6),
+  firstName: z.string().min(1).optional(),
+  lastName: z.string().optional(),
 })
 
 const confirmSchema = z.object({
@@ -29,7 +32,8 @@ const confirmSchema = z.object({
 })
 
 const loginSchema = z.object({
-  contact: z.string().min(3),
+  contact: z.string().min(3).optional(),
+  email: z.string().min(3).optional(),
   password: z.string().min(1),
   remember: z.boolean().optional(),
 })
@@ -39,9 +43,20 @@ const resetSchema = z.object({
   password: z.string().min(6),
 })
 
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(6),
+})
+
 router.post('/register', asyncHandler(async (req, res) => {
-  const { contact, password } = registerSchema.parse(req.body)
-  const normalized = contact.trim().toLowerCase()
+  const { contact, email, password, firstName, lastName } = registerSchema.parse(req.body)
+  const rawContact = contact ?? email
+  if (!rawContact) {
+    res.status(400).json({ error: 'Укажите email, телефон или contact' })
+    return
+  }
+  const hasFrontendProfile = firstName !== undefined
+  const normalized = rawContact.trim().toLowerCase()
 
   const existing = await prisma.user.findUnique({ where: { contact: normalized } })
   if (existing) {
@@ -50,6 +65,26 @@ router.post('/register', asyncHandler(async (req, res) => {
   }
 
   const passwordHash = await hashPassword(password)
+  if (hasFrontendProfile) {
+    const user = await prisma.user.create({
+      data: {
+        id: uuid(),
+        contact: normalized,
+        passwordHash,
+        firstName: firstName.trim(),
+        lastName: lastName?.trim() ?? '',
+        nickname: normalized.split('@')[0].slice(0, 15),
+        profileComplete: true,
+      },
+    })
+    res.status(201).json({
+      token: signToken(user.id),
+      user: publicUser(toDbUser(user)),
+      needsProfile: false,
+    })
+    return
+  }
+
   const confirmCode = generateConfirmCode()
   const expiresAt = new Date(Date.now() + config.confirmCodeTtlMs)
 
@@ -97,8 +132,13 @@ router.post('/confirm', asyncHandler(async (req, res) => {
 }))
 
 router.post('/login', asyncHandler(async (req, res) => {
-  const { contact, password, remember } = loginSchema.parse(req.body)
-  const normalized = contact.trim().toLowerCase()
+  const { contact, email, password, remember } = loginSchema.parse(req.body)
+  const rawContact = contact ?? email
+  if (!rawContact) {
+    res.status(400).json({ error: 'Укажите email, телефон или contact' })
+    return
+  }
+  const normalized = rawContact.trim().toLowerCase()
   const user = await prisma.user.findUnique({ where: { contact: normalized } })
 
   if (!user || !(await comparePassword(password, user.passwordHash))) {
@@ -173,6 +213,21 @@ router.post('/reset-password', asyncHandler(async (req, res) => {
   await prisma.user.update({
     where: { id: user.id },
     data: { passwordHash: await hashPassword(password) },
+  })
+  res.json({ message: 'Пароль обновлён' })
+}))
+
+router.patch('/password', authRequired, asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = changePasswordSchema.parse(req.body)
+  const user = await prisma.user.findUnique({ where: { id: req.userId } })
+  if (!user || !(await comparePassword(currentPassword, user.passwordHash))) {
+    res.status(400).json({ error: 'Текущий пароль указан неверно' })
+    return
+  }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { passwordHash: await hashPassword(newPassword) },
   })
   res.json({ message: 'Пароль обновлён' })
 }))

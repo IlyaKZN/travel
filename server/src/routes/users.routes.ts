@@ -24,10 +24,31 @@ const profileSchema = z.object({
 
 const settingsSchema = z.object({
   nickname: z.string().min(1).max(NICKNAME_MAX).optional(),
+  firstName: z.string().min(1).optional(),
+  lastName: z.string().optional(),
   avatar: z.string().optional(),
   about: z.string().max(ABOUT_MAX).optional(),
+  bio: z.string().max(ABOUT_MAX).optional(),
+  location: z.string().optional(),
+  email: z.string().optional(),
+  phone: z.string().optional(),
+  age: z.union([z.string(), z.number()]).optional(),
   showTours: z.boolean().optional(),
 })
+
+const reviewSchema = z.object({
+  text: z.string().min(1).max(500),
+})
+
+const reviewsByUser = new Map<string, Array<{ id: string; authorId: string; text: string; at: string }>>()
+
+router.get('/', asyncHandler(async (_req, res) => {
+  const users = await prisma.user.findMany({
+    where: { profileComplete: true },
+    orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+  })
+  res.json(users.map((user) => publicUser(toDbUser(user))))
+}))
 
 router.get('/me', authRequired, asyncHandler(async (req, res) => {
   const user = await prisma.user.findUnique({ where: { id: req.userId } })
@@ -36,6 +57,32 @@ router.get('/me', authRequired, asyncHandler(async (req, res) => {
     return
   }
   res.json(publicUser(toDbUser(user)))
+}))
+
+router.get('/:id/reviews', asyncHandler(async (req, res) => {
+  const userId = routeParam(req.params.id)
+  const reviews = reviewsByUser.get(userId) ?? []
+  res.json(reviews)
+}))
+
+router.post('/:id/reviews', authRequired, asyncHandler(async (req, res) => {
+  const userId = routeParam(req.params.id)
+  const user = await prisma.user.findUnique({ where: { id: userId } })
+  if (!user) {
+    res.status(404).json({ error: 'Пользователь не найден' })
+    return
+  }
+
+  const { text } = reviewSchema.parse(req.body)
+  const review = {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    authorId: req.userId!,
+    text: text.trim(),
+    at: new Date().toISOString(),
+  }
+  const reviews = reviewsByUser.get(userId) ?? []
+  reviewsByUser.set(userId, [review, ...reviews])
+  res.status(201).json(review)
 }))
 
 router.get('/:id', asyncHandler(async (req, res) => {
@@ -76,6 +123,7 @@ router.post('/profile', authRequired, asyncHandler(async (req, res) => {
 
 router.patch('/me', authRequired, asyncHandler(async (req, res) => {
   const data = settingsSchema.parse(req.body)
+  const { bio, location, email, phone: _phone, age, ...dbData } = data
   const user = await prisma.user.findUnique({ where: { id: req.userId } })
   if (!user) {
     res.status(404).json({ error: 'Пользователь не найден' })
@@ -92,11 +140,23 @@ router.patch('/me', authRequired, asyncHandler(async (req, res) => {
     }
   }
 
+  if (email && email.trim().toLowerCase() !== user.contact) {
+    const contactTaken = await prisma.user.findUnique({ where: { contact: email.trim().toLowerCase() } })
+    if (contactTaken) {
+      res.status(409).json({ error: 'Email уже занят' })
+      return
+    }
+  }
+
   const updated = await prisma.user.update({
     where: { id: user.id },
     data: {
-      ...data,
-      ...(data.avatar !== undefined && !data.avatar
+      ...dbData,
+      ...(email ? { contact: email.trim().toLowerCase() } : {}),
+      ...(bio !== undefined ? { about: bio } : {}),
+      ...(location !== undefined ? { patronymic: location } : {}),
+      ...(age !== undefined ? { birthDate: String(age) } : {}),
+      ...(dbData.avatar !== undefined && !dbData.avatar
         ? { avatar: unsplashAvatar('1507003211169-0a1dd7228f2d') }
         : {}),
     },

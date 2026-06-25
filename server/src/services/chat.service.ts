@@ -7,6 +7,7 @@ import {
   toDbUser,
 } from '../utils/serializers.js'
 import type { DbConversation, DbMessage, DbUser } from '../types/index.js'
+import { avatarColor, publicFrontendUser, splitTripLocation } from '../utils/frontendAdapters.js'
 
 export async function isTripParticipant(tripId: string, userId: string): Promise<boolean> {
   const trip = await prisma.trip.findUnique({ where: { id: tripId } })
@@ -164,17 +165,17 @@ export async function getOrCreateTripChat(tripId: string, userId: string): Promi
 export async function enrichConversation(conversation: DbConversation, currentUserId: string) {
   if (conversation.type === 'trip' && conversation.tripId) {
     const trip = await prisma.trip.findUnique({ where: { id: conversation.tripId } })
+    const route = trip ? splitTripLocation(trip.location) : null
+    const title = route ? `${route.from} → ${route.to}` : 'Чат поездки'
     return {
       id: conversation.id,
-      type: conversation.type,
+      kind: 'group',
       tripId: conversation.tripId,
-      title: trip ? `Поездка: ${trip.location}` : 'Чат поездки',
-      subtitle: trip?.shortDescription,
-      avatar: trip?.images[0],
+      title,
       participantIds: conversation.participantIds,
-      participantCount: conversation.participantIds.length,
-      lastMessage: conversation.lastMessageText,
-      lastMessageAt: conversation.lastMessageAt,
+      preview: conversation.lastMessageText ?? 'Пока нет сообщений',
+      unread: 0,
+      lastAt: conversation.lastMessageAt,
     }
   }
 
@@ -183,36 +184,22 @@ export async function enrichConversation(conversation: DbConversation, currentUs
 
   return {
     id: conversation.id,
-    type: conversation.type,
-    title: other ? `@${other.nickname}` : 'Личные сообщения',
-    subtitle: other ? `${other.firstName} ${other.lastName}` : undefined,
-    avatar: other?.avatar,
-    otherUser: other
-      ? {
-          id: other.id,
-          nickname: other.nickname,
-          firstName: other.firstName,
-          lastName: other.lastName,
-          avatar: other.avatar,
-        }
-      : undefined,
+    kind: 'dm',
+    title: other ? `${other.firstName} ${other.lastName}`.trim() || `@${other.nickname}` : 'Личные сообщения',
+    otherUser: other ? publicFrontendUser(toDbUser(other)) : undefined,
     participantIds: conversation.participantIds,
-    lastMessage: conversation.lastMessageText,
-    lastMessageAt: conversation.lastMessageAt,
+    preview: conversation.lastMessageText ?? 'Пока нет сообщений',
+    unread: 0,
+    lastAt: conversation.lastMessageAt,
   }
 }
 
 export async function enrichMessage(message: DbMessage) {
-  const sender = await prisma.user.findUnique({ where: { id: message.senderId } })
   return {
     id: message.id,
-    conversationId: message.conversationId,
-    senderId: message.senderId,
+    authorId: message.senderId,
     text: message.text,
-    createdAt: message.createdAt,
-    senderName: sender ? `${sender.firstName} ${sender.lastName[0]}.` : 'Пользователь',
-    senderAvatar: sender?.avatar ?? '',
-    senderNickname: sender?.nickname ?? '',
+    at: message.createdAt,
   }
 }
 
@@ -261,5 +248,7 @@ export function publicUserBrief(user: DbUser) {
     firstName: user.firstName,
     lastName: user.lastName,
     avatar: user.avatar,
+    avatarColor: avatarColor(user.avatar || user.id),
+    bio: user.about ?? '',
   }
 }
