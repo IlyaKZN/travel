@@ -1,0 +1,200 @@
+.trip-card {
+  display: block;
+  min-width: 0;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 1.75rem;
+  padding: 1.25rem;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+@media (min-width: 1024px) {
+  .trip-card {
+    padding: 1.5rem;
+  }
+}
+
+.trip-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lift);
+}
+
+.trip-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.trip-card__route-wrap {
+  min-width: 0;
+}
+
+.trip-card__route {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.trip-card__city {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--foreground);
+}
+
+@media (min-width: 1024px) {
+  .trip-card__city {
+    font-size: 1.25rem;
+  }
+}
+
+.trip-card__arrow {
+  flex-shrink: 0;
+  color: color-mix(in oklab, var(--muted-foreground) 40%, transparent);
+}
+
+.trip-card__date {
+  margin-top: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted-foreground);
+}
+
+.trip-card__icon-wrap {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  padding: 0.625rem;
+  border-radius: 0.75rem;
+}
+
+.trip-card__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-top: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+  padding-top: 1rem;
+}
+
+.trip-card__organizer {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.trip-card__organizer-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  box-shadow: 0 0 0 4px var(--background);
+}
+
+.trip-card__organizer-info {
+  min-width: 0;
+}
+
+.trip-card__organizer-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trip-card__organizer-role {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trip-card__badges {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.trip-card__budget-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: var(--secondary);
+  padding: 0.375rem 0.75rem;
+}
+
+.trip-card__budget-badge span {
+  white-space: nowrap;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  color: var(--foreground);
+}
+
+.trip-card__seats-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 9999px;
+  background: var(--secondary);
+  padding: 0.375rem 0.75rem;
+}
+
+.trip-card__seats-badge--fresh {
+  background: #fff7ed;
+}
+
+.trip-card__seats-dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 9999px;
+  background: color-mix(in oklab, var(--muted-foreground) 40%, transparent);
+}
+
+.trip-card__seats-dot--pulse {
+  background: oklch(0.62 0.17 38);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.trip-card__seats-text {
+  white-space: nowrap;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted-foreground);
+}
+
+.trip-card__seats-badge--fresh .trip-card__seats-text {
+  color: oklch(0.45 0.17 35);
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}

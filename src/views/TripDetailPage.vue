@@ -1,0 +1,258 @@
+<script setup lang="ts">
+import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Calendar,
+  Clock,
+  Users,
+  Wallet,
+  Car,
+  Train,
+  Bus,
+  Plane,
+  MessageCircle,
+} from "lucide-vue-next";
+import { computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import AppShell from "@/components/AppShell.vue";
+import TripAvatar from "@/components/TripAvatar.vue";
+import { api, getToken, transportLabel, type TransportType } from "@/lib/api";
+import { formatDateTime, formatBudget } from "@/lib/format";
+
+const transportMeta: Record<TransportType, { icon: typeof Car; modifier: string }> = {
+  car: { icon: Car, modifier: "transport-icon--car" },
+  train: { icon: Train, modifier: "transport-icon--train" },
+  bus: { icon: Bus, modifier: "transport-icon--bus" },
+  plane: { icon: Plane, modifier: "transport-icon--plane" },
+};
+
+const route = useRoute();
+const router = useRouter();
+const tripId = computed(() => route.params.tripId as string);
+const queryClient = useQueryClient();
+
+const tripQuery = useQuery({
+  queryKey: computed(() => ["trip", tripId.value]),
+  queryFn: () => api.trip(tripId.value),
+});
+const meQuery = useQuery({
+  queryKey: ["me"],
+  queryFn: api.me,
+  enabled: Boolean(getToken()),
+  retry: false,
+});
+
+const joinMutation = useMutation({
+  mutationFn: () => api.joinTrip(tripId.value),
+  onSuccess: async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["trips"] }),
+      queryClient.invalidateQueries({ queryKey: ["trip", tripId.value] }),
+      queryClient.invalidateQueries({ queryKey: ["chats"] }),
+    ]);
+    const chat = await api.tripChat(tripId.value);
+    router.push({ name: "chat", params: { chatId: chat.id } });
+  },
+});
+
+const openTripChatMutation = useMutation({
+  mutationFn: () => api.tripChat(tripId.value),
+  onSuccess: (chat) => router.push({ name: "chat", params: { chatId: chat.id } }),
+});
+
+const trip = computed(() => tripQuery.data.value);
+const organizer = computed(
+  () => trip.value?.organizer ?? trip.value?.participants?.find((p) => p.id === trip.value?.organizerId),
+);
+const participants = computed(
+  () => trip.value?.participants?.filter((p) => p.id !== trip.value?.organizerId) ?? [],
+);
+const isMember = computed(() =>
+  meQuery.data.value ? trip.value?.participantIds.includes(meQuery.data.value.id) : false,
+);
+const tMeta = computed(() => (trip.value ? transportMeta[trip.value.transport] : transportMeta.car));
+
+function handleCta() {
+  if (!getToken()) {
+    router.push("/auth");
+    return;
+  }
+  if (isMember.value) openTripChatMutation.mutate();
+  else joinMutation.mutate();
+}
+</script>
+
+<template>
+  <AppShell>
+    <div v-if="tripQuery.isLoading.value" class="state-box">Загружаем поездку...</div>
+    <div v-else-if="!trip" class="state-box">Поездка не найдена</div>
+
+    <template v-else>
+      <section class="hero">
+        <div class="hero__glow hero__glow--white" />
+        <div class="hero__glow hero__glow--amber" style="right: 0; left: auto; bottom: -6rem; top: auto" />
+        <div class="container" style="position: relative; padding-top: 1rem; padding-bottom: 1.5rem">
+          <button type="button" class="trip-detail__back" @click="router.back()">
+            <ArrowLeft class="icon icon--sm" :stroke-width="2.5" /> Назад
+          </button>
+
+          <div class="trip-detail__hero-row">
+            <div class="trip-detail__avatar-wrap">
+              <TripAvatar :from="trip.from" :to="trip.to" :size="56" />
+            </div>
+            <div style="min-width: 0">
+              <h1 class="trip-detail__route-title">
+                <span class="trip-detail__route-cities">
+                  <span>{{ trip.from }}</span>
+                  <ArrowRight class="icon" :stroke-width="2.25" />
+                  <span class="trip-detail__route-to">{{ trip.to }}</span>
+                </span>
+              </h1>
+              <p class="trip-detail__route-date">{{ formatDateTime(trip.startAt) }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="container trip-detail__content">
+        <div class="trip-detail__stats">
+          <div class="trip-detail__stat">
+            <div class="trip-detail__stat-row">
+              <span class="trip-detail__stat-icon trip-detail__stat-icon--orange">
+                <Calendar class="icon icon--sm" :stroke-width="2.25" />
+              </span>
+              <div style="min-width: 0">
+                <div class="trip-detail__stat-label">Начало</div>
+                <div class="trip-detail__stat-value">{{ formatDateTime(trip.startAt) }}</div>
+              </div>
+            </div>
+          </div>
+          <div class="trip-detail__stat">
+            <div class="trip-detail__stat-row">
+              <span class="trip-detail__stat-icon trip-detail__stat-icon--rose">
+                <Clock class="icon icon--sm" :stroke-width="2.25" />
+              </span>
+              <div style="min-width: 0">
+                <div class="trip-detail__stat-label">Окончание</div>
+                <div class="trip-detail__stat-value">{{ formatDateTime(trip.endAt) }}</div>
+              </div>
+            </div>
+          </div>
+          <div class="trip-detail__stat">
+            <div class="trip-detail__stat-row">
+              <span :class="['trip-detail__stat-icon', tMeta.modifier]">
+                <component :is="tMeta.icon" class="icon icon--sm" :stroke-width="2.25" />
+              </span>
+              <div style="min-width: 0">
+                <div class="trip-detail__stat-label">Транспорт</div>
+                <div class="trip-detail__stat-value">{{ transportLabel[trip.transport] }}</div>
+              </div>
+            </div>
+          </div>
+          <div class="trip-detail__stat">
+            <div class="trip-detail__stat-row">
+              <span class="trip-detail__stat-icon trip-detail__stat-icon--amber">
+                <Users class="icon icon--sm" :stroke-width="2.25" />
+              </span>
+              <div style="min-width: 0">
+                <div class="trip-detail__stat-label">Места</div>
+                <div class="trip-detail__stat-value">{{ trip.taken }} / {{ trip.seats }}</div>
+              </div>
+            </div>
+          </div>
+          <div class="trip-detail__stat">
+            <div class="trip-detail__stat-row">
+              <span class="trip-detail__stat-icon trip-detail__stat-icon--yellow">
+                <Wallet class="icon icon--sm" :stroke-width="2.25" />
+              </span>
+              <div style="min-width: 0">
+                <div class="trip-detail__stat-label">Бюджет</div>
+                <div class="trip-detail__stat-value">≈ {{ formatBudget(trip.budget) }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="padding: 1.25rem">
+          <div class="trip-detail__participants-head">
+            <h3 class="title title--sm">Участники</h3>
+            <span class="trip-detail__participants-count">{{ 1 + participants.length }} из {{ trip.seats }}</span>
+          </div>
+
+          <div class="trip-detail__participants-grid">
+            <RouterLink
+              :to="{ name: 'profile-user', params: { userId: organizer?.id ?? trip.organizerId } }"
+              class="trip-detail__participant trip-detail__participant--organizer"
+            >
+              <span
+                class="avatar trip-detail__participant-avatar"
+                :style="{ background: organizer?.avatarColor ?? '#94a3b8' }"
+              >
+                {{ organizer?.firstName[0] ?? "?" }}
+              </span>
+              <div style="min-width: 0; flex: 1">
+                <span class="trip-detail__organizer-badge">Организатор</span>
+                <div class="trip-detail__participant-name">
+                  {{ organizer?.firstName ?? "Организатор" }} {{ organizer?.lastName ?? "" }}
+                </div>
+              </div>
+            </RouterLink>
+
+            <RouterLink
+              v-for="p in participants"
+              :key="p.id"
+              :to="{ name: 'profile-user', params: { userId: p.id } }"
+              class="trip-detail__participant"
+            >
+              <span class="avatar trip-detail__participant-avatar" :style="{ background: p.avatarColor }">
+                {{ p.firstName[0] }}
+              </span>
+              <div style="min-width: 0; flex: 1">
+                <div class="trip-detail__participant-name">{{ p.firstName }} {{ p.lastName }}</div>
+              </div>
+            </RouterLink>
+
+            <div
+              v-for="(_, i) in Math.max(0, trip.seats - 1 - participants.length)"
+              :key="`empty-${i}`"
+              class="trip-detail__empty-seat"
+            >
+              <span class="trip-detail__empty-icon">+</span>
+              <div style="min-width: 0; flex: 1">
+                <div class="trip-detail__empty-label">Свободно</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="padding: 1.25rem">
+          <h3 class="title title--sm">О поездке</h3>
+          <p class="trip-detail__description">{{ trip.description }}</p>
+        </div>
+
+        <div class="trip-detail__spacer" />
+      </div>
+
+      <div class="container trip-detail__cta-wrap">
+        <div class="trip-detail__cta-panel">
+          <button
+            type="button"
+            class="btn btn--hero trip-detail__cta"
+            :disabled="joinMutation.isPending.value || openTripChatMutation.isPending.value"
+            @click="handleCta"
+          >
+            <template v-if="joinMutation.isPending.value || openTripChatMutation.isPending.value">
+              Подождите...
+            </template>
+            <template v-else-if="isMember">
+              <MessageCircle class="icon icon--sm" :stroke-width="2.5" />
+              Открыть чат поездки
+            </template>
+            <template v-else>Хочу поехать!</template>
+          </button>
+        </div>
+      </div>
+    </template>
+  </AppShell>
+</template>

@@ -20,6 +20,25 @@ export function formatBudget(rub: number) {
   return new Intl.NumberFormat("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0 }).format(rub);
 }
 
+export function formatBudgetShort(rub: number) {
+  const amount = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(rub);
+  return `~ ${amount} ₽`;
+}
+
+export function formatOrganizerShortName(firstName: string, lastName?: string) {
+  const initial = lastName?.[0] ? ` ${lastName[0]}.` : "";
+  return `${firstName}${initial}`;
+}
+
+export function formatSeatsLeft(count: number) {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  let word = "МЕСТ";
+  if (mod10 === 1 && mod100 !== 11) word = "МЕСТО";
+  else if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) word = "МЕСТА";
+  return `${count} ${word}`;
+}
+
 export function tripAvatarColors(from: string, to: string) {
   // Cheerful, vibrant gradient pairs — warm & friendly
   const pairs: Array<{ bg: string; fg: string }> = [

@@ -75,6 +75,7 @@ export function setToken(token: string) {
 
 export function clearToken() {
   localStorage.removeItem(TOKEN_KEY);
+  void import("./chat-ws").then(({ chatWs }) => chatWs.disconnect());
 }
 
 async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -123,6 +124,13 @@ export const api = {
   },
 
   me: () => apiFetch<User>("/api/auth/me"),
+  logout: async () => {
+    try {
+      await apiFetch<void>("/api/auth/logout", { method: "POST" });
+    } finally {
+      clearToken();
+    }
+  },
   users: () => apiFetch<User[]>("/api/users"),
   user: (id: string) => apiFetch<User>(`/api/users/${id}`),
   updateMe: (data: Partial<User> & { email?: string; phone?: string; age?: string; firstName?: string; lastName?: string }) =>

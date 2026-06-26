@@ -1,0 +1,163 @@
+.auth__form-wrap {
+  width: 100%;
+  max-width: 24rem;
+  margin: 0 auto;
+}
+
+.auth__mobile-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 1024px) {
+  .auth__mobile-logo {
+    display: none;
+  }
+}
+
+.auth__visual-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.auth__logo-icon {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  background: color-mix(in oklab, #fff 15%, transparent);
+}
+
+.auth__logo-icon--primary {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.auth__logo-text {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.auth__visual-logo .auth__logo-text {
+  font-size: 1.5rem;
+}
+
+.auth__visual-title {
+  font-family: var(--font-display);
+  font-size: 3rem;
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.auth__visual-desc {
+  margin-top: 1rem;
+  max-width: 28rem;
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+.auth__copyright {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.auth__title {
+  font-family: var(--font-display);
+  font-size: 1.875rem;
+  font-weight: 600;
+}
+
+.auth__subtitle {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
+
+.auth__form {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.auth__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+}
+
+.auth__remember {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--muted-foreground);
+}
+
+.auth__forgot {
+  color: var(--primary);
+}
+
+.auth__forgot:hover {
+  text-decoration: underline;
+}
+
+.auth__error {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--destructive);
+}
+
+.auth__footer {
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
+
+.auth__footer-link {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.auth__footer-link:hover {
+  text-decoration: underline;
+}
+
+.auth__onboarding-link {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.auth__onboarding-link:hover {
+  text-decoration: underline;
+}
+
+.auth__telegram-btn {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  padding: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.auth__telegram-btn:hover {
+  background: var(--secondary);
+}
+
+.auth__telegram-icon {
+  color: var(--clay);
+}

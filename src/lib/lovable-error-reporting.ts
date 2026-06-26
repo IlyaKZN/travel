@@ -1,5 +1,5 @@
 type LovableErrorOptions = {
-  mechanism?: "manual" | "onerror" | "unhandledrejection" | "react_error_boundary";
+  mechanism?: "manual" | "onerror" | "unhandledrejection" | "vue_error_boundary";
   handled?: boolean;
   severity?: "error" | "warning" | "info";
 };
@@ -23,12 +23,12 @@ export function reportLovableError(error: unknown, context: Record<string, unkno
   window.__lovableEvents?.captureException?.(
     error,
     {
-      source: "react_error_boundary",
+      source: "vue_error_boundary",
       route: window.location.pathname,
       ...context,
     },
     {
-      mechanism: "react_error_boundary",
+      mechanism: "vue_error_boundary",
       handled: false,
       severity: "error",
     },

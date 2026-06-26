@@ -40,7 +40,14 @@ const reviewSchema = z.object({
   text: z.string().min(1).max(500),
 })
 
-const reviewsByUser = new Map<string, Array<{ id: string; authorId: string; text: string; at: string }>>()
+function serializeReview(review: { id: string; authorId: string; text: string; createdAt: Date }) {
+  return {
+    id: review.id,
+    authorId: review.authorId,
+    text: review.text,
+    at: review.createdAt.toISOString(),
+  }
+}
 
 router.get('/', asyncHandler(async (_req, res) => {
   const users = await prisma.user.findMany({
@@ -61,12 +68,20 @@ router.get('/me', authRequired, asyncHandler(async (req, res) => {
 
 router.get('/:id/reviews', asyncHandler(async (req, res) => {
   const userId = routeParam(req.params.id)
-  const reviews = reviewsByUser.get(userId) ?? []
-  res.json(reviews)
+  const reviews = await prisma.review.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+  })
+  res.json(reviews.map(serializeReview))
 }))
 
 router.post('/:id/reviews', authRequired, asyncHandler(async (req, res) => {
   const userId = routeParam(req.params.id)
+  if (userId === req.userId) {
+    res.status(400).json({ error: 'Нельзя оставить отзыв самому себе' })
+    return
+  }
+
   const user = await prisma.user.findUnique({ where: { id: userId } })
   if (!user) {
     res.status(404).json({ error: 'Пользователь не найден' })
@@ -74,15 +89,14 @@ router.post('/:id/reviews', authRequired, asyncHandler(async (req, res) => {
   }
 
   const { text } = reviewSchema.parse(req.body)
-  const review = {
-    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    authorId: req.userId!,
-    text: text.trim(),
-    at: new Date().toISOString(),
-  }
-  const reviews = reviewsByUser.get(userId) ?? []
-  reviewsByUser.set(userId, [review, ...reviews])
-  res.status(201).json(review)
+  const review = await prisma.review.create({
+    data: {
+      userId,
+      authorId: req.userId!,
+      text: text.trim(),
+    },
+  })
+  res.status(201).json(serializeReview(review))
 }))
 
 router.get('/:id', asyncHandler(async (req, res) => {

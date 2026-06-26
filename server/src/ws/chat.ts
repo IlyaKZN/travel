@@ -70,6 +70,18 @@ function broadcastToParticipants(conversationId: string, participantIds: string[
   }
 }
 
+function broadcastToJoinedRoom(conversationId: string, participantIds: string[], data: unknown) {
+  for (const client of clients) {
+    if (
+      client.conversationId === conversationId &&
+      participantIds.includes(client.userId) &&
+      client.ws.readyState === client.ws.OPEN
+    ) {
+      sendJson(client.ws, data)
+    }
+  }
+}
+
 async function handleJoin(client: ChatClient, conversationId: string) {
   const conversation = await prisma.conversation.findUnique({
     where: { id: conversationId },
@@ -109,7 +121,7 @@ async function handleSend(client: ChatClient, text: string) {
     const participantIds = conversation.participants.map((p) => p.userId)
     const dbConversation = toDbConversation(conversation)
 
-    broadcastToParticipants(client.conversationId, participantIds, {
+    broadcastToJoinedRoom(client.conversationId, participantIds, {
       type: 'message',
       message: enriched,
     })

@@ -1,0 +1,11 @@
+.trip-avatar {
+  position: relative;
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 9999px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: #fff;
+}

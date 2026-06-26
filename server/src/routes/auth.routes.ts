@@ -263,4 +263,8 @@ router.get('/me', authRequired, asyncHandler(async (req, res) => {
   res.json(publicUser(toDbUser(user)))
 }))
 
+router.post('/logout', authRequired, asyncHandler(async (_req, res) => {
+  res.status(204).send()
+}))
+
 export default router

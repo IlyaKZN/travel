@@ -332,6 +332,32 @@ export async function seedDatabase() {
     }
   }
 
+  await prisma.review.createMany({
+    data: [
+      {
+        id: uuid(),
+        userId: '1',
+        authorId: '2',
+        text: 'Отличный организатор! Поездка в Сочи прошла без суеты, всё было продумано.',
+        createdAt: new Date('2025-06-21T10:00:00.000Z'),
+      },
+      {
+        id: uuid(),
+        userId: '1',
+        authorId: '4',
+        text: 'Александр помог с маршрутом и всегда был на связи. Рекомендую как попутчика.',
+        createdAt: new Date('2025-06-22T14:30:00.000Z'),
+      },
+      {
+        id: uuid(),
+        userId: '2',
+        authorId: '1',
+        text: 'Мария классно ведёт гастрономические туры — много интересных мест и вкусной еды.',
+        createdAt: new Date('2025-06-20T18:00:00.000Z'),
+      },
+    ],
+  })
+
   console.log(`[seed] Demo users password: ${DEMO_PASSWORD}`)
   console.log('[seed] Demo login: alex@travels.ru')
 }

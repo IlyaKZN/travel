@@ -1,0 +1,173 @@
+.app-shell {
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.app-shell__main {
+  min-width: 0;
+}
+
+.app-shell__main--with-nav {
+  padding-bottom: 6rem;
+}
+
+@media (min-width: 1024px) {
+  .app-shell__main--with-nav {
+    padding-bottom: 0;
+  }
+}
+
+.app-shell__header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: none;
+  border-bottom: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+  background: color-mix(in oklab, var(--background) 85%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+@media (min-width: 1024px) {
+  .app-shell__header {
+    display: block;
+  }
+}
+
+.app-shell__header-inner {
+  display: flex;
+  height: 4rem;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  align-items: center;
+  gap: 2rem;
+  padding: 0 2.5rem;
+}
+
+.app-shell__logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.app-shell__logo-icon {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.75rem;
+  background-image: var(--gradient-hero);
+  color: var(--primary-foreground);
+}
+
+.app-shell__logo-text {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.app-shell__nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.app-shell__nav-link {
+  border-radius: 9999px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.app-shell__nav-link:hover {
+  background: var(--secondary);
+  color: var(--foreground);
+}
+
+.app-shell__nav-link--active {
+  background: var(--secondary);
+  color: var(--foreground);
+}
+
+.app-shell__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto;
+}
+
+.app-shell__create-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  background-image: var(--gradient-hero);
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--primary-foreground);
+  box-shadow: var(--shadow-lift);
+  transition: opacity 0.15s;
+}
+
+.app-shell__create-btn:hover {
+  opacity: 0.95;
+}
+
+.app-shell__avatar-link {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  background: var(--secondary);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.app-shell__bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  border-top: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+  background: color-mix(in oklab, var(--background) 95%, transparent);
+  padding-bottom: var(--safe-bottom);
+  backdrop-filter: blur(8px);
+}
+
+@media (min-width: 1024px) {
+  .app-shell__bottom-nav {
+    display: none;
+  }
+}
+
+.app-shell__bottom-list {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  max-width: 28rem;
+  margin: 0 auto;
+  list-style: none;
+  padding: 0;
+}
+
+.app-shell__bottom-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.75rem 0.5rem;
+  font-size: 11px;
+  color: var(--muted-foreground);
+  transition: color 0.15s;
+}
+
+.app-shell__bottom-link--active {
+  color: var(--primary);
+}

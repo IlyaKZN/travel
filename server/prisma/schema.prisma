@@ -43,6 +43,21 @@ model User {
   tripSignups               TripSignup[]
   messages                  Message[]
   conversationParticipants  ConversationParticipant[]
+  reviewsReceived           Review[] @relation("ReviewsReceived")
+  reviewsWritten            Review[] @relation("ReviewsWritten")
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation("ReviewsReceived", fields: [userId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation("ReviewsWritten", fields: [authorId], references: [id], onDelete: Cascade)
+  text      String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([authorId])
 }
 
 model PendingUser {
