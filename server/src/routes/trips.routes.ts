@@ -33,12 +33,23 @@ const tripSchema = z.object({
   isDraft: z.boolean().default(false),
 })
 
-async function toFrontendTrip(trip: Trip) {
-  const [organizer, signups] = await Promise.all([
+async function toFrontendTrip(trip: Trip, viewerId?: string) {
+  const isOrganizer = viewerId === trip.creatorId
+  const joinRequestWhere = !viewerId
+    ? { tripId: trip.id, userId: '__anonymous__' }
+    : isOrganizer
+      ? { tripId: trip.id }
+      : { tripId: trip.id, userId: viewerId }
+  const [organizer, signups, joinRequests] = await Promise.all([
     prisma.user.findUnique({ where: { id: trip.creatorId } }),
     prisma.tripSignup.findMany({
       where: { tripId: trip.id },
       include: { user: true },
+    }),
+    prisma.tripJoinRequest.findMany({
+      where: joinRequestWhere,
+      include: { user: true },
+      orderBy: { createdAt: 'asc' },
     }),
   ])
   const { from, to } = splitTripLocation(trip.location)
@@ -64,6 +75,13 @@ async function toFrontendTrip(trip: Trip) {
     organizer: organizer ? publicUser(toDbUser(organizer)) : undefined,
     participantIds,
     participants,
+    pendingRequestIds: joinRequests.map((request) => request.userId),
+    pendingRequests: isOrganizer
+      ? joinRequests.map((request) => ({
+          user: publicUser(toDbUser(request.user)),
+          createdAt: request.createdAt.toISOString(),
+        }))
+      : [],
     description: trip.shortDescription,
     info: trip.fullPlan,
   }
@@ -94,10 +112,10 @@ router.get('/', authOptional, asyncHandler(async (req, res) => {
     )
   }
 
-  res.json(await Promise.all(trips.map(toFrontendTrip)))
+  res.json(await Promise.all(trips.map((trip) => toFrontendTrip(trip, req.userId))))
 }))
 
-router.get('/:id', asyncHandler(async (req, res) => {
+router.get('/:id', authOptional, asyncHandler(async (req, res) => {
   const id = routeParam(req.params.id)
   const trip = await prisma.trip.findFirst({
     where: { id, isDraft: false },
@@ -106,7 +124,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
     res.status(404).json({ error: 'Поездка не найдена' })
     return
   }
-  res.json(await toFrontendTrip(trip))
+  res.json(await toFrontendTrip(trip, req.userId))
 }))
 
 router.post('/', authRequired, asyncHandler(async (req, res) => {
@@ -145,7 +163,7 @@ router.post('/', authRequired, asyncHandler(async (req, res) => {
     },
   })
   await createTripConversation(trip.id)
-  res.status(201).json(await toFrontendTrip(trip))
+  res.status(201).json(await toFrontendTrip(trip, req.userId))
 }))
 
 router.post('/:id/signup', authRequired, asyncHandler(async (req, res) => {
@@ -159,6 +177,10 @@ router.post('/:id/signup', authRequired, asyncHandler(async (req, res) => {
     res.status(400).json({ error: 'Нет свободных мест' })
     return
   }
+  if (trip.creatorId === req.userId) {
+    res.status(400).json({ error: 'Организатор уже участвует в поездке' })
+    return
+  }
 
   const already = await prisma.tripSignup.findUnique({
     where: { tripId_userId: { tripId: trip.id, userId: req.userId! } },
@@ -168,9 +190,76 @@ router.post('/:id/signup', authRequired, asyncHandler(async (req, res) => {
     return
   }
 
-  const [, updatedTrip] = await prisma.$transaction([
+  const existingRequest = await prisma.tripJoinRequest.findUnique({
+    where: { tripId_userId: { tripId: trip.id, userId: req.userId! } },
+  })
+  if (existingRequest) {
+    res.status(409).json({ error: 'Заявка уже отправлена' })
+    return
+  }
+
+  await prisma.tripJoinRequest.create({
+    data: { tripId: trip.id, userId: req.userId! },
+  })
+  res.status(202).json(await toFrontendTrip(trip, req.userId))
+}))
+
+router.delete('/:id/signup', authRequired, asyncHandler(async (req, res) => {
+  const id = routeParam(req.params.id)
+  const trip = await prisma.trip.findUnique({ where: { id } })
+  if (!trip) {
+    res.status(404).json({ error: 'Поездка не найдена' })
+    return
+  }
+
+  await prisma.tripJoinRequest.deleteMany({
+    where: { tripId: trip.id, userId: req.userId! },
+  })
+  res.json(await toFrontendTrip(trip, req.userId))
+}))
+
+router.post('/:id/requests/:userId/approve', authRequired, asyncHandler(async (req, res) => {
+  const id = routeParam(req.params.id)
+  const targetUserId = routeParam(req.params.userId)
+  const trip = await prisma.trip.findUnique({ where: { id } })
+  if (!trip) {
+    res.status(404).json({ error: 'Поездка не найдена' })
+    return
+  }
+  if (trip.creatorId !== req.userId) {
+    res.status(403).json({ error: 'Только организатор может принимать заявки' })
+    return
+  }
+  if (trip.freeSpots <= 0) {
+    res.status(400).json({ error: 'Нет свободных мест' })
+    return
+  }
+
+  const request = await prisma.tripJoinRequest.findUnique({
+    where: { tripId_userId: { tripId: trip.id, userId: targetUserId } },
+  })
+  if (!request) {
+    res.status(404).json({ error: 'Заявка не найдена' })
+    return
+  }
+
+  const already = await prisma.tripSignup.findUnique({
+    where: { tripId_userId: { tripId: trip.id, userId: targetUserId } },
+  })
+  if (already) {
+    await prisma.tripJoinRequest.delete({
+      where: { tripId_userId: { tripId: trip.id, userId: targetUserId } },
+    })
+    res.json(await toFrontendTrip(trip, req.userId))
+    return
+  }
+
+  const [, , updatedTrip] = await prisma.$transaction([
+    prisma.tripJoinRequest.delete({
+      where: { tripId_userId: { tripId: trip.id, userId: targetUserId } },
+    }),
     prisma.tripSignup.create({
-      data: { tripId: trip.id, userId: req.userId! },
+      data: { tripId: trip.id, userId: targetUserId },
     }),
     prisma.trip.update({
       where: { id: trip.id },
@@ -178,8 +267,27 @@ router.post('/:id/signup', authRequired, asyncHandler(async (req, res) => {
     }),
   ])
 
-  await addUserToTripChat(trip.id, req.userId!)
-  res.json(await toFrontendTrip(updatedTrip))
+  await addUserToTripChat(trip.id, targetUserId)
+  res.json(await toFrontendTrip(updatedTrip, req.userId))
+}))
+
+router.post('/:id/requests/:userId/decline', authRequired, asyncHandler(async (req, res) => {
+  const id = routeParam(req.params.id)
+  const targetUserId = routeParam(req.params.userId)
+  const trip = await prisma.trip.findUnique({ where: { id } })
+  if (!trip) {
+    res.status(404).json({ error: 'Поездка не найдена' })
+    return
+  }
+  if (trip.creatorId !== req.userId) {
+    res.status(403).json({ error: 'Только организатор может отклонять заявки' })
+    return
+  }
+
+  await prisma.tripJoinRequest.deleteMany({
+    where: { tripId: trip.id, userId: targetUserId },
+  })
+  res.json(await toFrontendTrip(trip, req.userId))
 }))
 
 export default router

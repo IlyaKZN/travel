@@ -115,8 +115,7 @@
   border-radius: 9999px;
   background: color-mix(in oklab, var(--card) 95%, transparent);
   padding: 0.5rem;
-  box-shadow: var(--shadow-lift);
-  box-shadow: 0 0 0 1px color-mix(in oklab, #fff 40%, transparent);
+  box-shadow: var(--shadow-lift), 0 0 0 1px color-mix(in oklab, #fff 40%, transparent);
   backdrop-filter: blur(8px);
 }
 

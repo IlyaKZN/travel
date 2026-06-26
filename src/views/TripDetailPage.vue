@@ -12,6 +12,10 @@ import {
   Bus,
   Plane,
   MessageCircle,
+  Check,
+  X,
+  Clock3,
+  UserPlus,
 } from "lucide-vue-next";
 import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -43,17 +47,32 @@ const meQuery = useQuery({
   retry: false,
 });
 
+const invalidateTripQueries = async () => {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: ["trips"] }),
+    queryClient.invalidateQueries({ queryKey: ["trip", tripId.value] }),
+    queryClient.invalidateQueries({ queryKey: ["chats"] }),
+  ]);
+};
+
 const joinMutation = useMutation({
   mutationFn: () => api.joinTrip(tripId.value),
-  onSuccess: async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["trips"] }),
-      queryClient.invalidateQueries({ queryKey: ["trip", tripId.value] }),
-      queryClient.invalidateQueries({ queryKey: ["chats"] }),
-    ]);
-    const chat = await api.tripChat(tripId.value);
-    router.push({ name: "chat", params: { chatId: chat.id } });
-  },
+  onSuccess: invalidateTripQueries,
+});
+
+const cancelRequestMutation = useMutation({
+  mutationFn: () => api.cancelTripRequest(tripId.value),
+  onSuccess: invalidateTripQueries,
+});
+
+const approveRequestMutation = useMutation({
+  mutationFn: (userId: string) => api.approveTripRequest(tripId.value, userId),
+  onSuccess: invalidateTripQueries,
+});
+
+const declineRequestMutation = useMutation({
+  mutationFn: (userId: string) => api.declineTripRequest(tripId.value, userId),
+  onSuccess: invalidateTripQueries,
 });
 
 const openTripChatMutation = useMutation({
@@ -68,8 +87,32 @@ const organizer = computed(
 const participants = computed(
   () => trip.value?.participants?.filter((p) => p.id !== trip.value?.organizerId) ?? [],
 );
+const isOrganizer = computed(() =>
+  meQuery.data.value ? trip.value?.organizerId === meQuery.data.value.id : false,
+);
 const isMember = computed(() =>
   meQuery.data.value ? trip.value?.participantIds.includes(meQuery.data.value.id) : false,
+);
+const seatsLeft = computed(() => (trip.value ? Math.max(0, trip.value.seats - trip.value.taken) : 0));
+const myStatus = computed<"none" | "pending" | "member">(() => {
+  const me = meQuery.data.value;
+  if (!me) return "none";
+  if (isMember.value) return "member";
+  return trip.value?.pendingRequestIds?.includes(me.id) ? "pending" : "none";
+});
+const pendingRequests = computed(() => trip.value?.pendingRequests ?? []);
+const isRequestActionPending = computed(
+  () =>
+    joinMutation.isPending.value ||
+    cancelRequestMutation.isPending.value ||
+    approveRequestMutation.isPending.value ||
+    declineRequestMutation.isPending.value,
+);
+const ctaDisabled = computed(
+  () =>
+    isRequestActionPending.value ||
+    openTripChatMutation.isPending.value ||
+    (!isOrganizer.value && !isMember.value && myStatus.value !== "pending" && seatsLeft.value === 0),
 );
 const tMeta = computed(() => (trip.value ? transportMeta[trip.value.transport] : transportMeta.car));
 
@@ -78,8 +121,9 @@ function handleCta() {
     router.push("/auth");
     return;
   }
-  if (isMember.value) openTripChatMutation.mutate();
-  else joinMutation.mutate();
+  if (isOrganizer.value || isMember.value) openTripChatMutation.mutate();
+  else if (myStatus.value === "pending") cancelRequestMutation.mutate();
+  else if (seatsLeft.value > 0) joinMutation.mutate();
 }
 </script>
 
@@ -231,6 +275,86 @@ function handleCta() {
           <p class="trip-detail__description">{{ trip.description }}</p>
         </div>
 
+        <div v-if="!isOrganizer && myStatus === 'pending'" class="trip-detail__request-status">
+          <div class="trip-detail__request-status-main">
+            <span class="trip-detail__request-status-icon">
+              <Clock3 class="icon" :stroke-width="2.25" />
+            </span>
+            <div>
+              <div class="trip-detail__request-status-title">Заявка отправлена</div>
+              <div class="trip-detail__request-status-text">
+                Организатор {{ organizer?.firstName ?? "поездки" }} рассмотрит её в ближайшее время
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="trip-detail__request-cancel"
+            :disabled="cancelRequestMutation.isPending.value"
+            @click="cancelRequestMutation.mutate()"
+          >
+            Отменить заявку
+          </button>
+        </div>
+
+        <div v-if="isOrganizer" class="card" style="padding: 1.25rem">
+          <div class="trip-detail__requests-head">
+            <h3 class="trip-detail__requests-title">
+              <UserPlus class="icon icon--sm" :stroke-width="2.25" />
+              Заявки на вступление
+            </h3>
+            <span class="trip-detail__participants-count">{{ pendingRequests.length }}</span>
+          </div>
+
+          <p v-if="pendingRequests.length === 0" class="trip-detail__requests-empty">
+            Новых заявок пока нет. Они появятся здесь, когда кто-то захочет присоединиться.
+          </p>
+          <ul v-else class="trip-detail__requests-list">
+            <li v-for="request in pendingRequests" :key="request.user.id" class="trip-detail__request-item">
+              <RouterLink
+                :to="{ name: 'profile-user', params: { userId: request.user.id } }"
+                class="trip-detail__request-user"
+              >
+                <span
+                  class="avatar trip-detail__request-avatar"
+                  :style="{ background: request.user.avatarColor }"
+                >
+                  {{ request.user.firstName[0] }}
+                </span>
+                <div style="min-width: 0">
+                  <div class="trip-detail__request-name">
+                    {{ request.user.firstName }} {{ request.user.lastName }}
+                  </div>
+                  <div class="trip-detail__request-meta">
+                    {{ request.user.location }} · хочет присоединиться
+                  </div>
+                </div>
+              </RouterLink>
+              <div class="trip-detail__request-actions">
+                <button
+                  type="button"
+                  class="trip-detail__request-decline"
+                  :disabled="declineRequestMutation.isPending.value || approveRequestMutation.isPending.value"
+                  @click="declineRequestMutation.mutate(request.user.id)"
+                >
+                  <X class="icon icon--sm" :stroke-width="2.5" /> Отклонить
+                </button>
+                <button
+                  type="button"
+                  class="trip-detail__request-approve"
+                  :disabled="seatsLeft === 0 || declineRequestMutation.isPending.value || approveRequestMutation.isPending.value"
+                  @click="approveRequestMutation.mutate(request.user.id)"
+                >
+                  <Check class="icon icon--sm" :stroke-width="2.5" /> Принять
+                </button>
+              </div>
+            </li>
+          </ul>
+          <p v-if="seatsLeft === 0 && pendingRequests.length > 0" class="trip-detail__requests-no-seats">
+            Свободных мест нет — освободите место, чтобы принять заявку.
+          </p>
+        </div>
+
         <div class="trip-detail__spacer" />
       </div>
 
@@ -239,16 +363,21 @@ function handleCta() {
           <button
             type="button"
             class="btn btn--hero trip-detail__cta"
-            :disabled="joinMutation.isPending.value || openTripChatMutation.isPending.value"
+            :disabled="ctaDisabled"
             @click="handleCta"
           >
-            <template v-if="joinMutation.isPending.value || openTripChatMutation.isPending.value">
+            <template v-if="isRequestActionPending || openTripChatMutation.isPending.value">
               Подождите...
             </template>
-            <template v-else-if="isMember">
+            <template v-else-if="isOrganizer || isMember">
               <MessageCircle class="icon icon--sm" :stroke-width="2.5" />
               Открыть чат поездки
             </template>
+            <template v-else-if="myStatus === 'pending'">
+              <Clock3 class="icon icon--sm" :stroke-width="2.5" />
+              Заявка отправлена · отменить
+            </template>
+            <template v-else-if="seatsLeft === 0">Мест больше нет</template>
             <template v-else>Хочу поехать!</template>
           </button>
         </div>

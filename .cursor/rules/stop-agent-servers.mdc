@@ -1,0 +1,12 @@
+---
+description: Stop servers started by the agent when work is complete
+alwaysApply: true
+---
+
+# Stop Agent-Started Servers
+
+When the agent starts a local server, dev server, watcher, preview, or other long-running process, it must stop that process before finishing the task unless the user explicitly asks to keep it running.
+
+- Track which server commands were started by the agent during the task.
+- Before the final response, stop those agent-started processes and confirm they are no longer listening on their ports when practical.
+- Do not stop processes that were already running before the agent's work unless the user explicitly asks to stop them.

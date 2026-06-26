@@ -41,6 +41,7 @@ model User {
   trips                     Trip[]
   tourSignups               TourSignup[]
   tripSignups               TripSignup[]
+  tripJoinRequests          TripJoinRequest[]
   messages                  Message[]
   conversationParticipants  ConversationParticipant[]
   reviewsReceived           Review[] @relation("ReviewsReceived")
@@ -125,6 +126,7 @@ model Trip {
   createdAt        DateTime     @default(now())
 
   signups      TripSignup[]
+  joinRequests TripJoinRequest[]
   conversation Conversation?
 
   @@index([creatorId])
@@ -146,6 +148,17 @@ model TripSignup {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([tripId, userId])
+}
+
+model TripJoinRequest {
+  tripId    String
+  userId    String
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([tripId, userId])
+  @@index([userId])
 }
 
 model Conversation {

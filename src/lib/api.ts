@@ -26,6 +26,8 @@ export interface Trip {
   organizer?: User;
   participantIds: string[];
   participants?: User[];
+  pendingRequestIds?: string[];
+  pendingRequests?: Array<{ user: User; createdAt: string }>;
   description: string;
   info: string;
 }
@@ -153,6 +155,18 @@ export const api = {
     }),
   joinTrip: (id: string) =>
     apiFetch<Trip>(`/api/trips/${id}/signup`, {
+      method: "POST",
+    }),
+  cancelTripRequest: (id: string) =>
+    apiFetch<Trip>(`/api/trips/${id}/signup`, {
+      method: "DELETE",
+    }),
+  approveTripRequest: (tripId: string, userId: string) =>
+    apiFetch<Trip>(`/api/trips/${tripId}/requests/${userId}/approve`, {
+      method: "POST",
+    }),
+  declineTripRequest: (tripId: string, userId: string) =>
+    apiFetch<Trip>(`/api/trips/${tripId}/requests/${userId}/decline`, {
       method: "POST",
     }),
 
