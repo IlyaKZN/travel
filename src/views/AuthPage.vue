@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
-import { Compass, Send } from "lucide-vue-next";
+import { Compass } from "lucide-vue-next";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { api } from "@/lib/api";
@@ -102,16 +102,6 @@ function onSubmit(e: Event) {
             {{ authMutation.error.value?.message }}
           </p>
         </form>
-
-        <div class="divider" style="margin: 1.5rem 0">
-          <div class="divider__line" />
-          или
-          <div class="divider__line" />
-        </div>
-
-        <button type="button" class="auth__telegram-btn">
-          <Send class="icon icon--sm auth__telegram-icon" /> Войти через Telegram
-        </button>
 
         <p class="auth__footer">
           {{ mode === "login" ? "Нет аккаунта? " : "Уже есть аккаунт? " }}

@@ -139,25 +139,3 @@
 .auth__onboarding-link:hover {
   text-decoration: underline;
 }
-
-.auth__telegram-btn {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  border-radius: 9999px;
-  border: 1px solid var(--border);
-  background: var(--card);
-  padding: 0.75rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.auth__telegram-btn:hover {
-  background: var(--secondary);
-}
-
-.auth__telegram-icon {
-  color: var(--clay);
-}

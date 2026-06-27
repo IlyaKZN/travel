@@ -4,7 +4,7 @@ set -euo pipefail
 APP_DIR=/opt/travels
 DEPLOY_DIR="$APP_DIR/deploy"
 SERVER_ENV="$APP_DIR/server/.env"
-PUBLIC_URL="${PUBLIC_URL:-http://2.26.65.212}"
+PUBLIC_URL="${PUBLIC_URL:-https://trip-vmeste.ru}"
 
 echo "==> Installing system packages..."
 export DEBIAN_FRONTEND=noninteractive
