@@ -13,6 +13,19 @@
   background: color-mix(in oklab, #fff 25%, transparent);
 }
 
+.chat-room__hero-inner {
+  position: relative;
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .chat-room__hero-inner {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+}
+
 .chat-room__header-row {
   display: flex;
   align-items: center;

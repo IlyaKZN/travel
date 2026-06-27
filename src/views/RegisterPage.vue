@@ -77,7 +77,7 @@ function onSubmit(e: Event) {
   <div class="auth-layout">
     <div class="auth-layout__visual">
       <div class="auth__visual-logo">
-        <span class="auth__logo-icon"><Compass class="icon" /></span>
+        <span class="auth__logo-icon register__logo-icon"><Compass class="icon" /></span>
         <span class="auth__logo-text">waymate</span>
       </div>
       <div>
@@ -106,7 +106,7 @@ function onSubmit(e: Event) {
     <div class="auth-layout__form">
       <div class="register__form-wrap">
         <div class="auth__mobile-logo">
-          <span class="auth__logo-icon auth__logo-icon--primary"><Compass class="icon" /></span>
+          <span class="auth__logo-icon auth__logo-icon--primary register__logo-icon"><Compass class="icon" /></span>
           <span class="auth__logo-text">waymate</span>
         </div>
 
@@ -185,7 +185,7 @@ function onSubmit(e: Event) {
 
           <button
             type="submit"
-            class="btn btn--hero btn--block btn--md"
+            class="btn btn--hero btn--block register__submit"
             :disabled="!valid || registerMutation.isPending.value"
           >
             {{ registerMutation.isPending.value ? "Создаём..." : "Создать аккаунт" }}

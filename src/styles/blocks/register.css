@@ -4,6 +4,10 @@
   margin: 0 auto;
 }
 
+.register__logo-icon {
+  border-radius: 9999px;
+}
+
 .register__features {
   margin-top: 2rem;
   list-style: none;
@@ -35,6 +39,11 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.register__submit {
+  padding: 0.875rem 1.25rem;
+  box-shadow: var(--shadow-soft);
 }
 
 .register__strength {

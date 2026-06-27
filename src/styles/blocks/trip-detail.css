@@ -1,3 +1,32 @@
+.trip-detail__hero-inner {
+  position: relative;
+  padding-top: 1rem;
+  padding-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .trip-detail__hero-inner,
+  .trip-detail__content,
+  .trip-detail__cta-wrap {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .trip-detail__hero-inner,
+  .trip-detail__content,
+  .trip-detail__cta-wrap {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .trip-detail__hero-inner {
+    padding-top: 1.25rem;
+    padding-bottom: 2rem;
+  }
+}
+
 .trip-detail__back {
   display: inline-flex;
   align-items: center;
@@ -7,6 +36,7 @@
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
   font-weight: 600;
+  color: var(--primary-foreground);
   backdrop-filter: blur(4px);
 }
 
@@ -23,7 +53,7 @@
 
 .trip-detail__avatar-wrap {
   flex-shrink: 0;
-  border-radius: 1rem;
+  border-radius: 1.8rem;
   background: color-mix(in oklab, #fff 15%, transparent);
   padding: 0.375rem;
   backdrop-filter: blur(4px);
@@ -79,6 +109,16 @@
   .trip-detail__content {
     padding-top: 2rem;
     padding-bottom: 2rem;
+  }
+}
+
+.trip-detail__card {
+  padding: 1.25rem;
+}
+
+@media (min-width: 1024px) {
+  .trip-detail__card {
+    padding: 1.5rem;
   }
 }
 

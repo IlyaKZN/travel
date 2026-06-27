@@ -58,7 +58,7 @@
   place-items: center;
   width: 2.25rem;
   height: 2.25rem;
-  border-radius: 0.75rem;
+  border-radius: 50%;
   background-image: var(--gradient-hero);
   color: var(--primary-foreground);
 }

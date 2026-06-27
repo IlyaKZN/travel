@@ -87,8 +87,8 @@ function onSubmit(e: Event) {
 
           <button
             type="submit"
-            class="btn btn--primary btn--block btn--md"
-            :disabled="authMutation.isPending.value || !email || !password"
+            class="btn btn--primary btn--block auth__submit"
+            :disabled="authMutation.isPending.value"
           >
             {{
               authMutation.isPending.value

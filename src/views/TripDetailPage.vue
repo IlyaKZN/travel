@@ -135,8 +135,8 @@ function handleCta() {
     <template v-else>
       <section class="hero">
         <div class="hero__glow hero__glow--white" />
-        <div class="hero__glow hero__glow--amber" style="right: 0; left: auto; bottom: -6rem; top: auto" />
-        <div class="container" style="position: relative; padding-top: 1rem; padding-bottom: 1.5rem">
+        <div class="hero__glow hero__glow--bottom-amber" />
+        <div class="container trip-detail__hero-inner">
           <button type="button" class="trip-detail__back" @click="router.back()">
             <ArrowLeft class="icon icon--sm" :stroke-width="2.5" /> Назад
           </button>
@@ -218,7 +218,7 @@ function handleCta() {
           </div>
         </div>
 
-        <div class="card" style="padding: 1.25rem">
+        <div class="card trip-detail__card">
           <div class="trip-detail__participants-head">
             <h3 class="title title--sm">Участники</h3>
             <span class="trip-detail__participants-count">{{ 1 + participants.length }} из {{ trip.seats }}</span>
@@ -270,7 +270,7 @@ function handleCta() {
           </div>
         </div>
 
-        <div class="card" style="padding: 1.25rem">
+        <div class="card trip-detail__card">
           <h3 class="title title--sm">О поездке</h3>
           <p class="trip-detail__description">{{ trip.description }}</p>
         </div>
@@ -297,7 +297,7 @@ function handleCta() {
           </button>
         </div>
 
-        <div v-if="isOrganizer" class="card" style="padding: 1.25rem">
+        <div v-if="isOrganizer" class="card trip-detail__card">
           <div class="trip-detail__requests-head">
             <h3 class="trip-detail__requests-title">
               <UserPlus class="icon icon--sm" :stroke-width="2.25" />

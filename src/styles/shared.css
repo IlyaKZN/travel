@@ -313,6 +313,14 @@
   background: color-mix(in oklab, #fcd34d 40%, transparent);
 }
 
+.hero__glow--bottom-amber {
+  right: 0;
+  bottom: -6rem;
+  width: 18rem;
+  height: 18rem;
+  background: color-mix(in oklab, #fcd34d 30%, transparent);
+}
+
 .hero__glow--rose {
   left: -6rem;
   bottom: 0;
@@ -344,12 +352,14 @@
 
 .hero__inner {
   position: relative;
-  padding: 2rem 0 2.5rem;
+  padding-top: 2rem;
+  padding-bottom: 2.5rem;
 }
 
 @media (min-width: 1024px) {
   .hero__inner {
-    padding: 3rem 0 3.5rem;
+    padding-top: 3rem;
+    padding-bottom: 3.5rem;
   }
 }
 

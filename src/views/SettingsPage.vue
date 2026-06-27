@@ -80,7 +80,7 @@ watch(
     <template v-else>
       <section class="hero">
         <div class="hero__glow hero__glow--white" />
-        <div class="hero__glow hero__glow--amber" style="right: 0; left: auto; bottom: -6rem; top: auto" />
+        <div class="hero__glow hero__glow--bottom-amber" />
         <div class="container settings__hero-inner">
           <div>
             <RouterLink to="/profile" class="settings__back">

@@ -171,7 +171,7 @@ function onSubmit(e: Event) {
     <template v-else>
       <section class="hero">
         <div class="hero__fade" />
-        <div class="container hero__inner">
+        <div class="container chat-room__hero-inner">
           <div class="chat-room__header-row">
             <RouterLink to="/chats" class="chat-room__back">
               <ArrowLeft class="icon" />

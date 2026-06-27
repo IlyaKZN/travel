@@ -43,7 +43,7 @@
 }
 
 .home__hero-desktop {
-  max-width: 42rem;
+  max-width: 48rem;
 }
 
 .home__hero-subtitle {
@@ -72,9 +72,9 @@
 
 .home__hero-desc {
   margin-top: 1rem;
-  max-width: 36rem;
+  max-width: 32rem;
   font-size: 1rem;
-  line-height: 1.55;
+  line-height: 1.5;
   color: color-mix(in oklab, #fff 88%, transparent);
 }
 
@@ -159,6 +159,7 @@
 .home__section-title {
   font-size: 1.5rem;
   font-weight: 600;
+  line-height: 1.1;
   letter-spacing: -0.02em;
 }
 
@@ -186,6 +187,7 @@
   align-items: center;
   gap: 0.75rem 1rem;
   margin-bottom: 1.5rem;
+  padding-bottom: 0.25rem;
 }
 
 .home__filters-divider {
