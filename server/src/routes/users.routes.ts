@@ -23,6 +23,7 @@ const avatarSchema = z
     const [, payload = ''] = value.split(',', 2)
     return Math.ceil((payload.length * 3) / 4) <= AVATAR_MAX_BYTES
   }, 'Аватар должен быть PNG, JPG или WebP до 5 МБ')
+const optionalAvatarSchema = avatarSchema.nullish()
 
 const profileSchema = z.object({
   nickname: z.string().min(1).max(NICKNAME_MAX),
@@ -30,7 +31,7 @@ const profileSchema = z.object({
   lastName: z.string().min(1),
   patronymic: z.string().optional(),
   birthDate: z.string().min(1),
-  avatar: avatarSchema.optional(),
+  avatar: optionalAvatarSchema,
   about: z.string().max(ABOUT_MAX).optional(),
 })
 
@@ -38,7 +39,7 @@ const settingsSchema = z.object({
   nickname: z.string().min(1).max(NICKNAME_MAX).optional(),
   firstName: z.string().min(1).optional(),
   lastName: z.string().optional(),
-  avatar: avatarSchema.optional(),
+  avatar: optionalAvatarSchema,
   about: z.string().max(ABOUT_MAX).optional(),
   bio: z.string().max(ABOUT_MAX).optional(),
   location: z.string().optional(),
@@ -141,6 +142,7 @@ router.post('/profile', authRequired, asyncHandler(async (req, res) => {
     where: { id: user.id },
     data: {
       ...data,
+      avatar: data.avatar ?? '',
       profileComplete: true,
     },
   })
@@ -150,7 +152,7 @@ router.post('/profile', authRequired, asyncHandler(async (req, res) => {
 
 router.patch('/me', authRequired, asyncHandler(async (req, res) => {
   const data = settingsSchema.parse(req.body)
-  const { bio, location, email, phone: _phone, age, ...dbData } = data
+  const { bio, location, email, phone: _phone, age, avatar, ...dbData } = data
   const user = await prisma.user.findUnique({ where: { id: req.userId } })
   if (!user) {
     res.status(404).json({ error: 'Пользователь не найден' })
@@ -183,6 +185,7 @@ router.patch('/me', authRequired, asyncHandler(async (req, res) => {
       ...(bio !== undefined ? { about: bio } : {}),
       ...(location !== undefined ? { patronymic: location } : {}),
       ...(age !== undefined ? { birthDate: String(age) } : {}),
+      ...(avatar !== undefined ? { avatar: avatar ?? '' } : {}),
     },
   })
   emitUserChanged(updated.id)
