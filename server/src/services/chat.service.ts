@@ -208,6 +208,7 @@ export async function markConversationReadForUsers(
 
 export async function enrichConversation(conversation: DbConversation, currentUserId: string) {
   const unread = await countUnreadMessages(conversation.id, currentUserId)
+  const participants = conversation.participantUsers?.map(publicFrontendUser) ?? []
 
   if (conversation.type === 'trip' && conversation.tripId) {
     const trip = await prisma.trip.findUnique({ where: { id: conversation.tripId } })
@@ -219,6 +220,7 @@ export async function enrichConversation(conversation: DbConversation, currentUs
       tripId: conversation.tripId,
       title,
       participantIds: conversation.participantIds,
+      participants,
       preview: conversation.lastMessageText ?? 'Пока нет сообщений',
       unread,
       lastAt: conversation.lastMessageAt,
@@ -226,14 +228,18 @@ export async function enrichConversation(conversation: DbConversation, currentUs
   }
 
   const otherId = conversation.participantIds.find((id) => id !== currentUserId)
-  const other = otherId ? await prisma.user.findUnique({ where: { id: otherId } }) : null
+  const otherFromDb = otherId && participants.length === 0 ? await prisma.user.findUnique({ where: { id: otherId } }) : null
+  const other =
+    participants.find((user) => user.id === otherId) ??
+    (otherFromDb ? publicFrontendUser(toDbUser(otherFromDb)) : undefined)
 
   return {
     id: conversation.id,
     kind: 'dm',
     title: other ? `${other.firstName} ${other.lastName}`.trim() || `@${other.nickname}` : 'Личные сообщения',
-    otherUser: other ? publicFrontendUser(toDbUser(other)) : undefined,
+    otherUser: other,
     participantIds: conversation.participantIds,
+    participants,
     preview: conversation.lastMessageText ?? 'Пока нет сообщений',
     unread,
     lastAt: conversation.lastMessageAt,

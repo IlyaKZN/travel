@@ -100,7 +100,22 @@ function tripFor(id?: string) {
 }
 
 function userFor(id: string) {
-  return usersQuery.data.value?.find((u) => u.id === id) ?? meQuery.data.value;
+  if (id === meQuery.data.value?.id) return meQuery.data.value;
+
+  const activeParticipant = activeChat.value?.participants?.find((u) => u.id === id);
+  if (activeParticipant) return activeParticipant;
+
+  const chatParticipant = (chatsQuery.data.value ?? [])
+    .flatMap((chat) => chat.participants ?? [])
+    .find((u) => u.id === id);
+  if (chatParticipant) return chatParticipant;
+
+  const otherUser = (chatsQuery.data.value ?? [])
+    .map((chat) => chat.otherUser)
+    .find((u) => u?.id === id);
+  if (otherUser) return otherUser;
+
+  return usersQuery.data.value?.find((u) => u.id === id);
 }
 
 async function markActiveChatRead(chatId: string) {
@@ -115,7 +130,9 @@ async function markActiveChatRead(chatId: string) {
 
 const activeChat = computed(() => chatQuery.data.value ?? chatsQuery.data.value?.find((c) => c.id === activeChatId.value));
 const activeTrip = computed(() => (activeChat.value?.tripId ? tripFor(activeChat.value.tripId) : undefined));
-const activeOther = computed(() => activeChat.value?.otherUser);
+const activeOther = computed(
+  () => activeChat.value?.otherUser ?? activeChat.value?.participants?.find((u) => u.id !== meQuery.data.value?.id),
+);
 const messages = computed(() => messagesQuery.data.value ?? []);
 const groups = computed(() => {
   const result: { day: string; items: typeof messages.value }[] = [];

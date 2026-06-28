@@ -46,6 +46,7 @@ export interface ChatThread {
   kind: "group" | "dm";
   tripId?: string;
   participantIds: string[];
+  participants?: User[];
   title: string;
   preview: string;
   unread: number;

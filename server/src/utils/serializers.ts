@@ -94,7 +94,7 @@ export function toDbTrip(trip: Trip): DbTrip {
 }
 
 type ConversationWithParticipants = Conversation & {
-  participants: ConversationParticipant[]
+  participants: Array<ConversationParticipant & { user?: User }>
 }
 
 export function toDbConversation(conversation: ConversationWithParticipants): DbConversation {
@@ -103,6 +103,7 @@ export function toDbConversation(conversation: ConversationWithParticipants): Db
     type: conversation.type as ConversationType,
     tripId: conversation.tripId ?? undefined,
     participantIds: conversation.participants.map((p) => p.userId),
+    participantUsers: conversation.participants.flatMap((p) => (p.user ? [toDbUser(p.user)] : [])),
     createdAt: conversation.createdAt.toISOString(),
     lastMessageAt: conversation.lastMessageAt.toISOString(),
     lastMessageText: conversation.lastMessageText ?? undefined,
@@ -120,5 +121,5 @@ export function toDbMessage(message: Message): DbMessage {
 }
 
 export const conversationInclude = {
-  participants: true,
+  participants: { include: { user: true } },
 } as const

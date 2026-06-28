@@ -81,6 +81,7 @@ export interface DbConversation {
   type: ConversationType
   tripId?: string
   participantIds: string[]
+  participantUsers?: DbUser[]
   createdAt: string
   lastMessageAt: string
   lastMessageText?: string
