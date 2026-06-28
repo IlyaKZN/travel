@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import { Compass } from "lucide-vue-next";
-import { ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { api } from "@/lib/api";
 
@@ -12,6 +12,14 @@ const nickname = ref("");
 const remember = ref(false);
 const router = useRouter();
 const queryClient = useQueryClient();
+
+const telegramMutation = useMutation({
+  mutationFn: (initData: string) => api.telegramLogin(initData),
+  onSuccess: async () => {
+    await queryClient.invalidateQueries({ queryKey: ["me"] });
+    router.push("/");
+  },
+});
 
 const authMutation = useMutation({
   mutationFn: () =>
@@ -27,6 +35,18 @@ const authMutation = useMutation({
     await queryClient.invalidateQueries({ queryKey: ["me"] });
     router.push("/");
   },
+});
+
+const isSubmitting = computed(() => authMutation.isPending.value || telegramMutation.isPending.value);
+
+onMounted(() => {
+  const webApp = window.Telegram?.WebApp;
+  webApp?.ready();
+  webApp?.expand();
+
+  if (webApp?.initData) {
+    telegramMutation.mutate(webApp.initData);
+  }
 });
 
 function onSubmit(e: Event) {
@@ -88,18 +108,20 @@ function onSubmit(e: Event) {
           <button
             type="submit"
             class="btn btn--primary btn--block auth__submit"
-            :disabled="authMutation.isPending.value"
+            :disabled="isSubmitting"
           >
             {{
-              authMutation.isPending.value
+              telegramMutation.isPending.value
+                ? "Входим через Telegram..."
+                : authMutation.isPending.value
                 ? "Подождите..."
                 : mode === "login"
                   ? "Войти"
                   : "Зарегистрироваться"
             }}
           </button>
-          <p v-if="authMutation.isError.value" class="auth__error">
-            {{ authMutation.error.value?.message }}
+          <p v-if="authMutation.isError.value || telegramMutation.isError.value" class="auth__error">
+            {{ telegramMutation.error.value?.message ?? authMutation.error.value?.message }}
           </p>
         </form>
 

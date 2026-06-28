@@ -5,3 +5,15 @@ declare module "*.vue" {
   const component: DefineComponent<object, object, unknown>;
   export default component;
 }
+
+interface TelegramWebApp {
+  initData: string;
+  ready: () => void;
+  expand: () => void;
+}
+
+interface Window {
+  Telegram?: {
+    WebApp?: TelegramWebApp;
+  };
+}

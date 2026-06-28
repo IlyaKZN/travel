@@ -60,6 +60,12 @@ export interface Review {
   at: string;
 }
 
+interface AuthResult {
+  token: string;
+  user: User;
+  needsProfile?: boolean;
+}
+
 export const transportLabel: Record<TransportType, string> = {
   car: "Авто",
   train: "Поезд",
@@ -111,7 +117,7 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
 
 export const api = {
   login: async (data: { email: string; password: string; remember?: boolean }) => {
-    const result = await apiFetch<{ token: string; user: User }>("/api/auth/login", {
+    const result = await apiFetch<AuthResult>("/api/auth/login", {
       method: "POST",
       body: JSON.stringify(data),
     });
@@ -120,9 +126,18 @@ export const api = {
   },
 
   register: async (data: { firstName: string; lastName: string; email: string; password: string }) => {
-    const result = await apiFetch<{ token: string; user: User }>("/api/auth/register", {
+    const result = await apiFetch<AuthResult>("/api/auth/register", {
       method: "POST",
       body: JSON.stringify(data),
+    });
+    setToken(result.token);
+    return result;
+  },
+
+  telegramLogin: async (initData: string) => {
+    const result = await apiFetch<AuthResult>("/api/auth/telegram", {
+      method: "POST",
+      body: JSON.stringify({ initData }),
     });
     setToken(result.token);
     return result;
