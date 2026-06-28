@@ -7,7 +7,7 @@ export type ChatWsEvent =
   | { type: "conversation_updated"; conversation: ChatThread }
   | {
       type: "trip_changed";
-      action: "created" | "updated" | "request_created" | "request_cancelled" | "request_declined";
+      action: "created" | "updated" | "request_created" | "request_cancelled" | "request_approved" | "request_declined";
       tripId: string;
     }
   | { type: "tour_changed"; action: "created" | "updated"; tourId: string }

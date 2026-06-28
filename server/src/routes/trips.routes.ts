@@ -256,7 +256,7 @@ router.post('/:id/requests/:userId/approve', authRequired, asyncHandler(async (r
     await prisma.tripJoinRequest.delete({
       where: { tripId_userId: { tripId: trip.id, userId: targetUserId } },
     })
-    emitTripChanged('request_declined', trip.id, [trip.creatorId, targetUserId])
+    emitTripChanged('request_approved', trip.id, [trip.creatorId, targetUserId])
     res.json(await toFrontendTrip(trip, req.userId))
     return
   }
@@ -279,7 +279,7 @@ router.post('/:id/requests/:userId/approve', authRequired, asyncHandler(async (r
   if (conversation) {
     await emitConversationUpdated(conversation.id)
   }
-  emitTripChanged('updated', trip.id)
+  emitTripChanged('request_approved', trip.id)
   res.json(await toFrontendTrip(updatedTrip, req.userId))
 }))
 

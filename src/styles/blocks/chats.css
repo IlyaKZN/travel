@@ -386,6 +386,23 @@
   }
 }
 
+.chats__room-info {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: -0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 1rem;
+  text-align: left;
+  transition: background-color 0.15s;
+}
+
+.chats__room-info:hover {
+  background: color-mix(in oklab, var(--secondary) 50%, transparent);
+}
+
 .chats__room-avatar {
   width: 3rem;
   height: 3rem;
@@ -399,6 +416,7 @@
 }
 
 .chats__room-title {
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -429,10 +447,10 @@
 .chats__messages {
   flex: 1;
   overflow-y: auto;
-  background:
-    radial-gradient(color-mix(in oklab, var(--primary) 8%, transparent) 1px, transparent 1px),
-    color-mix(in oklab, var(--secondary) 24%, transparent);
-  background-size: 22px 22px;
+  background-color: #fcf4ec;
+  background-image: url("../../assets/chat-bg.svg");
+  background-repeat: repeat;
+  background-size: 560px auto;
   padding: 1.5rem 1rem;
 }
 
@@ -478,6 +496,7 @@
 }
 
 .chats__bubble {
+  position: relative;
   max-width: 78%;
   border-radius: 1rem;
   padding: 0.625rem 1rem;
@@ -495,6 +514,22 @@
   border-bottom-left-radius: 0.25rem;
   background: var(--card);
   color: var(--foreground);
+}
+
+.chats__bubble-tail {
+  position: absolute;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.chats__bubble-tail--mine {
+  right: -6px;
+  color: var(--primary);
+}
+
+.chats__bubble-tail--other {
+  left: -6px;
+  color: var(--card);
 }
 
 .chats__author {
@@ -590,4 +625,170 @@
   margin: 0 auto;
   padding: 5rem 1.25rem;
   text-align: center;
+}
+
+.chat-info {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: oklch(0.18 0.02 40 / 0.45);
+  backdrop-filter: blur(6px);
+}
+
+.chat-info__panel {
+  position: relative;
+  width: min(100%, 28rem);
+  max-height: min(90dvh, 42rem);
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 1.75rem;
+  background: var(--card);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-lift);
+}
+
+@media (min-width: 640px) {
+  .chat-info__panel {
+    padding: 1.5rem;
+  }
+}
+
+.chat-info__close {
+  position: absolute;
+  top: 0.875rem;
+  right: 0.875rem;
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border-radius: 9999px;
+  background: var(--secondary);
+  color: var(--muted-foreground);
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.chat-info__close:hover {
+  color: var(--foreground);
+}
+
+.chat-info__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-right: 2.5rem;
+}
+
+.chat-info__avatar {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 1rem;
+  font-size: 1.125rem;
+}
+
+.chat-info__heading {
+  min-width: 0;
+}
+
+.chat-info__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.chat-info__subtitle {
+  margin-top: 0.125rem;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+
+.chat-info__trip {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  border-radius: 1rem;
+  background: color-mix(in oklab, var(--secondary) 40%, transparent);
+  padding: 1rem;
+  font-size: 0.875rem;
+}
+
+.chat-info__trip-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.chat-info__trip-icon {
+  color: var(--primary);
+}
+
+.chat-info__trip-link {
+  display: inline-flex;
+  justify-content: center;
+  margin-top: 0.25rem;
+  border-radius: 0.875rem;
+  background: var(--primary);
+  padding: 0.75rem 1rem;
+  color: var(--primary-foreground);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.chat-info__section-title {
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted-foreground);
+}
+
+.chat-info__participants {
+  display: grid;
+  gap: 0.375rem;
+  max-height: 18rem;
+  overflow-y: auto;
+}
+
+.chat-info__participant {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 0.875rem;
+  padding: 0.5rem;
+  transition: background-color 0.15s;
+}
+
+.chat-info__participant:hover {
+  background: color-mix(in oklab, var(--secondary) 60%, transparent);
+}
+
+.chat-info__participant-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 0.875rem;
+}
+
+.chat-info__participant-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.chat-info__you {
+  margin-left: 0.375rem;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 400;
 }

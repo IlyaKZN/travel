@@ -20,7 +20,11 @@ export interface ChatClient {
 const clients = new Set<ChatClient>()
 
 type AppEvent =
-  | { type: 'trip_changed'; action: 'created' | 'updated' | 'request_created' | 'request_cancelled' | 'request_declined'; tripId: string }
+  | {
+      type: 'trip_changed'
+      action: 'created' | 'updated' | 'request_created' | 'request_cancelled' | 'request_approved' | 'request_declined'
+      tripId: string
+    }
   | { type: 'tour_changed'; action: 'created' | 'updated'; tourId: string }
   | { type: 'post_changed'; action: 'created' | 'updated' | 'deleted'; postId: string; userId: string }
   | { type: 'user_changed'; userId: string }

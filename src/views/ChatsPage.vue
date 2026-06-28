@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useQuery, useQueryClient } from "@tanstack/vue-query";
 import { useMutation } from "@tanstack/vue-query";
-import { ArrowLeft, MessageCircle, Plus, Search, Send, Users } from "lucide-vue-next";
+import { ArrowLeft, Calendar, MapPin, MessageCircle, Search, Send, Users, Wallet } from "lucide-vue-next";
 import { computed, nextTick, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import AppShell from "@/components/AppShell.vue";
@@ -15,7 +15,7 @@ import {
   updateChatConversation,
   type ChatWsEvent,
 } from "@/lib/chat-ws";
-import { formatDay, formatTime } from "@/lib/format";
+import { formatBudget, formatDay, formatTime } from "@/lib/format";
 
 const queryClient = useQueryClient();
 const route = useRoute();
@@ -52,6 +52,7 @@ const search = ref("");
 const messageText = ref("");
 const endRef = ref<HTMLDivElement | null>(null);
 const sendError = ref("");
+const infoOpen = ref(false);
 
 function handleWsEvent(event: ChatWsEvent) {
   if (event.type === "joined" && event.conversation.id === activeChatId.value) {
@@ -138,6 +139,7 @@ watch(
 watch(
   activeChatId,
   (nextId, prevId) => {
+    infoOpen.value = false;
     if (prevId && prevId !== nextId) {
       chatWs.leave();
     }
@@ -203,13 +205,6 @@ function onSubmit(e: Event) {
       <div class="chats__shell">
         <aside :class="['chats__sidebar', { 'chats__sidebar--hidden-mobile': activeChatId }]">
           <div class="chats__sidebar-head">
-            <div class="chats__title-row">
-              <h1 class="chats__title">Чаты</h1>
-              <button type="button" class="chats__new" aria-label="Новый чат">
-                <Plus class="icon" :stroke-width="2.5" />
-              </button>
-            </div>
-
             <div class="chats__search">
               <Search class="chats__search-icon icon icon--sm" />
               <input
@@ -299,29 +294,31 @@ function onSubmit(e: Event) {
               <RouterLink to="/chats" class="chats__room-back" aria-label="К списку чатов">
                 <ArrowLeft class="icon" />
               </RouterLink>
-              <TripAvatar
-                v-if="activeTrip"
-                :from="activeTrip.from"
-                :to="activeTrip.to"
-                :size="48"
-              />
-              <span
-                v-else
-                class="avatar chats__room-avatar"
-                :style="{ background: activeOther?.avatarColor ?? '#888' }"
-              >
-                {{ activeOther?.firstName[0] ?? "?" }}
-              </span>
-              <div class="chats__room-heading">
-                <h1 class="chats__room-title">{{ activeChat.title }}</h1>
-                <p class="chats__room-subtitle">
-                  <template v-if="activeChat.kind === 'group'">
-                    <Users class="icon icon--sm" />
-                    {{ activeChat.participantIds.length }} участников
-                  </template>
-                  <template v-else>в сети недавно</template>
-                </p>
-              </div>
+              <button type="button" class="chats__room-info" @click="infoOpen = true">
+                <TripAvatar
+                  v-if="activeTrip"
+                  :from="activeTrip.from"
+                  :to="activeTrip.to"
+                  :size="48"
+                />
+                <span
+                  v-else
+                  class="avatar chats__room-avatar"
+                  :style="{ background: activeOther?.avatarColor ?? '#888' }"
+                >
+                  {{ activeOther?.firstName[0] ?? "?" }}
+                </span>
+                <span class="chats__room-heading">
+                  <span class="chats__room-title">{{ activeChat.title }}</span>
+                  <span class="chats__room-subtitle">
+                    <template v-if="activeChat.kind === 'group'">
+                      <Users class="icon icon--sm" />
+                      {{ activeChat.participantIds.length }} участников
+                    </template>
+                    <template v-else>в сети недавно</template>
+                  </span>
+                </span>
+              </button>
             </div>
 
             <div class="chats__messages">
@@ -359,6 +356,28 @@ function onSubmit(e: Event) {
                     >
                       {{ formatTime(m.at) }}
                     </div>
+                    <svg
+                      v-if="m.authorId === meQuery.data.value?.id"
+                      class="chats__bubble-tail chats__bubble-tail--mine"
+                      width="10"
+                      height="12"
+                      viewBox="0 0 10 12"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path d="M0 0 C1 6 4 10 10 12 H0 Z" />
+                    </svg>
+                    <svg
+                      v-else
+                      class="chats__bubble-tail chats__bubble-tail--other"
+                      width="10"
+                      height="12"
+                      viewBox="0 0 10 12"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path d="M10 0 C9 6 6 10 0 12 H10 Z" />
+                    </svg>
                   </div>
                 </div>
               </div>
@@ -382,5 +401,89 @@ function onSubmit(e: Event) {
         </section>
       </div>
     </div>
+
+    <Teleport to="body">
+      <div
+        v-if="infoOpen && activeChat"
+        class="chat-info"
+        role="dialog"
+        aria-modal="true"
+        @click.self="infoOpen = false"
+      >
+        <div class="chat-info__panel">
+          <button type="button" class="chat-info__close" aria-label="Закрыть" @click="infoOpen = false">
+            ×
+          </button>
+
+          <div class="chat-info__header">
+            <TripAvatar
+              v-if="activeTrip"
+              :from="activeTrip.from"
+              :to="activeTrip.to"
+              :size="56"
+            />
+            <span
+              v-else
+              class="avatar chat-info__avatar"
+              :style="{ background: activeOther?.avatarColor ?? '#888' }"
+            >
+              {{ activeOther?.firstName[0] ?? "?" }}
+            </span>
+            <div class="chat-info__heading">
+              <h2 class="chat-info__title">{{ activeChat.title }}</h2>
+              <p class="chat-info__subtitle">
+                {{ activeChat.kind === "group" ? `${activeChat.participantIds.length} участников` : "Личный чат" }}
+              </p>
+            </div>
+          </div>
+
+          <div v-if="activeTrip" class="chat-info__trip">
+            <div class="chat-info__trip-row">
+              <MapPin class="icon icon--sm chat-info__trip-icon" />
+              <strong>{{ activeTrip.from }} → {{ activeTrip.to }}</strong>
+            </div>
+            <div class="chat-info__trip-row text-muted">
+              <Calendar class="icon icon--sm" />
+              <span>{{ formatDay(activeTrip.startAt) }} — {{ formatDay(activeTrip.endAt) }}</span>
+            </div>
+            <div class="chat-info__trip-row text-muted">
+              <Wallet class="icon icon--sm" />
+              <span>≈ {{ formatBudget(activeTrip.budget) }}</span>
+            </div>
+            <RouterLink
+              :to="{ name: 'trip', params: { tripId: activeTrip.id } }"
+              class="chat-info__trip-link"
+              @click="infoOpen = false"
+            >
+              Открыть поездку
+            </RouterLink>
+          </div>
+
+          <div>
+            <h3 class="chat-info__section-title">Участники</h3>
+            <div class="chat-info__participants">
+              <RouterLink
+                v-for="id in activeChat.participantIds"
+                :key="id"
+                :to="id === meQuery.data.value?.id ? '/profile' : { name: 'profile-user', params: { userId: id } }"
+                class="chat-info__participant"
+                @click="infoOpen = false"
+              >
+                <span
+                  class="avatar chat-info__participant-avatar"
+                  :style="{ background: userFor(id)?.avatarColor ?? '#94a3b8' }"
+                >
+                  {{ userFor(id)?.firstName[0] ?? "?" }}
+                </span>
+                <span class="chat-info__participant-name">
+                  {{ userFor(id)?.firstName }} {{ userFor(id)?.lastName }}
+                  <span v-if="id === meQuery.data.value?.id" class="chat-info__you">(вы)</span>
+                </span>
+              </RouterLink>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </AppShell>
 </template>

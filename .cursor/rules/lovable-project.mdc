@@ -1,0 +1,30 @@
+---
+description: Primary Lovable project context
+alwaysApply: true
+---
+
+# Primary Lovable Project
+
+When the user refers to the Lovable project for this workspace, use:
+
+- Project ID: `0104bdd4-1d3d-4c37-8506-20f762acf77c`
+- Editor URL: `https://lovable.dev/projects/0104bdd4-1d3d-4c37-8506-20f762acf77c`
+- Preview URL: `https://id-preview--0104bdd4-1d3d-4c37-8506-20f762acf77c.lovable.app`
+- Display name: `Kind Connection Hub`
+
+Use the Lovable MCP server for project reads, diffs, messages, and preview checks only when the user explicitly asks to work with this Lovable project or to support/sync changes from it.
+
+# Lovable Change Workflow
+
+The Lovable project changes frequently and is the active source for design, layouts, and user scenarios. Do not access or modify Lovable proactively. Use Lovable MCP only after the user explicitly asks to check, support, sync, compare, or apply changes from Lovable.
+
+When the user explicitly asks to work with the current Lovable state:
+
+- Start by reading the current Lovable project state with MCP (`get_project`, then `list_files`, `read_file`, `list_edits`, or `get_diff` as needed). Do not rely only on local files or older chat context.
+- Treat the Lovable preview and MCP diff as the source of truth for what currently exists. Verify important UI or scenario changes against the preview before reporting completion.
+- For open-ended design, layout, or flow changes, use `send_message` with `plan_mode=true` first unless the requested change is small and unambiguous.
+- Send one focused Lovable request at a time. Specify the screen, component, behavior, and final user-facing outcome.
+- After each Lovable agent change, inspect the reply and `get_diff`; use `read_file` for files where the diff is insufficient. Summarize what actually changed, not just what was requested.
+- Preserve recurring product/design guidance with `set_project_knowledge` instead of repeating it in every message.
+- When syncing Lovable work back into this local repo, first compare the cloud state to the local implementation and keep edits scoped to the affected feature, layout, or scenario.
+- If the user asks about "current design", "current layout", "latest scenario", "what is in Lovable now", "support changes from Lovable", or similar, check Lovable MCP first.

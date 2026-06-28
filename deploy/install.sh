@@ -71,7 +71,8 @@ cd "$APP_DIR/server"
 npm ci
 npx prisma generate
 npm run build
-npx prisma migrate deploy
+echo "==> Resetting database schema from Prisma schema..."
+npm run db:reset
 
 echo "==> Configuring nginx..."
 cp "$DEPLOY_DIR/nginx-travels.conf" /etc/nginx/sites-available/travels

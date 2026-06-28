@@ -42,7 +42,10 @@ cd "$APP_DIR/server"
 npm ci
 npx prisma generate
 npm run build
-npx prisma migrate deploy
+echo "==> Stopping API before database reset..."
+systemctl stop travels-api || true
+echo "==> Resetting database schema from Prisma schema..."
+npm run db:reset
 
 echo "==> Reloading services..."
 nginx -t
