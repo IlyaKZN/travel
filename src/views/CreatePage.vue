@@ -165,7 +165,7 @@ function submit(e: Event) {
               {{ createMutation.error.value?.message }}
             </p>
             <p class="create__legal">
-              Нажимая кнопку, вы соглашаетесь с правилами сервиса Waymate
+              Нажимая кнопку, вы соглашаетесь с правилами сервиса ЕдемВместе
             </p>
           </div>
         </form>

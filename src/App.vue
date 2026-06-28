@@ -12,7 +12,7 @@ let unsubscribe: (() => void) | undefined;
 watch(
   () => route.meta.title,
   (title) => {
-    document.title = (title as string) ?? "Waymate — Найди попутчиков и поезжай вместе";
+    document.title = (title as string) ?? "ЕдемВместе — Найди попутчиков и поезжай вместе";
   },
   { immediate: true },
 );

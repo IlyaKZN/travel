@@ -45,8 +45,8 @@ function next() {
   <div class="onboarding">
     <div class="onboarding__top">
       <div class="auth__visual-logo">
-        <span class="auth__logo-icon"><Compass class="icon" /></span>
-        <span class="auth__logo-text">waymate</span>
+        <span class="auth__logo-icon"><img src="/favicon.png" alt="" class="auth__logo-image" /></span>
+        <span class="auth__logo-text">ЕдемВместе</span>
       </div>
       <button type="button" class="onboarding__skip" @click="done">Пропустить</button>
     </div>

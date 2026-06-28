@@ -28,13 +28,19 @@
   place-items: center;
   width: 2.5rem;
   height: 2.5rem;
-  border-radius: 0.75rem;
+  border-radius: 9999px;
+  overflow: hidden;
   background: color-mix(in oklab, #fff 15%, transparent);
 }
 
 .auth__logo-icon--primary {
-  background: var(--primary);
-  color: var(--primary-foreground);
+  background: var(--secondary);
+}
+
+.auth__logo-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .auth__logo-text {

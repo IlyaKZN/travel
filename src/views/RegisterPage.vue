@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
-import { Compass, Eye, EyeOff, Check, User, Mail, Lock } from "lucide-vue-next";
+import { Eye, EyeOff, Check, User, Mail, Lock } from "lucide-vue-next";
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import { api } from "@/lib/api";
@@ -77,8 +77,10 @@ function onSubmit(e: Event) {
   <div class="auth-layout">
     <div class="auth-layout__visual">
       <div class="auth__visual-logo">
-        <span class="auth__logo-icon register__logo-icon"><Compass class="icon" /></span>
-        <span class="auth__logo-text">waymate</span>
+        <span class="auth__logo-icon register__logo-icon">
+          <img src="/favicon.png" alt="" class="auth__logo-image" />
+        </span>
+        <span class="auth__logo-text">ЕдемВместе</span>
       </div>
       <div>
         <h1 class="auth__visual-title">Присоединяйся к<br />сообществу путешественников.</h1>
@@ -100,14 +102,16 @@ function onSubmit(e: Event) {
           </li>
         </ul>
       </div>
-      <p class="auth__copyright">© 2026 Waymate</p>
+      <p class="auth__copyright">© 2026 ЕдемВместе</p>
     </div>
 
     <div class="auth-layout__form">
       <div class="register__form-wrap">
         <div class="auth__mobile-logo">
-          <span class="auth__logo-icon auth__logo-icon--primary register__logo-icon"><Compass class="icon" /></span>
-          <span class="auth__logo-text">waymate</span>
+          <span class="auth__logo-icon auth__logo-icon--primary register__logo-icon">
+            <img src="/favicon.png" alt="" class="auth__logo-image" />
+          </span>
+          <span class="auth__logo-text">ЕдемВместе</span>
         </div>
 
         <h2 class="auth__title">Создать аккаунт</h2>

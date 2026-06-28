@@ -56,7 +56,7 @@ function resetFilters() {
       <div class="container hero__inner">
         <div class="home__hero-mobile hide-desktop">
           <div>
-            <p class="home__hero-brand">waymate</p>
+            <p class="home__hero-brand">ЕдемВместе</p>
             <h1 class="home__hero-title">Путешествуй вместе</h1>
           </div>
           <RouterLink to="/profile" class="home__profile-link">A</RouterLink>

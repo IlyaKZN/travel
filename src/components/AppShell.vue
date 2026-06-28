@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useQuery } from "@tanstack/vue-query";
-import { Compass, Home, Plus, MessageCircle, User } from "lucide-vue-next";
+import { Home, Plus, MessageCircle, User } from "lucide-vue-next";
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 import { api, getToken } from "@/lib/api";
@@ -44,9 +44,9 @@ const bottomItems = [
       <div class="app-shell__header-inner">
         <RouterLink to="/" class="app-shell__logo">
           <span class="app-shell__logo-icon">
-            <Compass class="icon" />
+            <img src="/favicon.png" alt="" class="app-shell__logo-image" />
           </span>
-          <span class="app-shell__logo-text">waymate</span>
+          <span class="app-shell__logo-text">ЕдемВместе</span>
         </RouterLink>
         <nav class="app-shell__nav">
           <RouterLink
