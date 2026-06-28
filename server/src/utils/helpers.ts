@@ -36,6 +36,7 @@ export function publicUser(user: DbUser) {
     nickname: user.nickname,
     firstName: frontendUser.firstName,
     lastName: user.lastName,
+    avatar: frontendUser.avatar,
     avatarColor: frontendUser.avatarColor,
     bio: frontendUser.bio,
     location: frontendUser.location,
@@ -66,10 +67,6 @@ export function detectLocationType(location: string): 'city' | 'festival' | 'nat
 
 export function unsplash(id: string, w = 800, h = 500): string {
   return `https://images.unsplash.com/photo-${id}?w=${w}&h=${h}&fit=crop&q=80&auto=format`
-}
-
-export function unsplashAvatar(id: string, size = 150): string {
-  return `https://images.unsplash.com/photo-${id}?w=${size}&h=${size}&fit=crop&crop=faces&q=80&auto=format`
 }
 
 export function tripDisplayNumber(id: string, ordinal: number): number {

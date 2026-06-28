@@ -7,6 +7,7 @@ export interface User {
   nickname: string;
   firstName: string;
   lastName: string;
+  avatar?: string;
   avatarColor: string;
   bio: string;
   location: string;

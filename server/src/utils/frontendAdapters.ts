@@ -16,7 +16,7 @@ const transportMap: Record<string, FrontendTransport> = {
   самолёт: 'plane',
 }
 
-const avatarPalette = ['#C2614A', '#7D9B76', '#E8A87C', '#8B6F5E', '#4A6741', '#B8754B']
+const avatarPalette = ['#F97316', '#FB923C', '#F59E0B', '#F472B6', '#FDBA74', '#FDE68A', '#A7F3D0']
 
 function hashString(value: string): number {
   let hash = 0
@@ -54,6 +54,7 @@ export function publicFrontendUser(user: DbUser) {
     nickname: user.nickname,
     firstName: displayName,
     lastName: user.lastName,
+    avatar: user.avatar,
     avatarColor: avatarColor(user.avatar || user.id),
     bio: user.about ?? '',
     location: user.patronymic ?? '',

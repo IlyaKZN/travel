@@ -261,7 +261,7 @@ router.post('/resend-code', asyncHandler(async (req, res) => {
 router.get('/me', authRequired, asyncHandler(async (req, res) => {
   const user = await prisma.user.findUnique({ where: { id: req.userId } })
   if (!user) {
-    res.status(404).json({ error: 'Пользователь не найден' })
+    res.status(401).json({ error: 'Недействительный токен' })
     return
   }
   res.json(publicUser(toDbUser(user)))

@@ -4,6 +4,7 @@ import { Compass, Home, Plus, MessageCircle, User } from "lucide-vue-next";
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 import { api, getToken } from "@/lib/api";
+import { avatarClass, avatarStyle } from "@/lib/avatar";
 
 const route = useRoute();
 const hideChrome = computed(
@@ -20,7 +21,8 @@ const meQuery = useQuery({
   retry: false,
 });
 
-const initial = computed(() => meQuery.data.value?.firstName?.[0] ?? "A");
+const isAuthenticated = computed(() => Boolean(getToken() && meQuery.data.value));
+const initial = computed(() => meQuery.data.value?.firstName?.[0] ?? meQuery.data.value?.nickname?.[0] ?? "?");
 
 const topLinks = [
   { to: "/", label: "Поездки", exact: true },
@@ -62,8 +64,13 @@ const bottomItems = [
           <RouterLink to="/create" class="app-shell__create-btn">
             <Plus class="icon icon--sm" /> Создать поездку
           </RouterLink>
-          <RouterLink :to="getToken() ? '/profile' : '/auth'" class="app-shell__avatar-link">
-            {{ initial }}
+          <RouterLink
+            :to="getToken() ? '/profile' : '/auth'"
+            :class="['app-shell__avatar-link', avatarClass(meQuery.data.value)]"
+            :style="avatarStyle(meQuery.data.value, 'var(--secondary)')"
+          >
+            <span v-if="isAuthenticated">{{ initial }}</span>
+            <User v-else class="icon icon--sm" />
           </RouterLink>
         </div>
       </div>

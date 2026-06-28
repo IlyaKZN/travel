@@ -2,6 +2,7 @@
 import { ArrowRight, Car, Train, Bus, Plane } from "lucide-vue-next";
 import { computed } from "vue";
 import type { Trip, TransportType } from "@/lib/api";
+import { avatarClass, avatarStyle } from "@/lib/avatar";
 import { formatDate, formatTime, formatBudget } from "@/lib/format";
 
 const props = defineProps<{ trip: Trip }>();
@@ -43,8 +44,8 @@ const seatsLabel = computed(() => (seatsLeft.value === 1 ? "место" : "ме�
     <div class="trip-card__footer">
       <div class="trip-card__organizer">
         <div
-          class="avatar trip-card__organizer-avatar"
-          :style="{ backgroundColor: organizer?.avatarColor ?? '#94a3b8' }"
+          :class="['avatar trip-card__organizer-avatar', avatarClass(organizer)]"
+          :style="avatarStyle(organizer)"
         >
           {{ organizer?.firstName?.[0] }}
         </div>

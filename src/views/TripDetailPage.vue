@@ -22,6 +22,7 @@ import { useRoute, useRouter } from "vue-router";
 import AppShell from "@/components/AppShell.vue";
 import TripAvatar from "@/components/TripAvatar.vue";
 import { api, getToken, transportLabel, type TransportType } from "@/lib/api";
+import { avatarClass, avatarStyle } from "@/lib/avatar";
 import { formatDateTime, formatBudget } from "@/lib/format";
 
 const transportMeta: Record<TransportType, { icon: typeof Car; modifier: string }> = {
@@ -230,8 +231,8 @@ function handleCta() {
               class="trip-detail__participant trip-detail__participant--organizer"
             >
               <span
-                class="avatar trip-detail__participant-avatar"
-                :style="{ background: organizer?.avatarColor ?? '#94a3b8' }"
+                :class="['avatar trip-detail__participant-avatar', avatarClass(organizer)]"
+                :style="avatarStyle(organizer)"
               >
                 {{ organizer?.firstName[0] ?? "?" }}
               </span>
@@ -249,7 +250,10 @@ function handleCta() {
               :to="{ name: 'profile-user', params: { userId: p.id } }"
               class="trip-detail__participant"
             >
-              <span class="avatar trip-detail__participant-avatar" :style="{ background: p.avatarColor }">
+              <span
+                :class="['avatar trip-detail__participant-avatar', avatarClass(p)]"
+                :style="avatarStyle(p)"
+              >
                 {{ p.firstName[0] }}
               </span>
               <div style="min-width: 0; flex: 1">
@@ -316,8 +320,8 @@ function handleCta() {
                 class="trip-detail__request-user"
               >
                 <span
-                  class="avatar trip-detail__request-avatar"
-                  :style="{ background: request.user.avatarColor }"
+                  :class="['avatar trip-detail__request-avatar', avatarClass(request.user)]"
+                  :style="avatarStyle(request.user)"
                 >
                   {{ request.user.firstName[0] }}
                 </span>

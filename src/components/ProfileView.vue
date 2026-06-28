@@ -6,6 +6,7 @@ import { useRouter } from "vue-router";
 import AppShell from "@/components/AppShell.vue";
 import TripAvatar from "@/components/TripAvatar.vue";
 import { api, getToken, transportLabel, type Review, type TransportType } from "@/lib/api";
+import { avatarClass, avatarStyle } from "@/lib/avatar";
 import { formatDate } from "@/lib/format";
 
 const props = defineProps<{ userId?: string; owner?: boolean }>();
@@ -134,7 +135,10 @@ function startDm() {
       <div class="container profile__content">
         <div class="profile__card">
           <div class="profile__head">
-            <span class="avatar profile__avatar" :style="{ background: u.avatarColor }">
+            <span
+              :class="['avatar profile__avatar', avatarClass(u)]"
+              :style="avatarStyle(u)"
+            >
               {{ u.firstName[0] }}
             </span>
             <div style="min-width: 0">
@@ -240,8 +244,8 @@ function startDm() {
             <div v-for="r in reviews" :key="r.id" class="profile__review-item">
               <div class="profile__review-head">
                 <span
-                  class="avatar profile__review-avatar"
-                  :style="{ background: reviewAuthor(r.authorId)?.avatarColor }"
+                  :class="['avatar profile__review-avatar', avatarClass(reviewAuthor(r.authorId))]"
+                  :style="avatarStyle(reviewAuthor(r.authorId))"
                 >
                   {{ reviewAuthor(r.authorId)?.firstName[0] }}
                 </span>

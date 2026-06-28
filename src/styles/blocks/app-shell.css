@@ -126,8 +126,16 @@
   height: 2.25rem;
   border-radius: 9999px;
   background: var(--secondary);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
   font-size: 0.875rem;
   font-weight: 600;
+  overflow: hidden;
+}
+
+.app-shell__avatar-link .icon {
+  color: var(--muted-foreground);
 }
 
 .app-shell__bottom-nav {

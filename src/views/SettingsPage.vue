@@ -4,6 +4,10 @@ import { ArrowLeft, Camera, Eye, EyeOff, Lock } from "lucide-vue-next";
 import { computed, ref, watch } from "vue";
 import AppShell from "@/components/AppShell.vue";
 import { api, getToken } from "@/lib/api";
+import { avatarClass, avatarStyle } from "@/lib/avatar";
+
+const MAX_AVATAR_SIZE = 5 * 1024 * 1024;
+const AVATAR_TYPES = ["image/png", "image/jpeg", "image/webp"];
 
 const queryClient = useQueryClient();
 const meQuery = useQuery({
@@ -21,18 +25,23 @@ const location = ref("");
 const email = ref("");
 const phone = ref("");
 const age = ref("");
+const avatar = ref("");
+const avatarError = ref("");
+const avatarInput = ref<HTMLInputElement | null>(null);
 const currentPwd = ref("");
 const newPwd = ref("");
 const confirmPwd = ref("");
 const showPwd = ref(false);
 
 const pwdMismatch = computed(() => confirmPwd.value.length > 0 && newPwd.value !== confirmPwd.value);
+const avatarPreviewUser = computed(() => (u.value ? { ...u.value, avatar: avatar.value } : u.value));
 
 const profileMutation = useMutation({
   mutationFn: () =>
     api.updateMe({
       firstName: firstName.value,
       lastName: lastName.value,
+      avatar: avatar.value,
       bio: bio.value,
       location: location.value,
       email: email.value,
@@ -62,9 +71,51 @@ watch(
     bio.value = val.bio;
     location.value = val.location;
     email.value = val.email ?? "";
+    avatar.value = val.avatar ?? "";
   },
   { immediate: true },
 );
+
+function openAvatarPicker() {
+  avatarInput.value?.click();
+}
+
+function resetAvatar() {
+  avatar.value = "";
+  avatarError.value = "";
+  if (avatarInput.value) {
+    avatarInput.value.value = "";
+  }
+}
+
+function handleAvatarChange(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+
+  avatarError.value = "";
+  if (!AVATAR_TYPES.includes(file.type)) {
+    avatarError.value = "Выберите PNG, JPG или WebP.";
+    input.value = "";
+    return;
+  }
+  if (file.size > MAX_AVATAR_SIZE) {
+    avatarError.value = "Файл должен быть до 5 МБ.";
+    input.value = "";
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    avatar.value = typeof reader.result === "string" ? reader.result : "";
+    input.value = "";
+  };
+  reader.onerror = () => {
+    avatarError.value = "Не удалось прочитать файл.";
+    input.value = "";
+  };
+  reader.readAsDataURL(file);
+}
 </script>
 
 <template>
@@ -96,16 +147,35 @@ watch(
         <section class="panel">
           <div class="settings__avatar-row">
             <div class="settings__avatar-wrap">
-              <span class="avatar settings__avatar" :style="{ background: u.avatarColor }">
+              <span
+                :class="['avatar settings__avatar', avatarClass(avatarPreviewUser)]"
+                :style="avatarStyle(avatarPreviewUser)"
+              >
                 {{ u.firstName[0] }}
               </span>
-              <button type="button" class="settings__avatar-edit">
+              <button
+                type="button"
+                class="settings__avatar-edit"
+                aria-label="Загрузить фото профиля"
+                @click="openAvatarPicker"
+              >
                 <Camera class="icon icon--sm" />
               </button>
+              <input
+                ref="avatarInput"
+                class="settings__avatar-input"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                @change="handleAvatarChange"
+              />
             </div>
             <div class="settings__avatar-hint">
               <strong>Фото профиля</strong>
-              <div>PNG или JPG, до 5 МБ</div>
+              <div>PNG, JPG или WebP, до 5 МБ</div>
+              <button v-if="avatar" type="button" class="settings__avatar-remove" @click="resetAvatar">
+                Удалить фото
+              </button>
+              <p v-if="avatarError" class="settings__avatar-error">{{ avatarError }}</p>
             </div>
           </div>
 
@@ -146,7 +216,7 @@ watch(
             <button
               type="button"
               class="btn btn--hero btn--md"
-              :disabled="profileMutation.isPending.value"
+              :disabled="profileMutation.isPending.value || Boolean(avatarError)"
               @click="profileMutation.mutate()"
             >
               {{ profileMutation.isPending.value ? "Сохраняем..." : "Сохранить" }}

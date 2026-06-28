@@ -102,6 +102,10 @@
   transform: scale(1.05);
 }
 
+.settings__avatar-input {
+  display: none;
+}
+
 .settings__avatar-hint {
   font-size: 0.875rem;
   color: var(--muted-foreground);
@@ -111,6 +115,23 @@
   display: block;
   font-weight: 600;
   color: var(--foreground);
+}
+
+.settings__avatar-remove {
+  margin-top: 0.25rem;
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.settings__avatar-remove:hover {
+  text-decoration: underline;
+}
+
+.settings__avatar-error {
+  margin-top: 0.25rem;
+  color: var(--destructive);
+  font-size: 0.75rem;
 }
 
 .settings__grid {

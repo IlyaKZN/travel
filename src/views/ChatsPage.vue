@@ -15,6 +15,7 @@ import {
   updateChatConversation,
   type ChatWsEvent,
 } from "@/lib/chat-ws";
+import { avatarClass, avatarStyle } from "@/lib/avatar";
 import { formatBudget, formatDay, formatTime } from "@/lib/format";
 
 const queryClient = useQueryClient();
@@ -258,8 +259,8 @@ function onSubmit(e: Event) {
                 />
                 <span
                   v-else
-                  class="avatar chats__dm-avatar"
-                  :style="{ background: c.otherUser?.avatarColor ?? '#888' }"
+                  :class="['avatar chats__dm-avatar', avatarClass(c.otherUser)]"
+                  :style="avatarStyle(c.otherUser, '#888')"
                 >
                   {{ c.otherUser?.firstName[0] ?? "?" }}
                 </span>
@@ -320,8 +321,8 @@ function onSubmit(e: Event) {
                 />
                 <span
                   v-else
-                  class="avatar chats__room-avatar"
-                  :style="{ background: activeOther?.avatarColor ?? '#888' }"
+                  :class="['avatar chats__room-avatar', avatarClass(activeOther)]"
+                  :style="avatarStyle(activeOther, '#888')"
                 >
                   {{ activeOther?.firstName[0] ?? "?" }}
                 </span>
@@ -348,8 +349,8 @@ function onSubmit(e: Event) {
                 >
                   <span
                     v-if="m.authorId !== meQuery.data.value?.id"
-                    class="avatar chats__message-avatar"
-                    :style="{ background: userFor(m.authorId)?.avatarColor ?? '#94a3b8' }"
+                    :class="['avatar chats__message-avatar', avatarClass(userFor(m.authorId))]"
+                    :style="avatarStyle(userFor(m.authorId))"
                   >
                     {{ userFor(m.authorId)?.firstName[0] ?? "?" }}
                   </span>
@@ -441,8 +442,8 @@ function onSubmit(e: Event) {
             />
             <span
               v-else
-              class="avatar chat-info__avatar"
-              :style="{ background: activeOther?.avatarColor ?? '#888' }"
+              :class="['avatar chat-info__avatar', avatarClass(activeOther)]"
+              :style="avatarStyle(activeOther, '#888')"
             >
               {{ activeOther?.firstName[0] ?? "?" }}
             </span>
@@ -487,8 +488,8 @@ function onSubmit(e: Event) {
                 @click="infoOpen = false"
               >
                 <span
-                  class="avatar chat-info__participant-avatar"
-                  :style="{ background: userFor(id)?.avatarColor ?? '#94a3b8' }"
+                  :class="['avatar chat-info__participant-avatar', avatarClass(userFor(id))]"
+                  :style="avatarStyle(userFor(id))"
                 >
                   {{ userFor(id)?.firstName[0] ?? "?" }}
                 </span>

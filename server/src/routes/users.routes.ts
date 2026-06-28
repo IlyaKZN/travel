@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma.js'
 import { toDbUser } from '../utils/serializers.js'
-import { publicUser, unsplashAvatar } from '../utils/helpers.js'
+import { publicUser } from '../utils/helpers.js'
 import { authRequired } from '../middleware/auth.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { routeParam } from '../utils/routeParam.js'
@@ -12,6 +12,17 @@ const router = Router()
 
 const NICKNAME_MAX = 15
 const ABOUT_MAX = 200
+const AVATAR_MAX_BYTES = 5 * 1024 * 1024
+const AVATAR_DATA_URL_RE = /^data:image\/(?:png|jpe?g|webp);base64,[A-Za-z0-9+/]+={0,2}$/
+
+const avatarSchema = z
+  .string()
+  .refine((value) => {
+    if (!value) return true
+    if (!AVATAR_DATA_URL_RE.test(value)) return false
+    const [, payload = ''] = value.split(',', 2)
+    return Math.ceil((payload.length * 3) / 4) <= AVATAR_MAX_BYTES
+  }, 'Аватар должен быть PNG, JPG или WebP до 5 МБ')
 
 const profileSchema = z.object({
   nickname: z.string().min(1).max(NICKNAME_MAX),
@@ -19,7 +30,7 @@ const profileSchema = z.object({
   lastName: z.string().min(1),
   patronymic: z.string().optional(),
   birthDate: z.string().min(1),
-  avatar: z.string().optional(),
+  avatar: avatarSchema.optional(),
   about: z.string().max(ABOUT_MAX).optional(),
 })
 
@@ -27,7 +38,7 @@ const settingsSchema = z.object({
   nickname: z.string().min(1).max(NICKNAME_MAX).optional(),
   firstName: z.string().min(1).optional(),
   lastName: z.string().optional(),
-  avatar: z.string().optional(),
+  avatar: avatarSchema.optional(),
   about: z.string().max(ABOUT_MAX).optional(),
   bio: z.string().max(ABOUT_MAX).optional(),
   location: z.string().optional(),
@@ -130,7 +141,6 @@ router.post('/profile', authRequired, asyncHandler(async (req, res) => {
     where: { id: user.id },
     data: {
       ...data,
-      avatar: data.avatar || unsplashAvatar('1507003211169-0a1dd7228f2d'),
       profileComplete: true,
     },
   })
@@ -173,9 +183,6 @@ router.patch('/me', authRequired, asyncHandler(async (req, res) => {
       ...(bio !== undefined ? { about: bio } : {}),
       ...(location !== undefined ? { patronymic: location } : {}),
       ...(age !== undefined ? { birthDate: String(age) } : {}),
-      ...(dbData.avatar !== undefined && !dbData.avatar
-        ? { avatar: unsplashAvatar('1507003211169-0a1dd7228f2d') }
-        : {}),
     },
   })
   emitUserChanged(updated.id)
