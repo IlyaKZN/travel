@@ -162,7 +162,7 @@ export function syncJoinedChat(
   conversation: ChatThread,
   messages: Message[],
 ) {
-  queryClient.setQueryData(["chat", conversation.id], conversation);
+  updateChatConversation(queryClient, conversation);
   queryClient.setQueryData(["messages", conversation.id], messages);
 }
 

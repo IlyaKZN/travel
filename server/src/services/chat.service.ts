@@ -162,7 +162,53 @@ export async function getOrCreateTripChat(tripId: string, userId: string): Promi
   return conversation
 }
 
+async function countUnreadMessages(conversationId: string, currentUserId: string) {
+  const participant = await prisma.conversationParticipant.findUnique({
+    where: { conversationId_userId: { conversationId, userId: currentUserId } },
+    select: { lastReadAt: true },
+  })
+
+  return prisma.message.count({
+    where: {
+      conversationId,
+      senderId: { not: currentUserId },
+      ...(participant ? { createdAt: { gt: participant.lastReadAt } } : {}),
+    },
+  })
+}
+
+export async function markConversationRead(
+  conversationId: string,
+  userId: string,
+  readAt = new Date(),
+) {
+  const result = await prisma.conversationParticipant.updateMany({
+    where: { conversationId, userId },
+    data: { lastReadAt: readAt },
+  })
+
+  return result.count > 0
+}
+
+export async function markConversationReadForUsers(
+  conversationId: string,
+  userIds: string[],
+  readAt = new Date(),
+) {
+  if (userIds.length === 0) return
+
+  await prisma.conversationParticipant.updateMany({
+    where: {
+      conversationId,
+      userId: { in: [...new Set(userIds)] },
+    },
+    data: { lastReadAt: readAt },
+  })
+}
+
 export async function enrichConversation(conversation: DbConversation, currentUserId: string) {
+  const unread = await countUnreadMessages(conversation.id, currentUserId)
+
   if (conversation.type === 'trip' && conversation.tripId) {
     const trip = await prisma.trip.findUnique({ where: { id: conversation.tripId } })
     const route = trip ? splitTripLocation(trip.location) : null
@@ -174,7 +220,7 @@ export async function enrichConversation(conversation: DbConversation, currentUs
       title,
       participantIds: conversation.participantIds,
       preview: conversation.lastMessageText ?? 'Пока нет сообщений',
-      unread: 0,
+      unread,
       lastAt: conversation.lastMessageAt,
     }
   }
@@ -189,7 +235,7 @@ export async function enrichConversation(conversation: DbConversation, currentUs
     otherUser: other ? publicFrontendUser(toDbUser(other)) : undefined,
     participantIds: conversation.participantIds,
     preview: conversation.lastMessageText ?? 'Пока нет сообщений',
-    unread: 0,
+    unread,
     lastAt: conversation.lastMessageAt,
   }
 }
@@ -220,23 +266,28 @@ export async function sendMessage(
   const trimmed = text.trim()
   const now = new Date()
 
-  const message = await prisma.message.create({
-    data: {
-      id: uuid(),
-      conversationId,
-      senderId,
-      text: trimmed,
-      createdAt: now,
-    },
-  })
-
-  await prisma.conversation.update({
-    where: { id: conversationId },
-    data: {
-      lastMessageAt: now,
-      lastMessageText: trimmed.slice(0, 120),
-    },
-  })
+  const [message] = await prisma.$transaction([
+    prisma.message.create({
+      data: {
+        id: uuid(),
+        conversationId,
+        senderId,
+        text: trimmed,
+        createdAt: now,
+      },
+    }),
+    prisma.conversation.update({
+      where: { id: conversationId },
+      data: {
+        lastMessageAt: now,
+        lastMessageText: trimmed.slice(0, 120),
+      },
+    }),
+    prisma.conversationParticipant.updateMany({
+      where: { conversationId, userId: senderId },
+      data: { lastReadAt: now },
+    }),
+  ])
 
   return toDbMessage(message)
 }

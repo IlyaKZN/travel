@@ -195,6 +195,10 @@ export const api = {
     }),
   tripChat: (tripId: string) => apiFetch<ChatThread>(`/api/chats/trip/${tripId}`),
   chat: (id: string) => apiFetch<ChatThread>(`/api/chats/${id}`),
+  markChatRead: (id: string) =>
+    apiFetch<ChatThread>(`/api/chats/${id}/read`, {
+      method: "POST",
+    }),
   messages: (chatId: string) => apiFetch<Message[]>(`/api/chats/${chatId}/messages`),
   sendMessage: (chatId: string, text: string) =>
     apiFetch<Message>(`/api/chats/${chatId}/messages`, {

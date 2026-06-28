@@ -7,6 +7,7 @@ import {
   enrichMessage,
   getOrCreateDm,
   getOrCreateTripChat,
+  markConversationRead,
   publicUserBrief,
   sendMessage,
 } from '../services/chat.service.js'
@@ -100,6 +101,22 @@ router.get('/:id', asyncHandler(async (req, res) => {
   res.json(await enrichConversation(toDbConversation(conversation), req.userId!))
 }))
 
+router.post('/:id/read', asyncHandler(async (req, res) => {
+  const id = routeParam(req.params.id)
+  const conversation = await prisma.conversation.findUnique({
+    where: { id },
+    include: conversationInclude,
+  })
+  if (!conversation || !conversation.participants.some((p) => p.userId === req.userId!)) {
+    res.status(404).json({ error: 'Чат не найден' })
+    return
+  }
+
+  await markConversationRead(id, req.userId!)
+  await emitConversationUpdated(id)
+  res.json(await enrichConversation(toDbConversation(conversation), req.userId!))
+}))
+
 router.get('/:id/messages', asyncHandler(async (req, res) => {
   const id = routeParam(req.params.id)
   const conversation = await prisma.conversation.findUnique({
@@ -127,6 +144,8 @@ router.get('/:id/messages', asyncHandler(async (req, res) => {
     text: m.text,
     createdAt: m.createdAt.toISOString(),
   })))
+  await markConversationRead(id, req.userId!)
+  await emitConversationUpdated(id)
   res.json(enriched)
 }))
 

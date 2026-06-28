@@ -51,8 +51,7 @@ const router = createRouter({
     {
       path: "/chat/:chatId",
       name: "chat",
-      component: () => import("@/views/ChatRoomPage.vue"),
-      meta: { title: "Чат — Waymate" },
+      redirect: (to) => ({ name: "chats-chat", params: { chatId: to.params.chatId } }),
     },
     {
       path: "/profile",

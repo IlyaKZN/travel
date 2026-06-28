@@ -5,6 +5,8 @@ import { conversationInclude, toDbConversation } from '../utils/serializers.js'
 import {
   enrichConversation,
   enrichMessage,
+  markConversationRead,
+  markConversationReadForUsers,
   sendMessage,
 } from '../services/chat.service.js'
 import { verifyToken } from '../utils/helpers.js'
@@ -126,6 +128,11 @@ export async function emitChatMessage(conversationId: string, message: Awaited<R
   if (!conversation) return
 
   const participantIds = conversation.participants.map((p) => p.userId)
+  const joinedUserIds = [...clients]
+    .filter((client) => client.conversationId === conversationId && participantIds.includes(client.userId))
+    .map((client) => client.userId)
+  await markConversationReadForUsers(conversationId, joinedUserIds, new Date(message.createdAt))
+
   broadcastToJoinedRoom(conversationId, participantIds, {
     type: 'message',
     message: await enrichMessage(message),
@@ -177,6 +184,7 @@ async function handleJoin(client: ChatClient, conversationId: string) {
   }
 
   client.conversationId = conversationId
+  await markConversationRead(conversationId, client.userId)
   const dbConversation = toDbConversation(conversation)
   sendJson(client.ws, {
     type: 'joined',

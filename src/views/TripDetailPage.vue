@@ -77,7 +77,7 @@ const declineRequestMutation = useMutation({
 
 const openTripChatMutation = useMutation({
   mutationFn: () => api.tripChat(tripId.value),
-  onSuccess: (chat) => router.push({ name: "chat", params: { chatId: chat.id } }),
+  onSuccess: (chat) => router.push({ name: "chats-chat", params: { chatId: chat.id } }),
 });
 
 const trip = computed(() => tripQuery.data.value);

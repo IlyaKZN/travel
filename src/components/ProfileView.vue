@@ -74,7 +74,7 @@ const logoutMutation = useMutation({
 const startDmMutation = useMutation({
   mutationFn: () => api.startDm(profileUserId.value!),
   onSuccess: (chat) => {
-    router.push({ name: "chat", params: { chatId: chat.id } });
+    router.push({ name: "chats-chat", params: { chatId: chat.id } });
   },
 });
 

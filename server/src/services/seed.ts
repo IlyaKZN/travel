@@ -258,7 +258,10 @@ export async function seedDatabase() {
       lastMessageAt: new Date('2025-06-18T14:30:00.000Z'),
       lastMessageText: 'Привет! Когда следующий тур в Казань?',
       participants: {
-        create: [{ userId: '1' }, { userId: '2' }],
+        create: [
+          { userId: '1', lastReadAt: new Date('2025-06-18T14:20:00.000Z') },
+          { userId: '2', lastReadAt: new Date('2025-06-18T14:31:00.000Z') },
+        ],
       },
     },
   })
@@ -272,7 +275,10 @@ export async function seedDatabase() {
       lastMessageAt: new Date('2025-06-20T09:15:00.000Z'),
       lastMessageText: 'Встречаемся у вокзала в 6:00',
       participants: {
-        create: [{ userId: '1' }, { userId: '4' }],
+        create: [
+          { userId: '1', lastReadAt: new Date('2025-06-20T09:16:00.000Z') },
+          { userId: '4', lastReadAt: new Date('2025-06-19T15:45:00.000Z') },
+        ],
       },
     },
   })

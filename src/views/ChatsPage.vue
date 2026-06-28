@@ -102,6 +102,16 @@ function userFor(id: string) {
   return usersQuery.data.value?.find((u) => u.id === id) ?? meQuery.data.value;
 }
 
+async function markActiveChatRead(chatId: string) {
+  if (!getToken()) return;
+
+  try {
+    updateChatConversation(queryClient, await api.markChatRead(chatId));
+  } catch {
+    /* The chat query below will surface access errors when needed. */
+  }
+}
+
 const activeChat = computed(() => chatQuery.data.value ?? chatsQuery.data.value?.find((c) => c.id === activeChatId.value));
 const activeTrip = computed(() => (activeChat.value?.tripId ? tripFor(activeChat.value.tripId) : undefined));
 const activeOther = computed(() => activeChat.value?.otherUser);
@@ -133,6 +143,7 @@ watch(
     }
     if (nextId) {
       chatWs.join(nextId);
+      void markActiveChatRead(nextId);
     }
   },
   { immediate: true },
