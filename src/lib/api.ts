@@ -171,6 +171,10 @@ export const api = {
     }),
 
   chats: () => apiFetch<ChatThread[]>("/api/chats"),
+  startDm: (userId: string) =>
+    apiFetch<ChatThread>(`/api/chats/dm/${userId}`, {
+      method: "POST",
+    }),
   tripChat: (tripId: string) => apiFetch<ChatThread>(`/api/chats/trip/${tripId}`),
   chat: (id: string) => apiFetch<ChatThread>(`/api/chats/${id}`),
   messages: (chatId: string) => apiFetch<Message[]>(`/api/chats/${chatId}/messages`),

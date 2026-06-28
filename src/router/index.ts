@@ -43,6 +43,12 @@ const router = createRouter({
       meta: { title: "Чаты — Waymate" },
     },
     {
+      path: "/chats/:chatId",
+      name: "chats-chat",
+      component: () => import("@/views/ChatsPage.vue"),
+      meta: { title: "Чат — Waymate" },
+    },
+    {
       path: "/chat/:chatId",
       name: "chat",
       component: () => import("@/views/ChatRoomPage.vue"),

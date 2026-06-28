@@ -298,11 +298,12 @@
 
 .home__seats-btn:hover {
   background: var(--secondary);
+  color: var(--foreground);
 }
 
 .home__seats-btn--active {
   background-image: var(--gradient-hero);
-  color: var(--primary-foreground);
+  color: var(--foreground);
   box-shadow: var(--shadow-lift);
 }
 
@@ -346,11 +347,17 @@
   .home__filters {
     flex-wrap: nowrap;
     overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     margin-left: -1.25rem;
     margin-right: -1.25rem;
     padding-left: 1.25rem;
     padding-right: 1.25rem;
     padding-bottom: 0.25rem;
+  }
+
+  .home__filters::-webkit-scrollbar {
+    display: none;
   }
 
   .home__filters-transport {

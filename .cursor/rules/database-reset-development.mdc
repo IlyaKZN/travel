@@ -1,0 +1,12 @@
+---
+description: Database reset policy during first-version development
+alwaysApply: true
+---
+
+# Database Reset Policy
+
+The project is currently in first-version development.
+
+- Do not create or maintain database migrations unless the user explicitly asks for them.
+- Prefer recreating the database schema from scratch when database structure changes are needed.
+- It is acceptable to drop and rebuild development data during this phase, after confirming any destructive action with the user when it affects an existing local or remote database.

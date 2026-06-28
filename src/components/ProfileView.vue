@@ -71,6 +71,12 @@ const logoutMutation = useMutation({
     await router.push("/auth");
   },
 });
+const startDmMutation = useMutation({
+  mutationFn: () => api.startDm(profileUserId.value!),
+  onSuccess: (chat) => {
+    router.push({ name: "chat", params: { chatId: chat.id } });
+  },
+});
 
 const isSubmittingReview = computed(() => reviewMutation.isPending.value);
 const isLoggingOut = computed(() => logoutMutation.isPending.value);
@@ -98,6 +104,15 @@ function submitReview(e: Event) {
 
 function logout() {
   logoutMutation.mutate();
+}
+
+function startDm() {
+  if (!getToken()) {
+    router.push("/auth");
+    return;
+  }
+  if (!profileUserId.value || startDmMutation.isPending.value) return;
+  startDmMutation.mutate();
 }
 </script>
 
@@ -144,14 +159,20 @@ function logout() {
               </button>
             </div>
             <div v-else class="profile__actions">
-              <RouterLink
-                :to="getToken() ? '/chats' : '/auth'"
+              <button
+                type="button"
                 class="profile__action-btn profile__action-btn--hero"
+                :disabled="startDmMutation.isPending.value"
+                @click="startDm"
               >
-                <MessageCircle class="icon icon--sm" /> Написать
-              </RouterLink>
+                <MessageCircle class="icon icon--sm" />
+                {{ startDmMutation.isPending.value ? "Открываем..." : "Написать" }}
+              </button>
             </div>
           </div>
+          <p v-if="startDmMutation.isError.value" class="profile__review-error">
+            {{ startDmMutation.error.value?.message }}
+          </p>
           <p class="profile__bio">{{ u.bio }}</p>
         </div>
 
