@@ -2,12 +2,19 @@
 import { useQuery, useQueryClient } from "@tanstack/vue-query";
 import { useMutation } from "@tanstack/vue-query";
 import { ArrowLeft, MessageCircle, Plus, Search, Send, Users } from "lucide-vue-next";
-import { computed, nextTick, ref, watch } from "vue";
+import { computed, nextTick, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import AppShell from "@/components/AppShell.vue";
 import TripAvatar from "@/components/TripAvatar.vue";
-import { useChatsListSocket } from "@/composables/useChatSocket";
+import { useChatSocket } from "@/composables/useChatSocket";
 import { api, getToken } from "@/lib/api";
+import {
+  appendChatMessage,
+  chatWs,
+  syncJoinedChat,
+  updateChatConversation,
+  type ChatWsEvent,
+} from "@/lib/chat-ws";
 import { formatDay, formatTime } from "@/lib/format";
 
 const queryClient = useQueryClient();
@@ -46,7 +53,28 @@ const messageText = ref("");
 const endRef = ref<HTMLDivElement | null>(null);
 const sendError = ref("");
 
-useChatsListSocket(queryClient);
+function handleWsEvent(event: ChatWsEvent) {
+  if (event.type === "joined" && event.conversation.id === activeChatId.value) {
+    syncJoinedChat(queryClient, event.conversation, event.messages);
+    return;
+  }
+
+  if (event.type === "message" && activeChatId.value) {
+    appendChatMessage(queryClient, activeChatId.value, event.message);
+    return;
+  }
+
+  if (event.type === "conversation_updated") {
+    updateChatConversation(queryClient, event.conversation);
+    return;
+  }
+
+  if (event.type === "error") {
+    sendError.value = event.message;
+  }
+}
+
+useChatSocket(handleWsEvent);
 
 const tabs = [
   { key: "all", label: "Все" },
@@ -97,6 +125,23 @@ watch(
   },
 );
 
+watch(
+  activeChatId,
+  (nextId, prevId) => {
+    if (prevId && prevId !== nextId) {
+      chatWs.leave();
+    }
+    if (nextId) {
+      chatWs.join(nextId);
+    }
+  },
+  { immediate: true },
+);
+
+onUnmounted(() => {
+  chatWs.leave();
+});
+
 const sendMutation = useMutation({
   mutationFn: (text: string) => api.sendMessage(activeChatId.value!, text),
   onSuccess: async () => {
@@ -116,6 +161,14 @@ const sendMutation = useMutation({
 function sendMessage() {
   const value = messageText.value.trim();
   if (!value || !activeChatId.value || sendMutation.isPending.value) return;
+
+  if (chatWs.isConnected) {
+    sendError.value = "";
+    chatWs.send(value);
+    messageText.value = "";
+    return;
+  }
+
   sendMutation.mutate(value);
 }
 

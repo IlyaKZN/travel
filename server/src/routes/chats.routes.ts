@@ -13,6 +13,7 @@ import {
 import { authRequired } from '../middleware/auth.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { routeParam } from '../utils/routeParam.js'
+import { emitChatMessage, emitConversationUpdated } from '../ws/chat.js'
 
 const router = Router()
 
@@ -57,6 +58,7 @@ router.get('/users', asyncHandler(async (req, res) => {
 router.post('/dm/:userId', asyncHandler(async (req, res) => {
   try {
     const conversation = await getOrCreateDm(req.userId!, routeParam(req.params.userId))
+    await emitConversationUpdated(conversation.id)
     res.json(await enrichConversation(conversation, req.userId!))
   } catch (e) {
     if (e instanceof Error && e.message === 'USER_NOT_FOUND') {
@@ -74,6 +76,7 @@ router.post('/dm/:userId', asyncHandler(async (req, res) => {
 router.get('/trip/:tripId', asyncHandler(async (req, res) => {
   try {
     const conversation = await getOrCreateTripChat(routeParam(req.params.tripId), req.userId!)
+    await emitConversationUpdated(conversation.id)
     res.json(await enrichConversation(conversation, req.userId!))
   } catch (e) {
     if (e instanceof Error && e.message === 'FORBIDDEN') {
@@ -132,6 +135,7 @@ router.post('/:id/messages', asyncHandler(async (req, res) => {
 
   try {
     const message = await sendMessage(routeParam(req.params.id), req.userId!, text)
+    await emitChatMessage(routeParam(req.params.id), message)
     res.status(201).json(await enrichMessage(message))
   } catch (e) {
     if (e instanceof Error && e.message === 'NOT_FOUND') {

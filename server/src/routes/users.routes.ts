@@ -6,6 +6,7 @@ import { publicUser, unsplashAvatar } from '../utils/helpers.js'
 import { authRequired } from '../middleware/auth.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { routeParam } from '../utils/routeParam.js'
+import { emitReviewCreated, emitUserChanged } from '../ws/chat.js'
 
 const router = Router()
 
@@ -96,6 +97,7 @@ router.post('/:id/reviews', authRequired, asyncHandler(async (req, res) => {
       text: text.trim(),
     },
   })
+  emitReviewCreated(userId, review.id)
   res.status(201).json(serializeReview(review))
 }))
 
@@ -132,6 +134,7 @@ router.post('/profile', authRequired, asyncHandler(async (req, res) => {
       profileComplete: true,
     },
   })
+  emitUserChanged(updated.id)
   res.json(publicUser(toDbUser(updated)))
 }))
 
@@ -175,6 +178,7 @@ router.patch('/me', authRequired, asyncHandler(async (req, res) => {
         : {}),
     },
   })
+  emitUserChanged(updated.id)
   res.json(publicUser(toDbUser(updated)))
 }))
 

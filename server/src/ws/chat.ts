@@ -17,6 +17,13 @@ export interface ChatClient {
 
 const clients = new Set<ChatClient>()
 
+type AppEvent =
+  | { type: 'trip_changed'; action: 'created' | 'updated' | 'request_created' | 'request_cancelled' | 'request_declined'; tripId: string }
+  | { type: 'tour_changed'; action: 'created' | 'updated'; tourId: string }
+  | { type: 'post_changed'; action: 'created' | 'updated' | 'deleted'; postId: string; userId: string }
+  | { type: 'user_changed'; userId: string }
+  | { type: 'review_created'; userId: string; reviewId: string }
+
 const joinSchema = z.object({
   type: z.literal('join'),
   conversationId: z.string(),
@@ -59,10 +66,10 @@ async function getConversationMessages(conversationId: string) {
   )
 }
 
-function broadcastToParticipants(conversationId: string, participantIds: string[], data: unknown) {
+function broadcastAppEvent(data: AppEvent, recipientIds?: string[]) {
   for (const client of clients) {
     if (
-      participantIds.includes(client.userId) &&
+      (!recipientIds || recipientIds.includes(client.userId)) &&
       client.ws.readyState === client.ws.OPEN
     ) {
       sendJson(client.ws, data)
@@ -80,6 +87,83 @@ function broadcastToJoinedRoom(conversationId: string, participantIds: string[],
       sendJson(client.ws, data)
     }
   }
+}
+
+function findConversationWithParticipants(conversationId: string) {
+  return prisma.conversation.findUnique({
+    where: { id: conversationId },
+    include: conversationInclude,
+  })
+}
+
+type ConversationWithParticipants = NonNullable<Awaited<ReturnType<typeof findConversationWithParticipants>>>
+
+async function broadcastConversationUpdated(conversation: ConversationWithParticipants | null) {
+  if (!conversation) return
+
+  const participantIds = conversation.participants.map((p) => p.userId)
+  const dbConversation = toDbConversation(conversation)
+
+  await Promise.all(
+    [...clients]
+      .filter((client) => participantIds.includes(client.userId) && client.ws.readyState === client.ws.OPEN)
+      .map(async (client) => {
+        sendJson(client.ws, {
+          type: 'conversation_updated',
+          conversation: await enrichConversation(dbConversation, client.userId),
+        })
+      }),
+  )
+}
+
+export async function emitConversationUpdated(conversationId: string) {
+  const conversation = await findConversationWithParticipants(conversationId)
+  await broadcastConversationUpdated(conversation)
+}
+
+export async function emitChatMessage(conversationId: string, message: Awaited<ReturnType<typeof sendMessage>>) {
+  const conversation = await findConversationWithParticipants(conversationId)
+  if (!conversation) return
+
+  const participantIds = conversation.participants.map((p) => p.userId)
+  broadcastToJoinedRoom(conversationId, participantIds, {
+    type: 'message',
+    message: await enrichMessage(message),
+  })
+  await broadcastConversationUpdated(conversation)
+}
+
+export function emitTripChanged(
+  action: Extract<AppEvent, { type: 'trip_changed' }>['action'],
+  tripId: string,
+  recipientIds?: string[],
+) {
+  broadcastAppEvent({ type: 'trip_changed', action, tripId }, recipientIds)
+}
+
+export function emitTourChanged(
+  action: Extract<AppEvent, { type: 'tour_changed' }>['action'],
+  tourId: string,
+  recipientIds?: string[],
+) {
+  broadcastAppEvent({ type: 'tour_changed', action, tourId }, recipientIds)
+}
+
+export function emitPostChanged(
+  action: Extract<AppEvent, { type: 'post_changed' }>['action'],
+  postId: string,
+  userId: string,
+  recipientIds?: string[],
+) {
+  broadcastAppEvent({ type: 'post_changed', action, postId, userId }, recipientIds)
+}
+
+export function emitUserChanged(userId: string, recipientIds?: string[]) {
+  broadcastAppEvent({ type: 'user_changed', userId }, recipientIds)
+}
+
+export function emitReviewCreated(userId: string, reviewId: string, recipientIds?: string[]) {
+  broadcastAppEvent({ type: 'review_created', userId, reviewId }, recipientIds)
 }
 
 async function handleJoin(client: ChatClient, conversationId: string) {
@@ -109,27 +193,7 @@ async function handleSend(client: ChatClient, text: string) {
 
   try {
     const message = await sendMessage(client.conversationId, client.userId, text)
-    const enriched = await enrichMessage(message)
-
-    const conversation = await prisma.conversation.findUnique({
-      where: { id: client.conversationId },
-      include: conversationInclude,
-    })
-
-    if (!conversation) return
-
-    const participantIds = conversation.participants.map((p) => p.userId)
-    const dbConversation = toDbConversation(conversation)
-
-    broadcastToJoinedRoom(client.conversationId, participantIds, {
-      type: 'message',
-      message: enriched,
-    })
-
-    broadcastToParticipants(client.conversationId, participantIds, {
-      type: 'conversation_updated',
-      conversation: await enrichConversation(dbConversation, client.userId),
-    })
+    await emitChatMessage(client.conversationId, message)
   } catch (e) {
     if (e instanceof Error && e.message === 'NOT_FOUND') {
       sendError(client.ws, 'Чат не найден')

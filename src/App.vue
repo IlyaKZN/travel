@@ -1,8 +1,13 @@
 <script setup lang="ts">
-import { watch } from "vue";
+import { useQueryClient } from "@tanstack/vue-query";
+import { onMounted, onUnmounted, watch } from "vue";
 import { useRoute } from "vue-router";
+import { getToken } from "@/lib/api";
+import { applyRealtimeEvent, chatWs, ensureChatSocket } from "@/lib/chat-ws";
 
 const route = useRoute();
+const queryClient = useQueryClient();
+let unsubscribe: (() => void) | undefined;
 
 watch(
   () => route.meta.title,
@@ -11,6 +16,15 @@ watch(
   },
   { immediate: true },
 );
+
+onMounted(() => {
+  ensureChatSocket(getToken());
+  unsubscribe = chatWs.subscribe((event) => applyRealtimeEvent(queryClient, event));
+});
+
+onUnmounted(() => {
+  unsubscribe?.();
+});
 </script>
 
 <template>

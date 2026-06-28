@@ -5,13 +5,38 @@ export type ChatWsEvent =
   | { type: "joined"; conversation: ChatThread; messages: Message[] }
   | { type: "message"; message: Message }
   | { type: "conversation_updated"; conversation: ChatThread }
+  | {
+      type: "trip_changed";
+      action: "created" | "updated" | "request_created" | "request_cancelled" | "request_declined";
+      tripId: string;
+    }
+  | { type: "tour_changed"; action: "created" | "updated"; tourId: string }
+  | { type: "post_changed"; action: "created" | "updated" | "deleted"; postId: string; userId: string }
+  | { type: "user_changed"; userId: string }
+  | { type: "review_created"; userId: string; reviewId: string }
   | { type: "error"; message: string };
 
 type QueryClientLike = {
   setQueryData: <T>(key: unknown[], updater: T | ((old: T | undefined) => T | undefined)) => void;
+  invalidateQueries?: (filters: { queryKey: unknown[] }) => Promise<unknown> | unknown;
 };
 
 function wsUrl(token: string) {
+  const explicitWsUrl = import.meta.env.VITE_WS_URL as string | undefined;
+  if (explicitWsUrl) {
+    const url = new URL(explicitWsUrl);
+    url.searchParams.set("token", token);
+    return url.toString();
+  }
+
+  const apiUrl = import.meta.env.VITE_API_URL as string | undefined;
+  if (apiUrl) {
+    const url = new URL("/ws", apiUrl);
+    url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+    url.searchParams.set("token", token);
+    return url.toString();
+  }
+
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   return `${protocol}//${window.location.host}/ws?token=${encodeURIComponent(token)}`;
 }
@@ -149,6 +174,49 @@ export function updateChatConversation(queryClient: QueryClientLike, conversatio
     const next = idx === -1 ? [conversation, ...old] : old.map((c, i) => (i === idx ? conversation : c));
     return [...next].sort((a, b) => new Date(b.lastAt).getTime() - new Date(a.lastAt).getTime());
   });
+}
+
+function invalidate(queryClient: QueryClientLike, queryKey: unknown[]) {
+  void queryClient.invalidateQueries?.({ queryKey });
+}
+
+export function applyRealtimeEvent(queryClient: QueryClientLike, event: ChatWsEvent) {
+  if (event.type === "conversation_updated") {
+    updateChatConversation(queryClient, event.conversation);
+    return;
+  }
+
+  if (event.type === "trip_changed") {
+    invalidate(queryClient, ["trips"]);
+    invalidate(queryClient, ["trip", event.tripId]);
+    invalidate(queryClient, ["chats"]);
+    return;
+  }
+
+  if (event.type === "tour_changed") {
+    invalidate(queryClient, ["tours"]);
+    invalidate(queryClient, ["tour", event.tourId]);
+    return;
+  }
+
+  if (event.type === "post_changed") {
+    invalidate(queryClient, ["posts"]);
+    invalidate(queryClient, ["posts", event.userId]);
+    return;
+  }
+
+  if (event.type === "user_changed") {
+    invalidate(queryClient, ["me"]);
+    invalidate(queryClient, ["user", event.userId]);
+    invalidate(queryClient, ["users"]);
+    invalidate(queryClient, ["trips"]);
+    invalidate(queryClient, ["chats"]);
+    return;
+  }
+
+  if (event.type === "review_created") {
+    invalidate(queryClient, ["reviews", event.userId]);
+  }
 }
 
 export function ensureChatSocket(token: string | null) {

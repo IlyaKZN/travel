@@ -1,3 +1,5 @@
+import { chatWs, ensureChatSocket } from "./chat-ws";
+
 export type TransportType = "car" | "train" | "bus" | "plane";
 
 export interface User {
@@ -73,11 +75,12 @@ export function getToken() {
 
 export function setToken(token: string) {
   localStorage.setItem(TOKEN_KEY, token);
+  ensureChatSocket(token);
 }
 
 export function clearToken() {
   localStorage.removeItem(TOKEN_KEY);
-  void import("./chat-ws").then(({ chatWs }) => chatWs.disconnect());
+  chatWs.disconnect();
 }
 
 async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {

@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { useQuery } from "@tanstack/vue-query";
-import { Search, Car, Train, Bus, Plane, Sparkles } from "lucide-vue-next";
+import { Search, Car, Train, Bus, Plane } from "lucide-vue-next";
 import { computed, ref } from "vue";
 import AppShell from "@/components/AppShell.vue";
 import TripCard from "@/components/TripCard.vue";
 import { api, type TransportType } from "@/lib/api";
 
-const transports: { key: TransportType | "all"; label: string; icon: typeof Car; modifier: string }[] = [
-  { key: "all", label: "Все", icon: Sparkles, modifier: "transport-icon--all" },
+const transports: { key: TransportType | "all"; label: string; icon?: typeof Car; modifier?: string }[] = [
+  { key: "all", label: "Все" },
   { key: "car", label: "Авто", icon: Car, modifier: "transport-icon--car" },
   { key: "train", label: "Поезд", icon: Train, modifier: "transport-icon--train" },
   { key: "bus", label: "Автобус", icon: Bus, modifier: "transport-icon--bus" },
@@ -105,6 +105,7 @@ function resetFilters() {
             @click="filter = t.key"
           >
             <span
+              v-if="t.icon"
               :class="[
                 'home__filter-icon',
                 filter === t.key ? 'home__filter-icon--active' : t.modifier,

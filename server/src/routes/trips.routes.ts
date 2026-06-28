@@ -10,6 +10,7 @@ import { asyncHandler } from '../utils/asyncHandler.js'
 import { routeParam } from '../utils/routeParam.js'
 import { normalizeTransport, splitTripLocation } from '../utils/frontendAdapters.js'
 import { toDbUser } from '../utils/serializers.js'
+import { emitConversationUpdated, emitTripChanged } from '../ws/chat.js'
 
 const router = Router()
 
@@ -163,6 +164,9 @@ router.post('/', authRequired, asyncHandler(async (req, res) => {
     },
   })
   await createTripConversation(trip.id)
+  if (!trip.isDraft) {
+    emitTripChanged('created', trip.id)
+  }
   res.status(201).json(await toFrontendTrip(trip, req.userId))
 }))
 
@@ -201,6 +205,7 @@ router.post('/:id/signup', authRequired, asyncHandler(async (req, res) => {
   await prisma.tripJoinRequest.create({
     data: { tripId: trip.id, userId: req.userId! },
   })
+  emitTripChanged('request_created', trip.id, [trip.creatorId, req.userId!])
   res.status(202).json(await toFrontendTrip(trip, req.userId))
 }))
 
@@ -215,6 +220,7 @@ router.delete('/:id/signup', authRequired, asyncHandler(async (req, res) => {
   await prisma.tripJoinRequest.deleteMany({
     where: { tripId: trip.id, userId: req.userId! },
   })
+  emitTripChanged('request_cancelled', trip.id, [trip.creatorId, req.userId!])
   res.json(await toFrontendTrip(trip, req.userId))
 }))
 
@@ -250,6 +256,7 @@ router.post('/:id/requests/:userId/approve', authRequired, asyncHandler(async (r
     await prisma.tripJoinRequest.delete({
       where: { tripId_userId: { tripId: trip.id, userId: targetUserId } },
     })
+    emitTripChanged('request_declined', trip.id, [trip.creatorId, targetUserId])
     res.json(await toFrontendTrip(trip, req.userId))
     return
   }
@@ -268,6 +275,11 @@ router.post('/:id/requests/:userId/approve', authRequired, asyncHandler(async (r
   ])
 
   await addUserToTripChat(trip.id, targetUserId)
+  const conversation = await prisma.conversation.findUnique({ where: { tripId: trip.id } })
+  if (conversation) {
+    await emitConversationUpdated(conversation.id)
+  }
+  emitTripChanged('updated', trip.id)
   res.json(await toFrontendTrip(updatedTrip, req.userId))
 }))
 
@@ -287,6 +299,7 @@ router.post('/:id/requests/:userId/decline', authRequired, asyncHandler(async (r
   await prisma.tripJoinRequest.deleteMany({
     where: { tripId: trip.id, userId: targetUserId },
   })
+  emitTripChanged('request_declined', trip.id, [trip.creatorId, targetUserId])
   res.json(await toFrontendTrip(trip, req.userId))
 }))
 

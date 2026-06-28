@@ -8,6 +8,7 @@ import { authOptional, authRequired } from '../middleware/auth.js'
 import { creatorLabel, detectLocationType, unsplash } from '../utils/helpers.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { routeParam } from '../utils/routeParam.js'
+import { emitTourChanged } from '../ws/chat.js'
 
 const router = Router()
 
@@ -94,6 +95,9 @@ router.post('/', authRequired, asyncHandler(async (req, res) => {
       isDraft: data.isDraft,
     },
   })
+  if (!tour.isDraft) {
+    emitTourChanged('created', tour.id)
+  }
   res.status(201).json(await enrichTour(tour))
 }))
 
@@ -127,6 +131,7 @@ router.post('/:id/signup', authRequired, asyncHandler(async (req, res) => {
     }),
   ])
 
+  emitTourChanged('updated', updatedTour.id)
   res.json({ message: 'Вы записаны на тур', tour: await enrichTour(updatedTour) })
 }))
 

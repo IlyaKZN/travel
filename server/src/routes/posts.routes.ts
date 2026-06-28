@@ -6,6 +6,7 @@ import { toDbPost } from '../utils/serializers.js'
 import { authRequired } from '../middleware/auth.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { routeParam } from '../utils/routeParam.js'
+import { emitPostChanged } from '../ws/chat.js'
 
 const router = Router()
 
@@ -33,6 +34,7 @@ router.post('/', authRequired, asyncHandler(async (req, res) => {
       image: data.image,
     },
   })
+  emitPostChanged('created', post.id, post.userId)
   res.status(201).json(toDbPost(post))
 }))
 
@@ -52,6 +54,7 @@ router.patch('/:id', authRequired, asyncHandler(async (req, res) => {
     where: { id: post.id },
     data,
   })
+  emitPostChanged('updated', updated.id, updated.userId)
   res.json(toDbPost(updated))
 }))
 
@@ -67,6 +70,7 @@ router.delete('/:id', authRequired, asyncHandler(async (req, res) => {
     return
   }
   await prisma.post.delete({ where: { id: post.id } })
+  emitPostChanged('deleted', post.id, post.userId)
   res.json({ message: 'Пост удалён' })
 }))
 

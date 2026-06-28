@@ -15,6 +15,7 @@ import { validateTelegramInitData, telegramContact } from '../utils/telegram.js'
 import { config } from '../config.js'
 import { authRequired } from '../middleware/auth.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
+import { emitUserChanged } from '../ws/chat.js'
 
 const router = Router()
 
@@ -77,6 +78,7 @@ router.post('/register', asyncHandler(async (req, res) => {
         profileComplete: true,
       },
     })
+    emitUserChanged(user.id)
     res.status(201).json({
       token: signToken(user.id),
       user: publicUser(toDbUser(user)),
@@ -128,6 +130,7 @@ router.post('/confirm', asyncHandler(async (req, res) => {
 
   const dbUser = toDbUser(user)
   const token = signToken(user.id)
+  emitUserChanged(user.id)
   res.json({ token, user: publicUser(dbUser), needsProfile: true })
 }))
 
@@ -193,6 +196,7 @@ router.post('/telegram', asyncHandler(async (req, res) => {
   }
 
   const dbUser = toDbUser(user)
+  emitUserChanged(user.id)
   res.json({
     token: signToken(user.id),
     user: publicUser(dbUser),
