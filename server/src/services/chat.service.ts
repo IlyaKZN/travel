@@ -8,6 +8,7 @@ import {
 } from '../utils/serializers.js'
 import type { DbConversation, DbMessage, DbUser } from '../types/index.js'
 import { avatarColor, publicFrontendUser, splitTripLocation } from '../utils/frontendAdapters.js'
+import { messagePreview } from '../utils/messageImage.js'
 
 export async function isTripParticipant(tripId: string, userId: string): Promise<boolean> {
   const trip = await prisma.trip.findUnique({ where: { id: tripId } })
@@ -251,6 +252,7 @@ export async function enrichMessage(message: DbMessage) {
     id: message.id,
     authorId: message.senderId,
     text: message.text,
+    ...(message.image ? { image: message.image } : {}),
     at: message.createdAt,
   }
 }
@@ -259,6 +261,7 @@ export async function sendMessage(
   conversationId: string,
   senderId: string,
   text: string,
+  image?: string,
 ): Promise<DbMessage> {
   const conversation = await prisma.conversation.findUnique({
     where: { id: conversationId },
@@ -270,7 +273,11 @@ export async function sendMessage(
   }
 
   const trimmed = text.trim()
+  if (!trimmed && !image) {
+    throw new Error('EMPTY_MESSAGE')
+  }
   const now = new Date()
+  const preview = messagePreview(trimmed, image)
 
   const [message] = await prisma.$transaction([
     prisma.message.create({
@@ -279,6 +286,7 @@ export async function sendMessage(
         conversationId,
         senderId,
         text: trimmed,
+        image: image ?? null,
         createdAt: now,
       },
     }),
@@ -286,7 +294,7 @@ export async function sendMessage(
       where: { id: conversationId },
       data: {
         lastMessageAt: now,
-        lastMessageText: trimmed.slice(0, 120),
+        lastMessageText: preview,
       },
     }),
     prisma.conversationParticipant.updateMany({

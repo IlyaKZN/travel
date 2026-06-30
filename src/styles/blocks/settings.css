@@ -134,9 +134,15 @@
   font-size: 0.75rem;
 }
 
+.settings__content .panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
 .settings__grid {
   display: grid;
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
 @media (min-width: 640px) {
@@ -176,7 +182,6 @@
 .settings__actions {
   display: flex;
   justify-content: flex-end;
-  padding-top: 0.5rem;
 }
 
 .settings__counter {

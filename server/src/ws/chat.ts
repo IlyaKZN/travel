@@ -22,7 +22,7 @@ const clients = new Set<ChatClient>()
 type AppEvent =
   | {
       type: 'trip_changed'
-      action: 'created' | 'updated' | 'request_created' | 'request_cancelled' | 'request_approved' | 'request_declined'
+      action: 'created' | 'updated' | 'deleted' | 'request_created' | 'request_cancelled' | 'request_approved' | 'request_declined'
       tripId: string
     }
   | { type: 'tour_changed'; action: 'created' | 'updated'; tourId: string }
@@ -35,10 +35,15 @@ const joinSchema = z.object({
   conversationId: z.string(),
 })
 
-const sendSchema = z.object({
-  type: z.literal('send'),
-  text: z.string().min(1).max(2000),
-})
+const sendSchema = z
+  .object({
+    type: z.literal('send'),
+    text: z.string().max(2000).default(''),
+    image: z.string().optional(),
+  })
+  .refine((data) => data.text.trim().length > 0 || data.image, {
+    message: 'Сообщение не может быть пустым',
+  })
 
 const leaveSchema = z.object({
   type: z.literal('leave'),
@@ -66,6 +71,7 @@ async function getConversationMessages(conversationId: string) {
         conversationId: m.conversationId,
         senderId: m.senderId,
         text: m.text,
+        image: m.image ?? undefined,
         createdAt: m.createdAt.toISOString(),
       }),
     ),
@@ -197,14 +203,14 @@ async function handleJoin(client: ChatClient, conversationId: string) {
   })
 }
 
-async function handleSend(client: ChatClient, text: string) {
+async function handleSend(client: ChatClient, text: string, image?: string) {
   if (!client.conversationId) {
     sendError(client.ws, 'Сначала подключитесь к чату')
     return
   }
 
   try {
-    const message = await sendMessage(client.conversationId, client.userId, text)
+    const message = await sendMessage(client.conversationId, client.userId, text, image)
     await emitChatMessage(client.conversationId, message)
   } catch (e) {
     if (e instanceof Error && e.message === 'NOT_FOUND') {
@@ -213,6 +219,10 @@ async function handleSend(client: ChatClient, text: string) {
     }
     if (e instanceof Error && e.message === 'FORBIDDEN') {
       sendError(client.ws, 'Нет доступа к чату')
+      return
+    }
+    if (e instanceof Error && e.message === 'EMPTY_MESSAGE') {
+      sendError(client.ws, 'Сообщение не может быть пустым')
       return
     }
     sendError(client.ws, 'Не удалось отправить сообщение')
@@ -236,7 +246,7 @@ function handleMessage(client: ChatClient, raw: string) {
 
   const send = sendSchema.safeParse(parsed)
   if (send.success) {
-    void handleSend(client, send.data.text)
+    void handleSend(client, send.data.text, send.data.image)
     return
   }
 

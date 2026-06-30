@@ -40,6 +40,7 @@ export interface Message {
   authorId: string;
   text: string;
   at: string;
+  image?: string;
 }
 
 export interface ChatThread {
@@ -173,6 +174,20 @@ export const api = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+  updateTrip: (
+    id: string,
+    data: Omit<Trip, "id" | "taken" | "organizerId" | "participantIds" | "organizer" | "participants" | "pendingRequestIds" | "pendingRequests"> & {
+      seats: number;
+    },
+  ) =>
+    apiFetch<Trip>(`/api/trips/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+  deleteTrip: (id: string) =>
+    apiFetch<{ message: string }>(`/api/trips/${id}`, {
+      method: "DELETE",
+    }),
   joinTrip: (id: string) =>
     apiFetch<Trip>(`/api/trips/${id}/signup`, {
       method: "POST",
@@ -202,10 +217,10 @@ export const api = {
       method: "POST",
     }),
   messages: (chatId: string) => apiFetch<Message[]>(`/api/chats/${chatId}/messages`),
-  sendMessage: (chatId: string, text: string) =>
+  sendMessage: (chatId: string, payload: { text: string; image?: string }) =>
     apiFetch<Message>(`/api/chats/${chatId}/messages`, {
       method: "POST",
-      body: JSON.stringify({ text }),
+      body: JSON.stringify(payload),
     }),
 
   reviews: (userId: string) => apiFetch<Review[]>(`/api/users/${userId}/reviews`),

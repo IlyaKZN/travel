@@ -7,7 +7,7 @@ export type ChatWsEvent =
   | { type: "conversation_updated"; conversation: ChatThread }
   | {
       type: "trip_changed";
-      action: "created" | "updated" | "request_created" | "request_cancelled" | "request_approved" | "request_declined";
+      action: "created" | "updated" | "deleted" | "request_created" | "request_cancelled" | "request_approved" | "request_declined";
       tripId: string;
     }
   | { type: "tour_changed"; action: "created" | "updated"; tourId: string }
@@ -138,8 +138,8 @@ class ChatWebSocketClient {
     this.sendRaw({ type: "leave" });
   }
 
-  send(text: string) {
-    this.sendRaw({ type: "send", text });
+  send(text: string, image?: string) {
+    this.sendRaw({ type: "send", text, ...(image ? { image } : {}) });
   }
 
   get isConnected() {

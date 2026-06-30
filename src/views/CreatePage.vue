@@ -1,13 +1,24 @@
 <script setup lang="ts">
-import { useMutation, useQueryClient } from "@tanstack/vue-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { ArrowLeftRight } from "lucide-vue-next";
-import { ref } from "vue";
-import { useRouter } from "vue-router";
+import { computed, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import AppShell from "@/components/AppShell.vue";
 import { api, getToken, transportLabel, type TransportType } from "@/lib/api";
 
 const router = useRouter();
+const route = useRoute();
 const queryClient = useQueryClient();
+
+const tripId = computed(() => route.query.tripId as string | undefined);
+const isEdit = computed(() => Boolean(tripId.value));
+
+const tripQuery = useQuery({
+  queryKey: computed(() => ["trip", tripId.value]),
+  queryFn: () => api.trip(tripId.value!),
+  enabled: computed(() => Boolean(tripId.value)),
+});
+
 const from = ref("");
 const to = ref("");
 const transport = ref<TransportType>("car");
@@ -19,10 +30,55 @@ const endTime = ref("");
 const description = ref("");
 const budget = ref("");
 
+function toDateInput(iso: string) {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString().slice(0, 10);
+}
+
+function toTimeInput(iso: string) {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString().slice(11, 16);
+}
+
+function fillFromTrip() {
+  const trip = tripQuery.data.value;
+  if (!trip) return;
+  from.value = trip.from;
+  to.value = trip.to;
+  transport.value = trip.transport;
+  seats.value = trip.seats;
+  startDate.value = toDateInput(trip.startAt);
+  startTime.value = toTimeInput(trip.startAt);
+  endDate.value = toDateInput(trip.endAt);
+  endTime.value = toTimeInput(trip.endAt);
+  description.value = trip.description;
+  budget.value = String(trip.budget ?? "");
+}
+
+watch(() => tripQuery.data.value, fillFromTrip, { immediate: true });
+
 function swap() {
   const tmp = from.value;
   from.value = to.value;
   to.value = tmp;
+}
+
+function buildPayload() {
+  return {
+    from: from.value,
+    to: to.value,
+    startAt: new Date(`${startDate.value}T${startTime.value || "00:00"}`).toISOString(),
+    endAt: new Date(`${endDate.value || startDate.value}T${endTime.value || startTime.value || "00:00"}`).toISOString(),
+    transport: transport.value,
+    seats: seats.value,
+    budget: Number(budget.value) || 0,
+    description: description.value.trim() || `${from.value} → ${to.value}`,
+    info: description.value.trim(),
+  };
 }
 
 const createMutation = useMutation({
@@ -33,33 +89,46 @@ const createMutation = useMutation({
   },
 });
 
+const updateMutation = useMutation({
+  mutationFn: () => api.updateTrip(tripId.value!, buildPayload()),
+  onSuccess: async (trip) => {
+    await queryClient.invalidateQueries({ queryKey: ["trips"] });
+    await queryClient.invalidateQueries({ queryKey: ["trip", trip.id] });
+    router.push({ name: "trip", params: { tripId: trip.id } });
+  },
+});
+
+const isPending = computed(() => createMutation.isPending.value || updateMutation.isPending.value);
+const errorMessage = computed(
+  () => createMutation.error.value?.message ?? updateMutation.error.value?.message ?? "",
+);
+
 function submit(e: Event) {
   e.preventDefault();
   if (!getToken()) {
     router.push("/auth");
     return;
   }
-  createMutation.mutate({
-    from: from.value,
-    to: to.value,
-    startAt: new Date(`${startDate.value}T${startTime.value || "00:00"}`).toISOString(),
-    endAt: new Date(`${endDate.value || startDate.value}T${endTime.value || startTime.value || "00:00"}`).toISOString(),
-    transport: transport.value,
-    seats: seats.value,
-    budget: Number(budget.value) || 0,
-    description: description.value.trim() || `${from.value} → ${to.value}`,
-    info: description.value.trim(),
-  });
+  if (isEdit.value) {
+    updateMutation.mutate();
+    return;
+  }
+  createMutation.mutate(buildPayload());
 }
 </script>
 
 <template>
   <AppShell>
-    <div class="container container--narrow create">
+    <div v-if="isEdit && tripQuery.isLoading.value" class="state-box">Загружаем поездку...</div>
+    <div v-else-if="isEdit && !tripQuery.data.value" class="state-box">Поездка не найдена</div>
+
+    <div v-else class="container container--narrow create">
       <div class="create__card">
         <header class="create__header">
-          <h1 class="create__title">Создание поездки</h1>
-          <p class="create__subtitle">Заполните детали вашего маршрута</p>
+          <h1 class="create__title">{{ isEdit ? "Редактирование поездки" : "Создание поездки" }}</h1>
+          <p class="create__subtitle">
+            {{ isEdit ? "Обновите детали маршрута" : "Заполните детали вашего маршрута" }}
+          </p>
         </header>
 
         <form class="create__form" @submit="submit">
@@ -157,13 +226,19 @@ function submit(e: Event) {
             <button
               type="submit"
               class="btn btn--hero create__submit"
-              :disabled="createMutation.isPending.value || !from.trim() || !to.trim() || !startDate"
+              :disabled="isPending || !from.trim() || !to.trim() || !startDate"
             >
-              {{ createMutation.isPending.value ? "Публикуем..." : "Опубликовать поездку" }}
+              {{
+                isPending
+                  ? isEdit
+                    ? "Сохраняем..."
+                    : "Публикуем..."
+                  : isEdit
+                    ? "Сохранить изменения"
+                    : "Опубликовать поездку"
+              }}
             </button>
-            <p v-if="createMutation.isError.value" class="create__error">
-              {{ createMutation.error.value?.message }}
-            </p>
+            <p v-if="errorMessage" class="create__error">{{ errorMessage }}</p>
             <p class="create__legal">
               Нажимая кнопку, вы соглашаетесь с правилами сервиса ЕдемВместе
             </p>

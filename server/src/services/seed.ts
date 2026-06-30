@@ -188,6 +188,22 @@ const trips = [
     messages: [
       { senderContact: 'lena.demo@yandex.ru', text: 'Я составила общий список снаряжения, палаток пока хватает на всех' },
       { senderContact: 'maria.demo@yandex.ru', text: 'Могу взять горелку и кастрюлю' },
+      {
+        senderContact: 'maria.demo@yandex.ru',
+        text: 'Кидаю пару фоток с прошлого раза — там просто космос ✨',
+        image: unsplash('1464822759023-fed622ff2c3b', 1200, 800),
+      },
+      {
+        senderContact: 'maria.demo@yandex.ru',
+        text: '',
+        image: unsplash('1519681393784-d120267933ba', 1200, 800),
+      },
+      { senderContact: 'test@yandex.ru', text: 'Огонь, теперь ещё больше хочется!' },
+      {
+        senderContact: 'lena.demo@yandex.ru',
+        text: 'А вот вид с канатки 🚡',
+        image: unsplash('1483728642387-6c3bdd6c93e5', 1200, 800),
+      },
     ],
   },
 ]
@@ -446,12 +462,14 @@ export async function seedDatabase() {
           conversationId: conversation.id,
           senderId,
           text: messageSeed.text,
+          image: messageSeed.image ?? null,
           createdAt: daysAgo(tripSeed.messages.length - index),
         },
         update: {
           conversationId: conversation.id,
           senderId,
           text: messageSeed.text,
+          image: messageSeed.image ?? null,
           createdAt: daysAgo(tripSeed.messages.length - index),
         },
       })
@@ -459,11 +477,16 @@ export async function seedDatabase() {
 
     const lastMessage = tripSeed.messages.at(-1)
     if (lastMessage) {
+      const preview = lastMessage.text.trim()
+        ? lastMessage.text.slice(0, 120)
+        : lastMessage.image
+          ? 'Фото'
+          : ''
       await prisma.conversation.update({
         where: { id: conversation.id },
         data: {
           lastMessageAt: daysAgo(1),
-          lastMessageText: lastMessage.text.slice(0, 120),
+          lastMessageText: preview,
         },
       })
     }

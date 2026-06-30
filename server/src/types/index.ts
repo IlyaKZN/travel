@@ -92,6 +92,7 @@ export interface DbMessage {
   conversationId: string
   senderId: string
   text: string
+  image?: string
   createdAt: string
 }
 

@@ -116,6 +116,7 @@ export function toDbMessage(message: Message): DbMessage {
     conversationId: message.conversationId,
     senderId: message.senderId,
     text: message.text,
+    image: message.image ?? undefined,
     createdAt: message.createdAt.toISOString(),
   }
 }

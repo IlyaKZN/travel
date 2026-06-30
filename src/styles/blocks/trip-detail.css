@@ -44,6 +44,104 @@
   background: color-mix(in oklab, #fff 25%, transparent);
 }
 
+.trip-detail__hero-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.trip-detail__hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.trip-detail__hero-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 9999px;
+  background: color-mix(in oklab, #fff 15%, transparent);
+  padding: 0.5rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--primary-foreground);
+  backdrop-filter: blur(4px);
+  transition: background-color 0.15s;
+}
+
+.trip-detail__hero-action:hover {
+  background: color-mix(in oklab, #fff 25%, transparent);
+}
+
+.trip-detail__hero-action--danger {
+  background: color-mix(in oklab, var(--destructive) 80%, transparent);
+}
+
+.trip-detail__hero-action--danger:hover {
+  background: var(--destructive);
+}
+
+.trip-detail__hero-action-label {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .trip-detail__hero-action-label {
+    display: inline;
+  }
+}
+
+.trip-delete {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: oklch(0.18 0.02 40 / 0.45);
+  backdrop-filter: blur(6px);
+}
+
+.trip-delete__panel {
+  width: min(100%, 28rem);
+  border-radius: 1.25rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-lift);
+}
+
+.trip-delete__title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.trip-delete__text {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+.trip-delete__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.trip-delete__confirm {
+  background: var(--destructive);
+  color: #fff;
+}
+
+.trip-delete__confirm:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
 .trip-detail__hero-row {
   display: flex;
   align-items: center;

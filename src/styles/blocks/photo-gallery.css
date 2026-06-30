@@ -1,0 +1,13 @@
+.pswp {
+  --pswp-bg: oklch(0.18 0.02 40 / 0.92);
+}
+
+.pswp__button {
+  color: var(--primary-foreground);
+}
+
+.pswp__counter {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  opacity: 0.85;
+}

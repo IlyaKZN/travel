@@ -303,4 +303,73 @@ router.post('/:id/requests/:userId/decline', authRequired, asyncHandler(async (r
   res.json(await toFrontendTrip(trip, req.userId))
 }))
 
+router.patch('/:id', authRequired, asyncHandler(async (req, res) => {
+  const id = routeParam(req.params.id)
+  const trip = await prisma.trip.findUnique({ where: { id } })
+  if (!trip) {
+    res.status(404).json({ error: 'Поездка не найдена' })
+    return
+  }
+  if (trip.creatorId !== req.userId) {
+    res.status(403).json({ error: 'Только организатор может редактировать поездку' })
+    return
+  }
+
+  const data = tripSchema.parse(req.body)
+  const location = `${data.from.trim()} → ${data.to.trim()}`
+  const start = new Date(data.startAt)
+  const end = new Date(data.endAt)
+  if (end < start) {
+    res.status(400).json({ error: 'Дата окончания не может быть раньше даты начала' })
+    return
+  }
+
+  const signupCount = await prisma.tripSignup.count({ where: { tripId: id } })
+  const participantCount = signupCount + 1
+  if (data.seats < participantCount) {
+    res.status(400).json({ error: 'Число мест не может быть меньше текущего числа участников' })
+    return
+  }
+
+  const updatedTrip = await prisma.trip.update({
+    where: { id },
+    data: {
+      location,
+      locationType: detectLocationType(location),
+      shortDescription: data.description,
+      fullPlan: data.info?.trim() || data.description,
+      maxParticipants: data.seats,
+      freeSpots: Math.max(0, data.seats - participantCount),
+      price: data.budget,
+      startDate: start,
+      endDate: end,
+      transport: normalizeTransport(data.transport),
+      ...(data.images.length ? { images: data.images } : {}),
+      video: data.video,
+      isClosed: data.isClosed,
+      isDraft: data.isDraft,
+    },
+  })
+
+  emitTripChanged('updated', trip.id)
+  res.json(await toFrontendTrip(updatedTrip, req.userId))
+}))
+
+router.delete('/:id', authRequired, asyncHandler(async (req, res) => {
+  const id = routeParam(req.params.id)
+  const trip = await prisma.trip.findUnique({ where: { id } })
+  if (!trip) {
+    res.status(404).json({ error: 'Поездка не найдена' })
+    return
+  }
+  if (trip.creatorId !== req.userId) {
+    res.status(403).json({ error: 'Только организатор может удалить поездку' })
+    return
+  }
+
+  await prisma.trip.delete({ where: { id } })
+  emitTripChanged('deleted', trip.id)
+  res.json({ message: 'Поездка удалена' })
+}))
+
 export default router

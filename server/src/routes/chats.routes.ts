@@ -14,6 +14,7 @@ import {
 import { authRequired } from '../middleware/auth.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { routeParam } from '../utils/routeParam.js'
+import { messageImageSchema } from '../utils/messageImage.js'
 import { emitChatMessage, emitConversationUpdated } from '../ws/chat.js'
 
 const router = Router()
@@ -142,6 +143,7 @@ router.get('/:id/messages', asyncHandler(async (req, res) => {
     conversationId: m.conversationId,
     senderId: m.senderId,
     text: m.text,
+    image: m.image ?? undefined,
     createdAt: m.createdAt.toISOString(),
   })))
   await markConversationRead(id, req.userId!)
@@ -150,10 +152,23 @@ router.get('/:id/messages', asyncHandler(async (req, res) => {
 }))
 
 router.post('/:id/messages', asyncHandler(async (req, res) => {
-  const { text } = z.object({ text: z.string().min(1).max(2000) }).parse(req.body)
+  const body = z
+    .object({
+      text: z.string().max(2000).default(''),
+      image: messageImageSchema.optional(),
+    })
+    .refine((data) => data.text.trim().length > 0 || data.image, {
+      message: 'Сообщение не может быть пустым',
+    })
+    .parse(req.body)
 
   try {
-    const message = await sendMessage(routeParam(req.params.id), req.userId!, text)
+    const message = await sendMessage(
+      routeParam(req.params.id),
+      req.userId!,
+      body.text,
+      body.image,
+    )
     await emitChatMessage(routeParam(req.params.id), message)
     res.status(201).json(await enrichMessage(message))
   } catch (e) {
@@ -163,6 +178,10 @@ router.post('/:id/messages', asyncHandler(async (req, res) => {
     }
     if (e instanceof Error && e.message === 'FORBIDDEN') {
       res.status(403).json({ error: 'Нет доступа к чату' })
+      return
+    }
+    if (e instanceof Error && e.message === 'EMPTY_MESSAGE') {
+      res.status(400).json({ error: 'Сообщение не может быть пустым' })
       return
     }
     throw e

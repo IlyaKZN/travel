@@ -16,8 +16,10 @@ import {
   X,
   Clock3,
   UserPlus,
+  Pencil,
+  Trash2,
 } from "lucide-vue-next";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import AppShell from "@/components/AppShell.vue";
 import TripAvatar from "@/components/TripAvatar.vue";
@@ -81,6 +83,16 @@ const openTripChatMutation = useMutation({
   onSuccess: (chat) => router.push({ name: "chats-chat", params: { chatId: chat.id } }),
 });
 
+const deleteMutation = useMutation({
+  mutationFn: () => api.deleteTrip(tripId.value),
+  onSuccess: async () => {
+    await queryClient.invalidateQueries({ queryKey: ["trips"] });
+    await router.push("/");
+  },
+});
+
+const confirmDelete = ref(false);
+
 const trip = computed(() => tripQuery.data.value);
 const organizer = computed(
   () => trip.value?.organizer ?? trip.value?.participants?.find((p) => p.id === trip.value?.organizerId),
@@ -138,9 +150,30 @@ function handleCta() {
         <div class="hero__glow hero__glow--white" />
         <div class="hero__glow hero__glow--bottom-amber" />
         <div class="container trip-detail__hero-inner">
-          <button type="button" class="trip-detail__back" @click="router.back()">
-            <ArrowLeft class="icon icon--sm" :stroke-width="2.5" /> Назад
-          </button>
+          <div class="trip-detail__hero-top">
+            <button type="button" class="trip-detail__back" @click="router.back()">
+              <ArrowLeft class="icon icon--sm" :stroke-width="2.5" /> Назад
+            </button>
+            <div v-if="isOrganizer" class="trip-detail__hero-actions">
+              <RouterLink
+                :to="{ name: 'create', query: { tripId: trip.id } }"
+                class="trip-detail__hero-action"
+                aria-label="Редактировать поездку"
+              >
+                <Pencil class="icon icon--sm" :stroke-width="2.5" />
+                <span class="trip-detail__hero-action-label">Редактировать</span>
+              </RouterLink>
+              <button
+                type="button"
+                class="trip-detail__hero-action trip-detail__hero-action--danger"
+                aria-label="Удалить поездку"
+                @click="confirmDelete = true"
+              >
+                <Trash2 class="icon icon--sm" :stroke-width="2.5" />
+                <span class="trip-detail__hero-action-label">Удалить</span>
+              </button>
+            </div>
+          </div>
 
           <div class="trip-detail__hero-row">
             <div class="trip-detail__avatar-wrap">
@@ -386,6 +419,37 @@ function handleCta() {
           </button>
         </div>
       </div>
+
+      <Teleport to="body">
+        <div
+          v-if="confirmDelete"
+          class="trip-delete"
+          role="dialog"
+          aria-modal="true"
+          @click.self="confirmDelete = false"
+        >
+          <div class="trip-delete__panel">
+            <h2 class="trip-delete__title">Удалить поездку?</h2>
+            <p class="trip-delete__text">
+              Поездка «{{ trip.from }} → {{ trip.to }}» и её чат будут удалены без возможности
+              восстановить. Участники получат уведомление.
+            </p>
+            <div class="trip-delete__actions">
+              <button type="button" class="btn btn--secondary btn--md" @click="confirmDelete = false">
+                Отмена
+              </button>
+              <button
+                type="button"
+                class="btn btn--md trip-delete__confirm"
+                :disabled="deleteMutation.isPending.value"
+                @click="deleteMutation.mutate()"
+              >
+                {{ deleteMutation.isPending.value ? "Удаляем..." : "Удалить" }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Teleport>
     </template>
   </AppShell>
 </template>

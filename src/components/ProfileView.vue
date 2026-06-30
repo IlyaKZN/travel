@@ -135,18 +135,20 @@ function startDm() {
       <div class="container profile__content">
         <div class="profile__card">
           <div class="profile__head">
-            <span
-              :class="['avatar profile__avatar', avatarClass(u)]"
-              :style="avatarStyle(u)"
-            >
-              {{ u.firstName[0] }}
-            </span>
-            <div style="min-width: 0">
-              <h1 class="profile__name">{{ u.firstName }} {{ u.lastName }}</h1>
-              <div class="profile__location">
-                <span class="profile__location-item">
-                  <MapPin class="icon icon--sm" /> {{ u.location }}
-                </span>
+            <div class="profile__head-main">
+              <span
+                :class="['avatar profile__avatar', avatarClass(u)]"
+                :style="avatarStyle(u)"
+              >
+                {{ u.firstName[0] }}
+              </span>
+              <div style="min-width: 0; flex: 1">
+                <h1 class="profile__name">{{ u.firstName }} {{ u.lastName }}</h1>
+                <div class="profile__location">
+                  <span class="profile__location-item">
+                    <MapPin class="icon icon--sm" /> {{ u.location }}
+                  </span>
+                </div>
               </div>
             </div>
             <div v-if="owner" class="profile__actions">

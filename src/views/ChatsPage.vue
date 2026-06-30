@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useQuery, useQueryClient } from "@tanstack/vue-query";
 import { useMutation } from "@tanstack/vue-query";
-import { ArrowLeft, Calendar, MapPin, MessageCircle, Search, Send, Users, Wallet } from "lucide-vue-next";
+import { ArrowLeft, Calendar, MapPin, MessageCircle, Paperclip, Search, Send, Users, Wallet, X } from "lucide-vue-next";
 import { computed, nextTick, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import AppShell from "@/components/AppShell.vue";
@@ -17,6 +17,7 @@ import {
 } from "@/lib/chat-ws";
 import { avatarClass, avatarStyle } from "@/lib/avatar";
 import { formatBudget, formatDay, formatTime } from "@/lib/format";
+import { closePhotoGallery, openPhotoGallery } from "@/lib/photo-gallery";
 
 const queryClient = useQueryClient();
 const route = useRoute();
@@ -51,6 +52,9 @@ const meQuery = useQuery({
 const tab = ref<"all" | "trips" | "personal">("all");
 const search = ref("");
 const messageText = ref("");
+const pendingImage = ref<string | null>(null);
+const fileRef = ref<HTMLInputElement | null>(null);
+const infoTab = ref<"members" | "photos">("members");
 const endRef = ref<HTMLDivElement | null>(null);
 const sendError = ref("");
 const infoOpen = ref(false);
@@ -135,6 +139,25 @@ const activeOther = computed(
   () => activeChat.value?.otherUser ?? activeChat.value?.participants?.find((u) => u.id !== meQuery.data.value?.id),
 );
 const messages = computed(() => messagesQuery.data.value ?? []);
+const gallery = computed(() =>
+  messages.value
+    .filter((m) => m.image)
+    .map((m) => ({ src: m.image!, at: m.at, authorId: m.authorId })),
+);
+
+function galleryItems() {
+  return gallery.value.map((item) => ({ src: item.src, alt: "медиа из чата" }));
+}
+
+function openChatGallery(src: string, event: MouseEvent) {
+  const items = galleryItems();
+  const index = items.findIndex((item) => item.src === src);
+  void openPhotoGallery({
+    items,
+    index: index >= 0 ? index : 0,
+    thumbElement: event.currentTarget as HTMLElement,
+  });
+}
 const groups = computed(() => {
   const result: { day: string; items: typeof messages.value }[] = [];
   for (const m of messages.value) {
@@ -158,6 +181,10 @@ watch(
   activeChatId,
   (nextId, prevId) => {
     infoOpen.value = false;
+    infoTab.value = "members";
+    pendingImage.value = null;
+    closePhotoGallery();
+    if (fileRef.value) fileRef.value.value = "";
     if (prevId && prevId !== nextId) {
       chatWs.leave();
     }
@@ -171,12 +198,16 @@ watch(
 
 onUnmounted(() => {
   chatWs.leave();
+  closePhotoGallery();
 });
 
 const sendMutation = useMutation({
-  mutationFn: (text: string) => api.sendMessage(activeChatId.value!, text),
+  mutationFn: (payload: { text: string; image?: string }) =>
+    api.sendMessage(activeChatId.value!, payload),
   onSuccess: async () => {
     messageText.value = "";
+    pendingImage.value = null;
+    if (fileRef.value) fileRef.value.value = "";
     sendError.value = "";
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ["messages", activeChatId.value] }),
@@ -189,18 +220,35 @@ const sendMutation = useMutation({
   },
 });
 
+function onPickFile(file: File | undefined) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    pendingImage.value = reader.result as string;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearPendingImage() {
+  pendingImage.value = null;
+  if (fileRef.value) fileRef.value.value = "";
+}
+
 function sendMessage() {
   const value = messageText.value.trim();
-  if (!value || !activeChatId.value || sendMutation.isPending.value) return;
+  const image = pendingImage.value ?? undefined;
+  if ((!value && !image) || !activeChatId.value || sendMutation.isPending.value) return;
 
   if (chatWs.isConnected) {
     sendError.value = "";
-    chatWs.send(value);
+    chatWs.send(value, image);
     messageText.value = "";
+    pendingImage.value = null;
+    if (fileRef.value) fileRef.value.value = "";
     return;
   }
 
-  sendMutation.mutate(value);
+  sendMutation.mutate({ text: value, image });
 }
 
 function onSubmit(e: Event) {
@@ -363,7 +411,15 @@ function onSubmit(e: Event) {
                     <div v-if="m.authorId !== meQuery.data.value?.id" class="chats__author">
                       {{ userFor(m.authorId)?.firstName }}
                     </div>
-                    <p class="chats__message-text">{{ m.text }}</p>
+                    <button
+                      v-if="m.image"
+                      type="button"
+                      class="chats__message-image-btn"
+                      @click="openChatGallery(m.image!, $event)"
+                    >
+                      <img :src="m.image" alt="вложение" class="chats__message-image" />
+                    </button>
+                    <p v-if="m.text" class="chats__message-text">{{ m.text }}</p>
                     <div
                       :class="[
                         'chats__message-time',
@@ -404,12 +460,49 @@ function onSubmit(e: Event) {
 
             <div class="chats__composer">
               <p v-if="sendError" class="chats__error">{{ sendError }}</p>
+              <div v-if="pendingImage" class="chats__pending">
+                <img :src="pendingImage" alt="превью" class="chats__pending-thumb" />
+                <span class="chats__pending-label">Изображение готово к отправке</span>
+                <button
+                  type="button"
+                  class="chats__pending-remove"
+                  aria-label="Удалить вложение"
+                  @click="clearPendingImage"
+                >
+                  <X class="icon icon--sm" />
+                </button>
+              </div>
               <form class="chats__form" @submit="onSubmit">
                 <input
-                  v-model="messageText"
-                  class="chats__input"
-                  placeholder="Напишите сообщение..."
+                  ref="fileRef"
+                  type="file"
+                  accept="image/*"
+                  class="chats__file-input"
+                  @change="onPickFile(($event.target as HTMLInputElement).files?.[0])"
                 />
+                <button
+                  type="button"
+                  class="chats__attach chats__attach--desktop"
+                  aria-label="Прикрепить изображение"
+                  @click="fileRef?.click()"
+                >
+                  <Paperclip class="icon icon--sm" />
+                </button>
+                <div class="chats__input-wrap">
+                  <input
+                    v-model="messageText"
+                    class="chats__input"
+                    placeholder="Напишите сообщение..."
+                  />
+                  <button
+                    type="button"
+                    class="chats__attach chats__attach--mobile"
+                    aria-label="Прикрепить изображение"
+                    @click="fileRef?.click()"
+                  >
+                    <Paperclip class="icon icon--sm" />
+                  </button>
+                </div>
                 <button type="submit" class="chats__send" :disabled="sendMutation.isPending.value">
                   <Send class="icon icon--sm" />
                 </button>
@@ -477,27 +570,64 @@ function onSubmit(e: Event) {
             </RouterLink>
           </div>
 
-          <div>
-            <h3 class="chat-info__section-title">Участники</h3>
-            <div class="chat-info__participants">
-              <RouterLink
-                v-for="id in activeChat.participantIds"
-                :key="id"
-                :to="id === meQuery.data.value?.id ? '/profile' : { name: 'profile-user', params: { userId: id } }"
-                class="chat-info__participant"
-                @click="infoOpen = false"
+          <div class="chat-info__tabs">
+            <div class="chat-info__tab-list">
+              <button
+                type="button"
+                :class="['chat-info__tab', { 'chat-info__tab--active': infoTab === 'members' }]"
+                @click="infoTab = 'members'"
               >
-                <span
-                  :class="['avatar chat-info__participant-avatar', avatarClass(userFor(id))]"
-                  :style="avatarStyle(userFor(id))"
+                Участники
+                <span class="chat-info__tab-count">{{ activeChat.participantIds.length }}</span>
+              </button>
+              <button
+                type="button"
+                :class="['chat-info__tab', { 'chat-info__tab--active': infoTab === 'photos' }]"
+                @click="infoTab = 'photos'"
+              >
+                Фото
+                <span class="chat-info__tab-count">{{ gallery.length }}</span>
+              </button>
+            </div>
+
+            <div v-if="infoTab === 'members'" class="chat-info__tab-panel">
+              <div class="chat-info__participants">
+                <RouterLink
+                  v-for="id in activeChat.participantIds"
+                  :key="id"
+                  :to="id === meQuery.data.value?.id ? '/profile' : { name: 'profile-user', params: { userId: id } }"
+                  class="chat-info__participant"
+                  @click="infoOpen = false"
                 >
-                  {{ userFor(id)?.firstName[0] ?? "?" }}
-                </span>
-                <span class="chat-info__participant-name">
-                  {{ userFor(id)?.firstName }} {{ userFor(id)?.lastName }}
-                  <span v-if="id === meQuery.data.value?.id" class="chat-info__you">(вы)</span>
-                </span>
-              </RouterLink>
+                  <span
+                    :class="['avatar chat-info__participant-avatar', avatarClass(userFor(id))]"
+                    :style="avatarStyle(userFor(id))"
+                  >
+                    {{ userFor(id)?.firstName[0] ?? "?" }}
+                  </span>
+                  <span class="chat-info__participant-name">
+                    {{ userFor(id)?.firstName }} {{ userFor(id)?.lastName }}
+                    <span v-if="id === meQuery.data.value?.id" class="chat-info__you">(вы)</span>
+                  </span>
+                </RouterLink>
+              </div>
+            </div>
+
+            <div v-else class="chat-info__tab-panel">
+              <div v-if="gallery.length > 0" class="chat-info__gallery">
+                <button
+                  v-for="(item, index) in gallery"
+                  :key="index"
+                  type="button"
+                  class="chat-info__gallery-item"
+                  @click="openChatGallery(item.src, $event)"
+                >
+                  <img :src="item.src" alt="медиа" class="chat-info__gallery-image" />
+                </button>
+              </div>
+              <div v-else class="chat-info__gallery-empty">
+                Пока нет изображений. Прикрепите первое через скрепку в поле ввода.
+              </div>
             </div>
           </div>
         </div>
