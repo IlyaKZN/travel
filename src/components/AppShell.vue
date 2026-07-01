@@ -1,18 +1,28 @@
 <script setup lang="ts">
 import { useQuery } from "@tanstack/vue-query";
-import { Home, Plus, MessageCircle, User } from "lucide-vue-next";
+import { Home, Plus, MessageCircle, User, Bell } from "lucide-vue-next";
 import { computed } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
+import CreateTripDialog from "@/components/CreateTripDialog.vue";
+import NotificationsDialog from "@/components/NotificationsDialog.vue";
 import { api, getToken } from "@/lib/api";
 import { avatarClass, avatarStyle } from "@/lib/avatar";
+import { createDialogStore, notificationsDialogStore } from "@/lib/dialog-stores";
 
 const route = useRoute();
+const router = useRouter();
 const hideChrome = computed(
   () =>
     route.path === "/onboarding" ||
     route.path === "/auth" ||
     route.path === "/register",
 );
+
+const showMobileBell = computed(() => {
+  if (hideChrome.value) return false;
+  if (route.path.startsWith("/chats/") && route.path !== "/chats/") return false;
+  return true;
+});
 
 const meQuery = useQuery({
   queryKey: ["me"],
@@ -21,8 +31,16 @@ const meQuery = useQuery({
   retry: false,
 });
 
+const notificationsQuery = useQuery({
+  queryKey: ["notifications"],
+  queryFn: api.notifications,
+  enabled: Boolean(getToken()),
+  retry: false,
+});
+
 const isAuthenticated = computed(() => Boolean(getToken() && meQuery.data.value));
 const initial = computed(() => meQuery.data.value?.firstName?.[0] ?? meQuery.data.value?.nickname?.[0] ?? "?");
+const unread = computed(() => (notificationsQuery.data.value ?? []).filter((n) => !n.read).length);
 
 const topLinks = [
   { to: "/", label: "Поездки", exact: true },
@@ -32,10 +50,25 @@ const topLinks = [
 
 const bottomItems = [
   { to: "/", label: "Главная", icon: Home, exact: true },
-  { to: "/create", label: "Создать", icon: Plus, exact: false },
   { to: "/chats", label: "Чаты", icon: MessageCircle, exact: false },
   { to: "/profile", label: "Профиль", icon: User, exact: false },
 ] as const;
+
+function openCreate(tripId?: string) {
+  if (!getToken()) {
+    void router.push("/auth");
+    return;
+  }
+  createDialogStore.open(tripId);
+}
+
+function openNotifications() {
+  if (!getToken()) {
+    void router.push("/auth");
+    return;
+  }
+  notificationsDialogStore.open();
+}
 </script>
 
 <template>
@@ -61,9 +94,18 @@ const bottomItems = [
           </RouterLink>
         </nav>
         <div class="app-shell__actions">
-          <RouterLink to="/create" class="app-shell__create-btn">
+          <button
+            type="button"
+            class="app-shell__bell-btn"
+            aria-label="Уведомления"
+            @click="openNotifications"
+          >
+            <Bell class="icon icon--sm" />
+            <span v-if="unread > 0" class="app-shell__bell-badge">{{ unread }}</span>
+          </button>
+          <button type="button" class="app-shell__create-btn" @click="openCreate()">
             <Plus class="icon icon--sm" /> Создать поездку
-          </RouterLink>
+          </button>
           <RouterLink
             :to="getToken() ? '/profile' : '/auth'"
             :class="['app-shell__avatar-link', avatarClass(meQuery.data.value)]"
@@ -76,13 +118,41 @@ const bottomItems = [
       </div>
     </header>
 
+    <button
+      v-if="showMobileBell"
+      type="button"
+      class="app-shell__mobile-bell"
+      aria-label="Уведомления"
+      @click="openNotifications"
+    >
+      <Bell class="icon" />
+      <span v-if="unread > 0" class="app-shell__mobile-bell-badge">{{ unread }}</span>
+    </button>
+
     <main :class="['app-shell__main', { 'app-shell__main--with-nav': !hideChrome }]">
       <slot />
     </main>
 
     <nav v-if="!hideChrome" class="app-shell__bottom-nav">
       <ul class="app-shell__bottom-list">
-        <li v-for="item in bottomItems" :key="item.to">
+        <li>
+          <RouterLink
+            to="/"
+            class="app-shell__bottom-link"
+            active-class="app-shell__bottom-link--active"
+            exact-active-class="app-shell__bottom-link--active"
+          >
+            <Home class="icon" />
+            <span>Главная</span>
+          </RouterLink>
+        </li>
+        <li>
+          <button type="button" class="app-shell__bottom-link app-shell__bottom-link--button" @click="openCreate()">
+            <Plus class="icon" />
+            <span>Создать</span>
+          </button>
+        </li>
+        <li v-for="item in bottomItems.slice(1)" :key="item.to">
           <RouterLink
             :to="item.to"
             class="app-shell__bottom-link"
@@ -95,5 +165,8 @@ const bottomItems = [
         </li>
       </ul>
     </nav>
+
+    <CreateTripDialog />
+    <NotificationsDialog />
   </div>
 </template>

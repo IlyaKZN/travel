@@ -15,4 +15,5 @@
 @import "./blocks/profile.css";
 @import "./blocks/settings.css";
 @import "./blocks/trip-detail.css";
-@import "./blocks/not-found.css";
+@import "./blocks/dialogs.css";
+@import "./blocks/notifications.css";

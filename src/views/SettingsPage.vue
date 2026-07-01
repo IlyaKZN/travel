@@ -33,6 +33,7 @@ const email = ref("");
 const phone = ref("");
 const age = ref("");
 const avatar = ref("");
+const savedAvatar = ref("");
 const avatarError = ref("");
 const emailError = ref("");
 const avatarInput = ref<HTMLInputElement | null>(null);
@@ -49,18 +50,23 @@ const pwdMismatch = computed(() => confirmPwd.value.length > 0 && newPwd.value !
 const avatarPreviewUser = computed(() => (u.value ? { ...u.value, avatar: avatar.value } : u.value));
 
 const profileMutation = useMutation({
-  mutationFn: () =>
-    api.updateMe({
+  mutationFn: () => {
+    const payload: Parameters<typeof api.updateMe>[0] = {
       firstName: firstName.value,
       lastName: lastName.value,
-      avatar: avatar.value,
       bio: bio.value,
       location: location.value,
       email: email.value,
       phone: phone.value,
       age: age.value,
-    }),
+    };
+    if (avatar.value !== savedAvatar.value) {
+      payload.avatar = avatar.value;
+    }
+    return api.updateMe(payload);
+  },
   onSuccess: async () => {
+    savedAvatar.value = avatar.value;
     await queryClient.invalidateQueries({ queryKey: ["me"] });
   },
 });
@@ -83,7 +89,9 @@ watch(
     bio.value = val.bio;
     location.value = val.location;
     email.value = val.email ?? "";
-    avatar.value = val.avatar ?? "";
+    const currentAvatar = val.avatar ?? "";
+    avatar.value = currentAvatar;
+    savedAvatar.value = currentAvatar;
   },
   { immediate: true },
 );

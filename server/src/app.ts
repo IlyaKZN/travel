@@ -9,6 +9,7 @@ import toursRoutes from './routes/tours.routes.js'
 import tripsRoutes from './routes/trips.routes.js'
 import chatsRoutes from './routes/chats.routes.js'
 import pushRoutes from './routes/push.routes.js'
+import notificationsRoutes from './routes/notifications.routes.js'
 
 export function createApp() {
   const app = express()
@@ -27,6 +28,7 @@ export function createApp() {
   app.use('/api/trips', tripsRoutes)
   app.use('/api/chats', chatsRoutes)
   app.use('/api/push', pushRoutes)
+  app.use('/api/notifications', notificationsRoutes)
 
   app.use(notFound)
   app.use(errorHandler)

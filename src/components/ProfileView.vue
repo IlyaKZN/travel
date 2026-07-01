@@ -8,6 +8,7 @@ import TripAvatar from "@/components/TripAvatar.vue";
 import { api, getToken, transportLabel, type Review, type TransportType } from "@/lib/api";
 import { avatarClass, avatarStyle } from "@/lib/avatar";
 import { formatDate } from "@/lib/format";
+import { openPhotoGallery } from "@/lib/photo-gallery";
 
 const props = defineProps<{ userId?: string; owner?: boolean }>();
 
@@ -115,6 +116,20 @@ function startDm() {
   if (!profileUserId.value || startDmMutation.isPending.value) return;
   startDmMutation.mutate();
 }
+
+function openAvatarGallery(event: MouseEvent) {
+  const avatar = u.value?.avatar;
+  if (!avatar) return;
+  void openPhotoGallery({
+    items: [
+      {
+        src: avatar,
+        alt: `Фото ${u.value?.firstName ?? ""} ${u.value?.lastName ?? ""}`.trim(),
+      },
+    ],
+    thumbElement: event.currentTarget as HTMLElement,
+  });
+}
 </script>
 
 <template>
@@ -136,7 +151,18 @@ function startDm() {
         <div class="profile__card">
           <div class="profile__head">
             <div class="profile__head-main">
+              <button
+                v-if="u.avatar"
+                type="button"
+                :class="['avatar profile__avatar profile__avatar--clickable', avatarClass(u)]"
+                :style="avatarStyle(u)"
+                :aria-label="`Открыть фото ${u.firstName} ${u.lastName}`"
+                @click="openAvatarGallery"
+              >
+                {{ u.firstName[0] }}
+              </button>
               <span
+                v-else
                 :class="['avatar profile__avatar', avatarClass(u)]"
                 :style="avatarStyle(u)"
               >

@@ -33,8 +33,10 @@ const router = createRouter({
     {
       path: "/create",
       name: "create",
-      component: () => import("@/views/CreatePage.vue"),
-      meta: { title: "Создать поездку — ЕдемВместе" },
+      redirect: (to) => ({
+        path: "/",
+        query: to.query.tripId ? { openCreate: to.query.tripId } : { openCreate: "1" },
+      }),
     },
     {
       path: "/chats",

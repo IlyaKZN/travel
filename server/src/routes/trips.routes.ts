@@ -16,6 +16,11 @@ import {
   notifyCompanionRequestDeclined,
   notifyOrganizerJoinRequest,
 } from '../services/trip-push.service.js'
+import {
+  buildTripChangeSummary,
+  createNotification,
+  notifyTripParticipantsUpdated,
+} from '../services/notification.service.js'
 
 const router = Router()
 
@@ -210,6 +215,12 @@ router.post('/:id/signup', authRequired, asyncHandler(async (req, res) => {
   await prisma.tripJoinRequest.create({
     data: { tripId: trip.id, userId: req.userId! },
   })
+  void createNotification({
+    userId: trip.creatorId,
+    kind: 'request_incoming',
+    tripId: trip.id,
+    actorId: req.userId!,
+  })
   emitTripChanged('request_created', trip.id, [trip.creatorId, req.userId!])
   void notifyOrganizerJoinRequest(trip.id, req.userId!)
   res.status(202).json(await toFrontendTrip(trip, req.userId))
@@ -264,6 +275,12 @@ router.post('/:id/requests/:userId/approve', authRequired, asyncHandler(async (r
     })
     emitTripChanged('request_approved', trip.id, [trip.creatorId, targetUserId])
     void notifyCompanionRequestApproved(trip.id, targetUserId)
+    void createNotification({
+      userId: targetUserId,
+      kind: 'request_accepted',
+      tripId: trip.id,
+      actorId: req.userId!,
+    })
     res.json(await toFrontendTrip(trip, req.userId))
     return
   }
@@ -288,6 +305,12 @@ router.post('/:id/requests/:userId/approve', authRequired, asyncHandler(async (r
   }
   emitTripChanged('request_approved', trip.id)
   void notifyCompanionRequestApproved(trip.id, targetUserId)
+  void createNotification({
+    userId: targetUserId,
+    kind: 'request_accepted',
+    tripId: trip.id,
+    actorId: req.userId!,
+  })
   res.json(await toFrontendTrip(updatedTrip, req.userId))
 }))
 
@@ -309,6 +332,12 @@ router.post('/:id/requests/:userId/decline', authRequired, asyncHandler(async (r
   })
   emitTripChanged('request_declined', trip.id, [trip.creatorId, targetUserId])
   void notifyCompanionRequestDeclined(trip.id, targetUserId)
+  void createNotification({
+    userId: targetUserId,
+    kind: 'request_declined',
+    tripId: trip.id,
+    actorId: req.userId!,
+  })
   res.json(await toFrontendTrip(trip, req.userId))
 }))
 
@@ -359,6 +388,9 @@ router.patch('/:id', authRequired, asyncHandler(async (req, res) => {
       isDraft: data.isDraft,
     },
   })
+
+  const changeSummary = buildTripChangeSummary(trip, updatedTrip)
+  void notifyTripParticipantsUpdated(trip.id, trip.creatorId, changeSummary)
 
   emitTripChanged('updated', trip.id)
   res.json(await toFrontendTrip(updatedTrip, req.userId))

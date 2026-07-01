@@ -26,6 +26,7 @@ import TripAvatar from "@/components/TripAvatar.vue";
 import { api, getToken, transportLabel, type TransportType } from "@/lib/api";
 import { avatarClass, avatarStyle } from "@/lib/avatar";
 import { formatDateTime, formatBudget } from "@/lib/format";
+import { createDialogStore } from "@/lib/dialog-stores";
 
 const transportMeta: Record<TransportType, { icon: typeof Car; modifier: string }> = {
   car: { icon: Car, modifier: "transport-icon--car" },
@@ -155,14 +156,15 @@ function handleCta() {
               <ArrowLeft class="icon icon--sm" :stroke-width="2.5" /> Назад
             </button>
             <div v-if="isOrganizer" class="trip-detail__hero-actions">
-              <RouterLink
-                :to="{ name: 'create', query: { tripId: trip.id } }"
+              <button
+                type="button"
                 class="trip-detail__hero-action"
                 aria-label="Редактировать поездку"
+                @click="createDialogStore.open(trip.id)"
               >
                 <Pencil class="icon icon--sm" :stroke-width="2.5" />
                 <span class="trip-detail__hero-action-label">Редактировать</span>
-              </RouterLink>
+              </button>
               <button
                 type="button"
                 class="trip-detail__hero-action trip-detail__hero-action--danger"

@@ -78,6 +78,22 @@
   box-shadow: 0 0 0 4px var(--card);
 }
 
+.profile__avatar--clickable {
+  padding: 0;
+  border: none;
+  cursor: zoom-in;
+  transition: opacity 0.15s;
+}
+
+.profile__avatar--clickable:hover {
+  opacity: 0.92;
+}
+
+.profile__avatar--clickable:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 4px;
+}
+
 @media (min-width: 640px) {
   .profile__avatar {
     width: 5rem;

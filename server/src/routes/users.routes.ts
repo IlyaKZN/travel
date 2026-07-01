@@ -15,11 +15,14 @@ const NICKNAME_MAX = 15
 const ABOUT_MAX = 200
 const AVATAR_MAX_BYTES = 5 * 1024 * 1024
 const AVATAR_DATA_URL_RE = /^data:image\/(?:png|jpe?g|webp);base64,[A-Za-z0-9+/]+={0,2}$/
+const AVATAR_HTTP_RE = /^https?:\/\/.+/i
+const AVATAR_MAX_URL_LENGTH = 2048
 
 const avatarSchema = z
   .string()
   .refine((value) => {
     if (!value) return true
+    if (AVATAR_HTTP_RE.test(value)) return value.length <= AVATAR_MAX_URL_LENGTH
     if (!AVATAR_DATA_URL_RE.test(value)) return false
     const [, payload = ''] = value.split(',', 2)
     return Math.ceil((payload.length * 3) / 4) <= AVATAR_MAX_BYTES

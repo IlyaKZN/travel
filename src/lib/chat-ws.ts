@@ -190,6 +190,7 @@ export function applyRealtimeEvent(queryClient: QueryClientLike, event: ChatWsEv
     invalidate(queryClient, ["trips"]);
     invalidate(queryClient, ["trip", event.tripId]);
     invalidate(queryClient, ["chats"]);
+    invalidate(queryClient, ["notifications"]);
     return;
   }
 

@@ -64,6 +64,22 @@ export interface Review {
   at: string;
 }
 
+export type NotificationKind =
+  | "request_incoming"
+  | "request_accepted"
+  | "request_declined"
+  | "trip_updated";
+
+export interface Notification {
+  id: string;
+  kind: NotificationKind;
+  tripId: string;
+  actorId?: string;
+  at: string;
+  read: boolean;
+  changeSummary?: string;
+}
+
 interface AuthResult {
   token: string;
   user: User;
@@ -243,4 +259,16 @@ export const api = {
       method: "DELETE",
       body: JSON.stringify({ endpoint }),
     }),
+
+  notifications: () => apiFetch<Notification[]>("/api/notifications"),
+  markAllNotificationsRead: () =>
+    apiFetch<{ message: string }>("/api/notifications/read-all", { method: "POST" }),
+  markNotificationRead: (id: string) =>
+    apiFetch<Notification>(`/api/notifications/${id}/read`, { method: "PATCH" }),
+  dismissNotification: (id: string) =>
+    apiFetch<void>(`/api/notifications/${id}`, { method: "DELETE" }),
+  acceptNotificationRequest: (id: string) =>
+    apiFetch<{ message: string }>(`/api/notifications/${id}/accept`, { method: "POST" }),
+  declineNotificationRequest: (id: string) =>
+    apiFetch<{ message: string }>(`/api/notifications/${id}/decline`, { method: "POST" }),
 };
