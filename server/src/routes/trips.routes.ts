@@ -11,6 +11,11 @@ import { routeParam } from '../utils/routeParam.js'
 import { normalizeTransport, splitTripLocation } from '../utils/frontendAdapters.js'
 import { toDbUser } from '../utils/serializers.js'
 import { emitConversationUpdated, emitTripChanged } from '../ws/chat.js'
+import {
+  notifyCompanionRequestApproved,
+  notifyCompanionRequestDeclined,
+  notifyOrganizerJoinRequest,
+} from '../services/trip-push.service.js'
 
 const router = Router()
 
@@ -206,6 +211,7 @@ router.post('/:id/signup', authRequired, asyncHandler(async (req, res) => {
     data: { tripId: trip.id, userId: req.userId! },
   })
   emitTripChanged('request_created', trip.id, [trip.creatorId, req.userId!])
+  void notifyOrganizerJoinRequest(trip.id, req.userId!)
   res.status(202).json(await toFrontendTrip(trip, req.userId))
 }))
 
@@ -257,6 +263,7 @@ router.post('/:id/requests/:userId/approve', authRequired, asyncHandler(async (r
       where: { tripId_userId: { tripId: trip.id, userId: targetUserId } },
     })
     emitTripChanged('request_approved', trip.id, [trip.creatorId, targetUserId])
+    void notifyCompanionRequestApproved(trip.id, targetUserId)
     res.json(await toFrontendTrip(trip, req.userId))
     return
   }
@@ -280,6 +287,7 @@ router.post('/:id/requests/:userId/approve', authRequired, asyncHandler(async (r
     await emitConversationUpdated(conversation.id)
   }
   emitTripChanged('request_approved', trip.id)
+  void notifyCompanionRequestApproved(trip.id, targetUserId)
   res.json(await toFrontendTrip(updatedTrip, req.userId))
 }))
 
@@ -300,6 +308,7 @@ router.post('/:id/requests/:userId/decline', authRequired, asyncHandler(async (r
     where: { tripId: trip.id, userId: targetUserId },
   })
   emitTripChanged('request_declined', trip.id, [trip.creatorId, targetUserId])
+  void notifyCompanionRequestDeclined(trip.id, targetUserId)
   res.json(await toFrontendTrip(trip, req.userId))
 }))
 

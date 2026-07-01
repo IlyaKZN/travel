@@ -4,6 +4,7 @@ import { Eye, EyeOff, Check, User, Mail, Lock } from "lucide-vue-next";
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import { api } from "@/lib/api";
+import { isAllowedAuthContact, validateAuthContact } from "@/lib/contactPolicy";
 
 const router = useRouter();
 const queryClient = useQueryClient();
@@ -40,14 +41,21 @@ const strengthBarClass = (i: number) => {
 };
 
 function isEmailOrPhone(v: string) {
-  const s = v.trim();
-  return /.+@.+\..+/.test(s) || /^\+?[\d\s\-()]{10,}$/.test(s);
+  return isAllowedAuthContact(v);
 }
+
+const contactError = computed(() => {
+  const value = form.value.email.trim();
+  if (!value) return "";
+  const check = validateAuthContact(value);
+  return check.ok ? "" : check.error;
+});
 
 const valid = computed(
   () =>
     form.value.firstName.trim().length >= 2 &&
     isEmailOrPhone(form.value.email) &&
+    !contactError.value &&
     form.value.password.length >= 6 &&
     form.value.password === form.value.confirm &&
     agree.value,
@@ -134,9 +142,10 @@ function onSubmit(e: Event) {
               inputmode="email"
               autocomplete="email"
               class="input input--with-icon"
-              placeholder="Email или телефон"
+              placeholder="Email (Mail.ru, Яндекс…) или телефон +7"
               required
             />
+            <p v-if="contactError" class="register__mismatch">{{ contactError }}</p>
           </div>
 
           <div class="input-wrap">

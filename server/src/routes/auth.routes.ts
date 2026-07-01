@@ -1,4 +1,4 @@
-import { Router } from 'express'
+import { Router, type Response } from 'express'
 import { z } from 'zod'
 import { v4 as uuid } from 'uuid'
 import crypto from 'crypto'
@@ -16,8 +16,18 @@ import { config } from '../config.js'
 import { authRequired } from '../middleware/auth.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { emitUserChanged } from '../ws/chat.js'
+import { validateAuthContact } from '../utils/contactPolicy.js'
 
 const router = Router()
+
+function rejectInvalidContact(res: Response, contact: string): boolean {
+  const check = validateAuthContact(contact)
+  if (!check.ok) {
+    res.status(400).json({ error: check.error })
+    return true
+  }
+  return false
+}
 
 const registerSchema = z.object({
   contact: z.string().min(3).optional(),
@@ -58,6 +68,8 @@ router.post('/register', asyncHandler(async (req, res) => {
   }
   const hasFrontendProfile = firstName !== undefined
   const normalized = rawContact.trim().toLowerCase()
+
+  if (rejectInvalidContact(res, normalized)) return
 
   const existing = await prisma.user.findUnique({ where: { contact: normalized } })
   if (existing) {
@@ -104,6 +116,8 @@ router.post('/confirm', asyncHandler(async (req, res) => {
   const { contact, code } = confirmSchema.parse(req.body)
   const normalized = contact.trim().toLowerCase()
 
+  if (rejectInvalidContact(res, normalized)) return
+
   const pending = await prisma.pendingUser.findUnique({ where: { contact: normalized } })
   if (!pending) {
     res.status(400).json({ error: 'Регистрация не найдена' })
@@ -142,6 +156,9 @@ router.post('/login', asyncHandler(async (req, res) => {
     return
   }
   const normalized = rawContact.trim().toLowerCase()
+
+  if (rejectInvalidContact(res, normalized)) return
+
   const user = await prisma.user.findUnique({ where: { contact: normalized } })
 
   if (!user || !(await comparePassword(password, user.passwordHash))) {
@@ -207,6 +224,9 @@ router.post('/telegram', asyncHandler(async (req, res) => {
 router.post('/reset-password', asyncHandler(async (req, res) => {
   const { contact, password } = resetSchema.parse(req.body)
   const normalized = contact.trim().toLowerCase()
+
+  if (rejectInvalidContact(res, normalized)) return
+
   const user = await prisma.user.findUnique({ where: { contact: normalized } })
 
   if (!user) {
@@ -239,6 +259,9 @@ router.patch('/password', authRequired, asyncHandler(async (req, res) => {
 router.post('/resend-code', asyncHandler(async (req, res) => {
   const { contact } = z.object({ contact: z.string() }).parse(req.body)
   const normalized = contact.trim().toLowerCase()
+
+  if (rejectInvalidContact(res, normalized)) return
+
   const pending = await prisma.pendingUser.findUnique({ where: { contact: normalized } })
 
   if (!pending) {

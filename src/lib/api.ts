@@ -1,4 +1,5 @@
 import { chatWs, ensureChatSocket } from "./chat-ws";
+import { syncPushSubscription } from "./push-notifications";
 
 export type TransportType = "car" | "train" | "bus" | "plane";
 
@@ -85,6 +86,7 @@ export function getToken() {
 export function setToken(token: string) {
   localStorage.setItem(TOKEN_KEY, token);
   ensureChatSocket(token);
+  void syncPushSubscription();
 }
 
 export function clearToken() {
@@ -228,5 +230,17 @@ export const api = {
     apiFetch<Review>(`/api/users/${userId}/reviews`, {
       method: "POST",
       body: JSON.stringify({ text }),
+    }),
+
+  pushVapidKey: () => apiFetch<{ publicKey: string | null }>("/api/push/vapid-key"),
+  subscribePush: (subscription: PushSubscriptionJSON) =>
+    apiFetch<{ message: string }>("/api/push/subscribe", {
+      method: "POST",
+      body: JSON.stringify(subscription),
+    }),
+  unsubscribePush: (endpoint: string) =>
+    apiFetch<void>("/api/push/subscribe", {
+      method: "DELETE",
+      body: JSON.stringify({ endpoint }),
     }),
 };

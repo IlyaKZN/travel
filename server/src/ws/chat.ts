@@ -183,6 +183,15 @@ export function emitReviewCreated(userId: string, reviewId: string, recipientIds
   broadcastAppEvent({ type: 'review_created', userId, reviewId }, recipientIds)
 }
 
+export function isUserOnline(userId: string): boolean {
+  for (const client of clients) {
+    if (client.userId === userId && client.ws.readyState === client.ws.OPEN) {
+      return true
+    }
+  }
+  return false
+}
+
 async function handleJoin(client: ChatClient, conversationId: string) {
   const conversation = await prisma.conversation.findUnique({
     where: { id: conversationId },

@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { api } from "@/lib/api";
+import { validateAuthContact } from "@/lib/contactPolicy";
 
 const mode = ref<"login" | "register">("login");
 const email = ref("");
@@ -19,6 +20,8 @@ const telegramMutation = useMutation({
     router.push("/");
   },
 });
+
+const contactError = ref("");
 
 const authMutation = useMutation({
   mutationFn: () =>
@@ -50,6 +53,12 @@ onMounted(() => {
 
 function onSubmit(e: Event) {
   e.preventDefault();
+  const check = validateAuthContact(email.value);
+  if (!check.ok) {
+    contactError.value = check.error;
+    return;
+  }
+  contactError.value = "";
   authMutation.mutate();
 }
 </script>
@@ -91,7 +100,7 @@ function onSubmit(e: Event) {
             class="input"
             placeholder="Никнейм"
           />
-          <input v-model="email" type="email" class="input" placeholder="Email или телефон" />
+          <input v-model="email" type="email" class="input" placeholder="Email (Mail.ru, Яндекс…) или телефон +7" />
           <input
             v-model="password"
             type="password"
@@ -121,7 +130,8 @@ function onSubmit(e: Event) {
                   : "Зарегистрироваться"
             }}
           </button>
-          <p v-if="authMutation.isError.value || telegramMutation.isError.value" class="auth__error">
+          <p v-if="contactError" class="auth__error">{{ contactError }}</p>
+          <p v-else-if="authMutation.isError.value || telegramMutation.isError.value" class="auth__error">
             {{ telegramMutation.error.value?.message ?? authMutation.error.value?.message }}
           </p>
         </form>

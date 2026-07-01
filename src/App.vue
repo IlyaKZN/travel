@@ -4,6 +4,7 @@ import { onMounted, onUnmounted, watch } from "vue";
 import { useRoute } from "vue-router";
 import { getToken } from "@/lib/api";
 import { applyRealtimeEvent, chatWs, ensureChatSocket } from "@/lib/chat-ws";
+import { syncPushSubscription } from "@/lib/push-notifications";
 
 const route = useRoute();
 const queryClient = useQueryClient();
@@ -20,6 +21,7 @@ watch(
 onMounted(() => {
   ensureChatSocket(getToken());
   unsubscribe = chatWs.subscribe((event) => applyRealtimeEvent(queryClient, event));
+  void syncPushSubscription();
 });
 
 onUnmounted(() => {

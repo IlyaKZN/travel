@@ -7,6 +7,7 @@ import { authRequired } from '../middleware/auth.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { routeParam } from '../utils/routeParam.js'
 import { emitReviewCreated, emitUserChanged } from '../ws/chat.js'
+import { validateAuthContact } from '../utils/contactPolicy.js'
 
 const router = Router()
 
@@ -170,7 +171,13 @@ router.patch('/me', authRequired, asyncHandler(async (req, res) => {
   }
 
   if (email && email.trim().toLowerCase() !== user.contact) {
-    const contactTaken = await prisma.user.findUnique({ where: { contact: email.trim().toLowerCase() } })
+    const normalizedEmail = email.trim().toLowerCase()
+    const contactCheck = validateAuthContact(normalizedEmail)
+    if (!contactCheck.ok) {
+      res.status(400).json({ error: contactCheck.error })
+      return
+    }
+    const contactTaken = await prisma.user.findUnique({ where: { contact: normalizedEmail } })
     if (contactTaken) {
       res.status(409).json({ error: 'Email уже занят' })
       return

@@ -1,10 +1,17 @@
 <script setup lang="ts">
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
-import { ArrowLeft, Camera, Eye, EyeOff, Lock } from "lucide-vue-next";
+import { ArrowLeft, Bell, BellOff, Camera, Eye, EyeOff, Lock } from "lucide-vue-next";
 import { computed, ref, watch } from "vue";
 import AppShell from "@/components/AppShell.vue";
 import { api, getToken } from "@/lib/api";
 import { avatarClass, avatarStyle } from "@/lib/avatar";
+import { isEmailContact, validateAuthContact } from "@/lib/contactPolicy";
+import {
+  disablePushNotifications,
+  enablePushNotifications,
+  isPushSupported,
+  pushPermission,
+} from "@/lib/push-notifications";
 
 const MAX_AVATAR_SIZE = 5 * 1024 * 1024;
 const AVATAR_TYPES = ["image/png", "image/jpeg", "image/webp"];
@@ -27,11 +34,16 @@ const phone = ref("");
 const age = ref("");
 const avatar = ref("");
 const avatarError = ref("");
+const emailError = ref("");
 const avatarInput = ref<HTMLInputElement | null>(null);
 const currentPwd = ref("");
 const newPwd = ref("");
 const confirmPwd = ref("");
 const showPwd = ref(false);
+const pushStatus = ref<ReturnType<typeof pushPermission>>(pushPermission());
+const pushBusy = ref(false);
+const pushMessage = ref("");
+const pushMessageIsError = ref(false);
 
 const pwdMismatch = computed(() => confirmPwd.value.length > 0 && newPwd.value !== confirmPwd.value);
 const avatarPreviewUser = computed(() => (u.value ? { ...u.value, avatar: avatar.value } : u.value));
@@ -88,6 +100,18 @@ function resetAvatar() {
   }
 }
 
+function saveProfile() {
+  emailError.value = "";
+  if (isEmailContact(email.value)) {
+    const check = validateAuthContact(email.value);
+    if (!check.ok) {
+      emailError.value = check.error;
+      return;
+    }
+  }
+  profileMutation.mutate();
+}
+
 function handleAvatarChange(event: Event) {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
@@ -115,6 +139,43 @@ function handleAvatarChange(event: Event) {
     input.value = "";
   };
   reader.readAsDataURL(file);
+}
+
+async function togglePushNotifications() {
+  pushMessage.value = "";
+  pushMessageIsError.value = false;
+  if (!isPushSupported()) {
+    pushMessage.value = "Браузер не поддерживает push-уведомления.";
+    pushMessageIsError.value = true;
+    return;
+  }
+
+  pushBusy.value = true;
+  try {
+    if (pushStatus.value === "granted") {
+      await disablePushNotifications();
+      pushStatus.value = pushPermission();
+      pushMessage.value = "Push-уведомления отключены.";
+      return;
+    }
+
+    const result = await enablePushNotifications();
+    pushStatus.value = pushPermission();
+    if (result === "granted") {
+      pushMessage.value = "Push-уведомления включены.";
+    } else if (result === "denied") {
+      pushMessage.value = "Разрешите уведомления в настройках браузера.";
+      pushMessageIsError.value = true;
+    } else if (result === "unconfigured") {
+      pushMessage.value = "Push не настроен на сервере (VAPID-ключи). Перезапустите сервер после добавления ключей в server/.env.";
+      pushMessageIsError.value = true;
+    }
+  } catch (error) {
+    pushMessage.value = error instanceof Error ? error.message : "Не удалось изменить настройки уведомлений.";
+    pushMessageIsError.value = true;
+  } finally {
+    pushBusy.value = false;
+  }
 }
 </script>
 
@@ -199,6 +260,7 @@ function handleAvatarChange(event: Event) {
             <label class="field">
               <span class="field__label">Email</span>
               <input v-model="email" type="email" class="input input--round" />
+              <p v-if="emailError" class="register__mismatch">{{ emailError }}</p>
             </label>
             <label class="field">
               <span class="field__label">Телефон</span>
@@ -216,14 +278,52 @@ function handleAvatarChange(event: Event) {
             <button
               type="button"
               class="btn btn--hero btn--md"
-              :disabled="profileMutation.isPending.value || Boolean(avatarError)"
-              @click="profileMutation.mutate()"
+              :disabled="profileMutation.isPending.value || Boolean(avatarError) || Boolean(emailError)"
+              @click="saveProfile"
             >
               {{ profileMutation.isPending.value ? "Сохраняем..." : "Сохранить" }}
             </button>
           </div>
           <p v-if="profileMutation.isError.value" class="settings__message text-error">
             {{ profileMutation.error.value?.message }}
+          </p>
+        </section>
+
+        <section v-if="isPushSupported()" class="panel">
+          <div class="settings__section-head">
+            <span class="settings__section-icon"><Bell class="icon" /></span>
+            <div>
+              <h2 class="settings__section-title">Push-уведомления</h2>
+              <p class="settings__section-desc">
+                Заявки на поездки и ответы организатора, даже когда вкладка закрыта
+              </p>
+            </div>
+          </div>
+
+          <div class="settings__actions">
+            <button
+              type="button"
+              class="btn btn--hero btn--md"
+              :disabled="pushBusy"
+              @click="togglePushNotifications"
+            >
+              <BellOff v-if="pushStatus === 'granted'" class="icon icon--sm" />
+              <Bell v-else class="icon icon--sm" />
+              {{
+                pushBusy
+                  ? "Сохраняем..."
+                  : pushStatus === "granted"
+                    ? "Отключить уведомления"
+                    : "Включить уведомления"
+              }}
+            </button>
+          </div>
+          <p
+            v-if="pushMessage"
+            class="settings__message"
+            :class="pushMessageIsError ? 'text-error' : 'text-success'"
+          >
+            {{ pushMessage }}
           </p>
         </section>
 
