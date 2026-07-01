@@ -34,6 +34,8 @@ PORT=3001
 DATABASE_URL=postgresql://travels:${POSTGRES_PASSWORD}@127.0.0.1:5432/travels
 JWT_SECRET=${JWT_SECRET}
 CORS_ORIGIN=${PUBLIC_URL}
+APP_PUBLIC_URL=${PUBLIC_URL}
+VAPID_SUBJECT=${PUBLIC_URL}
 EOF
   chmod 600 "$SERVER_ENV"
   export POSTGRES_PASSWORD
@@ -71,6 +73,7 @@ cd "$APP_DIR/server"
 npm ci
 npx prisma generate
 npm run build
+bash "$DEPLOY_DIR/configure-push.sh"
 echo "==> Resetting database schema from Prisma schema..."
 npm run db:reset
 
