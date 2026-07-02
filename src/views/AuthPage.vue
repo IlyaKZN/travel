@@ -4,6 +4,7 @@ import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { api } from "@/lib/api";
 import { validateAuthContact } from "@/lib/contactPolicy";
+import { notify } from "@/lib/notify";
 
 const mode = ref<"login" | "register">("login");
 const email = ref("");
@@ -18,6 +19,9 @@ const telegramMutation = useMutation({
   onSuccess: async () => {
     await queryClient.invalidateQueries({ queryKey: ["me"] });
     router.push("/");
+  },
+  onError: (error: Error) => {
+    notify.error("Не удалось войти через Telegram", { description: error.message });
   },
 });
 
@@ -36,6 +40,11 @@ const authMutation = useMutation({
   onSuccess: async () => {
     await queryClient.invalidateQueries({ queryKey: ["me"] });
     router.push("/");
+  },
+  onError: (error: Error) => {
+    notify.error(mode.value === "login" ? "Не удалось войти" : "Не удалось зарегистрироваться", {
+      description: error.message,
+    });
   },
 });
 
@@ -56,6 +65,7 @@ function onSubmit(e: Event) {
   const check = validateAuthContact(email.value);
   if (!check.ok) {
     contactError.value = check.error;
+    notify.error("Проверьте контакт", { description: check.error });
     return;
   }
   contactError.value = "";

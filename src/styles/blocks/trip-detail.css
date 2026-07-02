@@ -220,6 +220,20 @@
   }
 }
 
+.trip-detail__card--compact {
+  padding: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .trip-detail__card--compact {
+    padding: 1.25rem;
+  }
+}
+
+.trip-detail__section-title {
+  font-size: 1rem;
+}
+
 .trip-detail__stats {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -277,16 +291,16 @@
 }
 
 .trip-detail__participants-count {
-  font-size: 0.75rem;
+  font-size: 11px;
   font-weight: 600;
   color: var(--muted-foreground);
 }
 
 .trip-detail__participants-grid {
-  margin-top: 1rem;
+  margin-top: 0.75rem;
   display: grid;
   grid-template-columns: 1fr;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 @media (min-width: 640px) {
@@ -304,53 +318,79 @@
 .trip-detail__participant {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  border-radius: 1rem;
+  gap: 0.625rem;
+  border-radius: 0.75rem;
   border: 1px solid var(--border);
   background: color-mix(in oklab, var(--background) 60%, transparent);
-  padding: 0.75rem;
-  transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+  padding: 0.5rem 2.25rem 0.5rem 0.5rem;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.trip-detail__participant-wrap {
+  position: relative;
+}
+
+.trip-detail__participant-wrap:hover .trip-detail__participant-remove {
+  opacity: 1;
+}
+
+.trip-detail__participant-remove {
+  position: absolute;
+  right: 0.375rem;
+  top: 50%;
+  display: grid;
+  width: 1.5rem;
+  height: 1.5rem;
+  place-items: center;
+  border: none;
+  border-radius: 9999px;
+  background: transparent;
+  color: color-mix(in oklab, var(--muted-foreground) 60%, transparent);
+  opacity: 0;
+  transform: translateY(-50%);
+  cursor: pointer;
+  transition: opacity 0.15s, background-color 0.15s, color 0.15s;
+}
+
+.trip-detail__participant-remove:hover {
+  background: #fff1f2;
+  color: #e11d48;
 }
 
 .trip-detail__participant:hover {
   border-color: color-mix(in oklab, var(--primary) 40%, transparent);
   background: color-mix(in oklab, var(--secondary) 60%, transparent);
-  box-shadow: var(--shadow-soft);
 }
 
 .trip-detail__participant--organizer {
-  border-width: 2px;
-  border-color: color-mix(in oklab, var(--primary) 30%, transparent);
-  background: color-mix(in oklab, var(--primary) 6%, var(--card));
+  border-width: 1px;
+  border-color: color-mix(in oklab, var(--primary) 25%, transparent);
+  background: color-mix(in oklab, var(--primary) 5%, var(--card));
+  padding-right: 0.75rem;
 }
 
 .trip-detail__participant--organizer:hover {
-  border-color: color-mix(in oklab, var(--primary) 60%, transparent);
+  border-color: color-mix(in oklab, var(--primary) 50%, transparent);
 }
 
 .trip-detail__participant-avatar {
-  width: 3.5rem;
-  height: 3.5rem;
-  font-size: 1.125rem;
-  box-shadow: 0 0 0 2px color-mix(in oklab, #fff 60%, transparent);
+  width: 2.25rem;
+  height: 2.25rem;
+  font-size: 0.875rem;
 }
 
 .trip-detail__organizer-badge {
-  display: inline-block;
-  border-radius: 9999px;
-  background: var(--primary);
-  padding: 0.125rem 0.5rem;
+  margin-top: 0.125rem;
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--primary-foreground);
+  letter-spacing: 0.1em;
+  color: color-mix(in oklab, var(--primary) 80%, transparent);
 }
 
 .trip-detail__participant-name {
-  margin-top: 0.25rem;
   font-size: 0.875rem;
-  font-weight: 700;
+  font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -359,30 +399,30 @@
 .trip-detail__empty-seat {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  border-radius: 1rem;
-  border: 2px dashed var(--border);
-  background: color-mix(in oklab, var(--background) 30%, transparent);
-  padding: 0.75rem;
+  gap: 0.625rem;
+  border-radius: 0.75rem;
+  border: 1px dashed color-mix(in oklab, var(--border) 70%, transparent);
+  padding: 0.5rem;
 }
 
 .trip-detail__empty-icon {
   display: grid;
   place-items: center;
-  width: 3.5rem;
-  height: 3.5rem;
+  width: 2.25rem;
+  height: 2.25rem;
   flex-shrink: 0;
-  border-radius: 1rem;
-  background: color-mix(in oklab, var(--secondary) 60%, transparent);
-  font-size: 1.5rem;
+  border-radius: 9999px;
+  background: color-mix(in oklab, var(--secondary) 50%, transparent);
+  font-size: 1.125rem;
   font-weight: 300;
-  color: color-mix(in oklab, var(--muted-foreground) 60%, transparent);
+  line-height: 1;
+  color: color-mix(in oklab, var(--muted-foreground) 50%, transparent);
 }
 
 .trip-detail__empty-label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: color-mix(in oklab, var(--muted-foreground) 70%, transparent);
 }
 
 .trip-detail__description {
@@ -390,6 +430,22 @@
   font-size: 0.875rem;
   line-height: 1.625;
   color: color-mix(in oklab, var(--foreground) 80%, transparent);
+}
+
+.trip-detail__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: 1rem;
+}
+
+.trip-detail__tag {
+  border-radius: 9999px;
+  background: color-mix(in oklab, var(--secondary) 70%, transparent);
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
 }
 
 .trip-detail__request-status {
@@ -464,7 +520,7 @@
   align-items: center;
   gap: 0.5rem;
   font-family: var(--font-display);
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 700;
   letter-spacing: -0.025em;
 }
@@ -482,8 +538,8 @@
 .trip-detail__requests-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin-top: 1rem;
+  gap: 0;
+  margin-top: 0.75rem;
   padding: 0;
   list-style: none;
 }
@@ -493,10 +549,17 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
-  border-radius: 1rem;
-  border: 1px solid var(--border);
-  background: color-mix(in oklab, var(--background) 60%, transparent);
-  padding: 0.75rem;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+}
+
+.trip-detail__request-item:first-child {
+  padding-top: 0;
+}
+
+.trip-detail__request-item:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .trip-detail__request-user {
@@ -504,14 +567,13 @@
   min-width: 0;
   flex: 1;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.625rem;
 }
 
 .trip-detail__request-avatar {
-  width: 3rem;
-  height: 3rem;
-  font-size: 1rem;
-  box-shadow: 0 0 0 2px color-mix(in oklab, #fff 60%, transparent);
+  width: 2.25rem;
+  height: 2.25rem;
+  font-size: 0.875rem;
 }
 
 .trip-detail__request-name {
@@ -519,7 +581,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 0.875rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .trip-detail__request-meta {
@@ -534,25 +596,23 @@
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .trip-detail__request-decline,
 .trip-detail__request-approve {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
   border-radius: 9999px;
-  padding: 0.5rem 0.875rem;
-  font-size: 0.875rem;
-  font-weight: 700;
   transition: opacity 0.15s, background-color 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .trip-detail__request-decline {
   border: 1px solid var(--border);
   background: var(--card);
-  color: var(--foreground);
+  color: var(--muted-foreground);
 }
 
 .trip-detail__request-decline:hover:not(:disabled) {
@@ -562,8 +622,13 @@
 }
 
 .trip-detail__request-approve {
+  border: none;
   background: var(--primary);
   color: var(--primary-foreground);
+}
+
+.trip-detail__request-approve:hover:not(:disabled) {
+  opacity: 0.9;
 }
 
 .trip-detail__request-decline:disabled,

@@ -12,6 +12,7 @@ import {
   isPushSupported,
   pushPermission,
 } from "@/lib/push-notifications";
+import { notify } from "@/lib/notify";
 
 const MAX_AVATAR_SIZE = 5 * 1024 * 1024;
 const AVATAR_TYPES = ["image/png", "image/jpeg", "image/webp"];
@@ -68,6 +69,10 @@ const profileMutation = useMutation({
   onSuccess: async () => {
     savedAvatar.value = avatar.value;
     await queryClient.invalidateQueries({ queryKey: ["me"] });
+    notify.success("Профиль сохранён");
+  },
+  onError: (error: Error) => {
+    notify.error("Не удалось сохранить профиль", { description: error.message });
   },
 });
 
@@ -77,6 +82,10 @@ const passwordMutation = useMutation({
     currentPwd.value = "";
     newPwd.value = "";
     confirmPwd.value = "";
+    notify.success("Пароль обновлён");
+  },
+  onError: (error: Error) => {
+    notify.error("Не удалось сменить пароль", { description: error.message });
   },
 });
 
@@ -114,6 +123,7 @@ function saveProfile() {
     const check = validateAuthContact(email.value);
     if (!check.ok) {
       emailError.value = check.error;
+      notify.error("Проверьте email", { description: check.error });
       return;
     }
   }
@@ -128,11 +138,13 @@ function handleAvatarChange(event: Event) {
   avatarError.value = "";
   if (!AVATAR_TYPES.includes(file.type)) {
     avatarError.value = "Выберите PNG, JPG или WebP.";
+    notify.error("Неверный формат файла", { description: "Выберите PNG, JPG или WebP." });
     input.value = "";
     return;
   }
   if (file.size > MAX_AVATAR_SIZE) {
     avatarError.value = "Файл должен быть до 5 МБ.";
+    notify.error("Файл слишком большой", { description: "Фото должно быть до 5 МБ." });
     input.value = "";
     return;
   }

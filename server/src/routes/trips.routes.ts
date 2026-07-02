@@ -5,7 +5,7 @@ import type { Trip } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
 import { authOptional, authRequired } from '../middleware/auth.js'
 import { detectLocationType, publicUser, unsplash } from '../utils/helpers.js'
-import { addUserToTripChat, createTripConversation } from '../services/chat.service.js'
+import { addUserToTripChat, createTripConversation, removeUserFromTripChat } from '../services/chat.service.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { routeParam } from '../utils/routeParam.js'
 import { normalizeTransport, splitTripLocation } from '../utils/frontendAdapters.js'
@@ -28,6 +28,22 @@ const LOCATION_MAX = 100
 const PARTICIPANTS_MAX = 10
 const PRICE_MAX = 9_999_999
 
+const TAGS_MAX = 8
+const TAG_MAX_LEN = 24
+
+function normalizeTags(tags: string[]): string[] {
+  const seen = new Set<string>()
+  const result: string[] = []
+  for (const tag of tags) {
+    const value = tag.trim()
+    if (!value || seen.has(value)) continue
+    seen.add(value)
+    result.push(value.slice(0, TAG_MAX_LEN))
+    if (result.length >= TAGS_MAX) break
+  }
+  return result
+}
+
 const tripSchema = z.object({
   from: z.string().min(1).max(LOCATION_MAX),
   to: z.string().min(1).max(LOCATION_MAX),
@@ -38,6 +54,7 @@ const tripSchema = z.object({
   budget: z.number().nonnegative().max(PRICE_MAX).default(0),
   description: z.string().min(1),
   info: z.string().optional(),
+  tags: z.array(z.string().trim().min(1).max(TAG_MAX_LEN)).max(TAGS_MAX).default([]),
   images: z.array(z.string()).max(10).default([]),
   video: z.string().optional(),
   isClosed: z.boolean().default(false),
@@ -95,6 +112,7 @@ async function toFrontendTrip(trip: Trip, viewerId?: string) {
       : [],
     description: trip.shortDescription,
     info: trip.fullPlan,
+    tags: trip.tags,
   }
 }
 
@@ -167,6 +185,7 @@ router.post('/', authRequired, asyncHandler(async (req, res) => {
       startDate: start,
       endDate: end,
       transport: normalizeTransport(data.transport),
+      tags: normalizeTags(data.tags),
       images: data.images.length ? data.images : [unsplash('1488646953015-85cb44e25828')],
       video: data.video,
       isClosed: data.isClosed,
@@ -341,6 +360,58 @@ router.post('/:id/requests/:userId/decline', authRequired, asyncHandler(async (r
   res.json(await toFrontendTrip(trip, req.userId))
 }))
 
+router.delete('/:id/participants/:userId', authRequired, asyncHandler(async (req, res) => {
+  const id = routeParam(req.params.id)
+  const targetUserId = routeParam(req.params.userId)
+  const trip = await prisma.trip.findUnique({ where: { id } })
+  if (!trip) {
+    res.status(404).json({ error: 'Поездка не найдена' })
+    return
+  }
+  if (trip.creatorId !== req.userId) {
+    res.status(403).json({ error: 'Только организатор может удалять участников' })
+    return
+  }
+  if (targetUserId === trip.creatorId) {
+    res.status(400).json({ error: 'Нельзя удалить организатора' })
+    return
+  }
+
+  const signup = await prisma.tripSignup.findUnique({
+    where: { tripId_userId: { tripId: trip.id, userId: targetUserId } },
+  })
+  if (!signup) {
+    res.status(404).json({ error: 'Участник не найден' })
+    return
+  }
+
+  const [, updatedTrip] = await prisma.$transaction([
+    prisma.tripSignup.delete({
+      where: { tripId_userId: { tripId: trip.id, userId: targetUserId } },
+    }),
+    prisma.trip.update({
+      where: { id: trip.id },
+      data: { freeSpots: { increment: 1 } },
+    }),
+  ])
+
+  await removeUserFromTripChat(trip.id, targetUserId)
+  const conversation = await prisma.conversation.findUnique({ where: { tripId: trip.id } })
+  if (conversation) {
+    await emitConversationUpdated(conversation.id)
+  }
+
+  emitTripChanged('updated', trip.id, [trip.creatorId, targetUserId])
+  void createNotification({
+    userId: targetUserId,
+    kind: 'trip_updated',
+    tripId: trip.id,
+    actorId: req.userId!,
+    changeSummary: 'Организатор удалил вас из поездки',
+  })
+  res.json(await toFrontendTrip(updatedTrip, req.userId))
+}))
+
 router.patch('/:id', authRequired, asyncHandler(async (req, res) => {
   const id = routeParam(req.params.id)
   const trip = await prisma.trip.findUnique({ where: { id } })
@@ -382,6 +453,7 @@ router.patch('/:id', authRequired, asyncHandler(async (req, res) => {
       startDate: start,
       endDate: end,
       transport: normalizeTransport(data.transport),
+      tags: normalizeTags(data.tags),
       ...(data.images.length ? { images: data.images } : {}),
       video: data.video,
       isClosed: data.isClosed,

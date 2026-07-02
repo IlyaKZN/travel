@@ -2,6 +2,7 @@
 import { computed } from "vue";
 import { useRouter } from "vue-router";
 import CreateTripForm from "@/components/CreateTripForm.vue";
+import GoogleIcon from "@/components/GoogleIcon.vue";
 import { createDialogStore } from "@/lib/dialog-stores";
 import type { Trip } from "@/lib/api";
 
@@ -34,7 +35,9 @@ function onSuccess(trip: Trip) {
       @click.self="close"
     >
       <div class="app-dialog__panel app-dialog__panel--create">
-        <button type="button" class="app-dialog__close" aria-label="Закрыть" @click="close">×</button>
+        <button type="button" class="app-dialog__close" aria-label="Закрыть" @click="close">
+          <GoogleIcon name="close" class="icon" />
+        </button>
         <CreateTripForm :key="tripId ?? 'new'" :trip-id="tripId" embedded @success="onSuccess" />
       </div>
     </div>

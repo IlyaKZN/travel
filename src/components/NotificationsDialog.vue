@@ -14,6 +14,7 @@ import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import { api, getToken, type Notification, type NotificationKind, type User } from "@/lib/api";
 import { notificationsDialogStore } from "@/lib/dialog-stores";
+import { notify } from "@/lib/notify";
 
 const router = useRouter();
 const queryClient = useQueryClient();
@@ -123,12 +124,32 @@ const dismissMutation = useMutation({
 
 const acceptMutation = useMutation({
   mutationFn: api.acceptNotificationRequest,
-  onSuccess: invalidate,
+  onSuccess: (_result, notificationId) => {
+    const notification = items.value.find((item) => item.id === notificationId);
+    const actor = userFor(notification?.actorId);
+    invalidate();
+    notify.success("Заявка принята", {
+      description: actor ? `${actor.firstName} присоединился к поездке` : undefined,
+    });
+  },
+  onError: (error: Error) => {
+    notify.error("Не удалось принять заявку", { description: error.message });
+  },
 });
 
 const declineMutation = useMutation({
   mutationFn: api.declineNotificationRequest,
-  onSuccess: invalidate,
+  onSuccess: (_result, notificationId) => {
+    const notification = items.value.find((item) => item.id === notificationId);
+    const actor = userFor(notification?.actorId);
+    invalidate();
+    notify.info("Заявка отклонена", {
+      description: actor ? `Вы отклонили заявку от ${actor.firstName}` : undefined,
+    });
+  },
+  onError: (error: Error) => {
+    notify.error("Не удалось отклонить заявку", { description: error.message });
+  },
 });
 
 function goToTrip(tripId: string, notificationId: string) {

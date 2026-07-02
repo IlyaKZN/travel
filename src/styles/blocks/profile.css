@@ -353,6 +353,95 @@
   color: color-mix(in oklab, var(--foreground) 80%, transparent);
 }
 
+.profile__notifications-card {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  border: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in oklab, var(--secondary) 50%, transparent);
+  padding: 0.75rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.profile__notifications-card:hover {
+  background: var(--secondary);
+}
+
+@media (min-width: 1024px) {
+  .profile__notifications-card {
+    display: none;
+  }
+}
+
+.profile__notifications-icon {
+  position: relative;
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 0.75rem;
+  background: color-mix(in oklab, var(--primary) 10%, transparent);
+  color: var(--primary);
+}
+
+.profile__notifications-dot {
+  position: absolute;
+  top: -0.125rem;
+  right: -0.125rem;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 9999px;
+  background: var(--primary);
+  box-shadow: 0 0 0 2px var(--card);
+}
+
+.profile__notifications-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.profile__notifications-title {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.profile__notifications-subtitle {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.profile__notifications-count {
+  display: grid;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  place-items: center;
+  border-radius: 9999px;
+  background: var(--primary);
+  padding: 0 0.375rem;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--primary-foreground);
+}
+
+.profile__notifications-chevron {
+  flex-shrink: 0;
+  color: var(--muted-foreground);
+  transition: transform 0.15s;
+}
+
+.profile__notifications-card:hover .profile__notifications-chevron {
+  transform: translateX(2px);
+}
+
 .profile__gate {
   max-width: 28rem;
   margin: 0 auto;

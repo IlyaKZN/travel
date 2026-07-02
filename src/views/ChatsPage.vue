@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { useQuery, useQueryClient } from "@tanstack/vue-query";
 import { useMutation } from "@tanstack/vue-query";
-import { ArrowLeft, Calendar, MapPin, MessageCircle, Paperclip, Search, Send, Users, Wallet, X } from "lucide-vue-next";
-import { computed, nextTick, onUnmounted, ref, watch } from "vue";
-import { useRoute } from "vue-router";
+import { ArrowLeft, Calendar, MapPin, MessageCircle, Paperclip, Search, Send, Trash2, Users, Wallet, X } from "lucide-vue-next";
+import GoogleIcon from "@/components/GoogleIcon.vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import AppShell from "@/components/AppShell.vue";
 import TripAvatar from "@/components/TripAvatar.vue";
 import { useChatSocket } from "@/composables/useChatSocket";
-import { api, getToken } from "@/lib/api";
+import { api, getToken, type ChatThread } from "@/lib/api";
 import {
   appendChatMessage,
   chatWs,
@@ -18,9 +19,11 @@ import {
 import { avatarClass, avatarStyle } from "@/lib/avatar";
 import { formatBudget, formatDay, formatTime } from "@/lib/format";
 import { closePhotoGallery, openPhotoGallery } from "@/lib/photo-gallery";
+import { notify } from "@/lib/notify";
 
 const queryClient = useQueryClient();
 const route = useRoute();
+const router = useRouter();
 const activeChatId = computed(() => route.params.chatId as string | undefined);
 
 const chatsQuery = useQuery({
@@ -58,6 +61,8 @@ const infoTab = ref<"members" | "photos">("members");
 const endRef = ref<HTMLDivElement | null>(null);
 const sendError = ref("");
 const infoOpen = ref(false);
+const pendingDelete = ref<ChatThread | null>(null);
+const contextMenu = ref<{ x: number; y: number; chat: ChatThread } | null>(null);
 
 function handleWsEvent(event: ChatWsEvent) {
   if (event.type === "joined" && event.conversation.id === activeChatId.value) {
@@ -199,7 +204,65 @@ watch(
 onUnmounted(() => {
   chatWs.leave();
   closePhotoGallery();
+  document.removeEventListener("click", closeContextMenu);
+  document.removeEventListener("contextmenu", onDocumentContextMenu);
 });
+
+onMounted(() => {
+  document.addEventListener("click", closeContextMenu);
+  document.addEventListener("contextmenu", onDocumentContextMenu);
+});
+
+function openChat(chatId: string) {
+  closeContextMenu();
+  void router.push({ name: "chats-chat", params: { chatId } });
+}
+
+function onChatKeydown(event: KeyboardEvent, chatId: string) {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    openChat(chatId);
+  }
+}
+
+function onChatContextMenu(event: MouseEvent, chat: ChatThread) {
+  event.preventDefault();
+  event.stopPropagation();
+  contextMenu.value = { x: event.clientX, y: event.clientY, chat };
+}
+
+function onDocumentContextMenu() {
+  closeContextMenu();
+}
+
+function closeContextMenu() {
+  contextMenu.value = null;
+}
+
+function requestDeleteChat(chat: ChatThread) {
+  closeContextMenu();
+  pendingDelete.value = chat;
+}
+
+const deleteChatMutation = useMutation({
+  mutationFn: (chatId: string) => api.deleteChat(chatId),
+  onSuccess: async (_data, chatId) => {
+    const title = pendingDelete.value?.title;
+    const wasActive = activeChatId.value === chatId;
+    pendingDelete.value = null;
+    await queryClient.invalidateQueries({ queryKey: ["chats"] });
+    notify.info("Чат удалён", { description: title });
+    if (wasActive) void router.push({ name: "chats" });
+  },
+  onError: (error: Error) => {
+    notify.error("Не удалось удалить чат", { description: error.message });
+  },
+});
+
+function confirmDeleteChat() {
+  if (!pendingDelete.value || deleteChatMutation.isPending.value) return;
+  deleteChatMutation.mutate(pendingDelete.value.id);
+}
 
 const sendMutation = useMutation({
   mutationFn: (payload: { text: string; image?: string }) =>
@@ -217,6 +280,7 @@ const sendMutation = useMutation({
   },
   onError: (error: Error) => {
     sendError.value = error.message;
+    notify.error("Не удалось отправить сообщение", { description: error.message });
   },
 });
 
@@ -295,9 +359,13 @@ function onSubmit(e: Event) {
 
           <ul class="chats__list">
             <li v-for="c in list" :key="c.id" class="chats__item">
-              <RouterLink
-                :to="{ name: 'chats-chat', params: { chatId: c.id } }"
+              <div
+                role="button"
+                tabindex="0"
                 :class="['chats__link', { 'chats__link--active': c.id === activeChatId }]"
+                @click="openChat(c.id)"
+                @keydown="onChatKeydown($event, c.id)"
+                @contextmenu="onChatContextMenu($event, c)"
               >
                 <TripAvatar
                   v-if="c.tripId && tripFor(c.tripId)"
@@ -327,7 +395,7 @@ function onSubmit(e: Event) {
                     <span v-if="c.unread > 0" class="chats__badge">{{ c.unread }}</span>
                   </div>
                 </div>
-              </RouterLink>
+              </div>
             </li>
 
             <li v-if="chatsQuery.isLoading.value" class="chats__empty">Загружаем чаты...</li>
@@ -523,7 +591,7 @@ function onSubmit(e: Event) {
       >
         <div class="chat-info__panel">
           <button type="button" class="chat-info__close" aria-label="Закрыть" @click="infoOpen = false">
-            ×
+            <GoogleIcon name="close" class="icon" />
           </button>
 
           <div class="chat-info__header">
@@ -629,6 +697,53 @@ function onSubmit(e: Event) {
                 Пока нет изображений. Прикрепите первое через скрепку в поле ввода.
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <Teleport to="body">
+      <div
+        v-if="contextMenu"
+        class="chats__context-menu"
+        :style="{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }"
+        @click.stop
+        @contextmenu.prevent.stop
+      >
+        <button
+          type="button"
+          class="chats__context-item chats__context-item--danger"
+          @click="requestDeleteChat(contextMenu.chat)"
+        >
+          <Trash2 class="icon icon--sm" />
+          Удалить чат
+        </button>
+      </div>
+
+      <div
+        v-if="pendingDelete"
+        class="trip-delete"
+        role="dialog"
+        aria-modal="true"
+        @click.self="pendingDelete = null"
+      >
+        <div class="trip-delete__panel">
+          <h2 class="trip-delete__title">Удалить чат?</h2>
+          <p class="trip-delete__text">
+            «{{ pendingDelete.title }}» и вся переписка будут удалены без возможности восстановления.
+          </p>
+          <div class="trip-delete__actions">
+            <button type="button" class="btn btn--secondary btn--md" @click="pendingDelete = null">
+              Отмена
+            </button>
+            <button
+              type="button"
+              class="btn btn--md trip-delete__confirm"
+              :disabled="deleteChatMutation.isPending.value"
+              @click="confirmDeleteChat"
+            >
+              {{ deleteChatMutation.isPending.value ? "Удаляем..." : "Удалить" }}
+            </button>
           </div>
         </div>
       </div>

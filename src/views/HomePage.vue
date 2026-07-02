@@ -93,7 +93,7 @@ function resetFilters() {
     <div class="container home__content">
       <div class="home__section-head">
         <h2 class="title home__section-title">Ближайшие поездки</h2>
-        <span class="home__section-count">{{ filtered.length }} найдено</span>
+        <span v-if="hasActiveFilters" class="home__section-count">{{ filtered.length }} найдено</span>
       </div>
 
         <div class="home__filters">

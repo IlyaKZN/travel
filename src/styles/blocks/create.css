@@ -136,6 +136,10 @@
   margin-top: 0.5rem;
 }
 
+.create__datetime-wrap {
+  margin-top: 0.5rem;
+}
+
 .create__transport-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -281,4 +285,137 @@
 .create__soft-input:focus {
   border-color: color-mix(in oklab, var(--foreground) 40%, transparent);
   background: var(--card);
+}
+
+.create__tags-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.create__tags-count {
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.create__tags-hint {
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.create__tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+}
+
+.create__tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 9999px;
+  background: color-mix(in oklab, var(--primary) 10%, transparent);
+  padding: 0.25rem 0.25rem 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.create__tag-remove {
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: none;
+  border-radius: 9999px;
+  background: transparent;
+  color: color-mix(in oklab, var(--primary) 70%, transparent);
+  cursor: pointer;
+}
+
+.create__tag-remove:hover {
+  background: color-mix(in oklab, var(--primary) 15%, transparent);
+  color: var(--primary);
+}
+
+.create__tag-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--secondary) 40%, transparent);
+  padding: 0.5rem 0.75rem;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.create__tag-input-wrap:focus-within {
+  border-color: color-mix(in oklab, var(--foreground) 40%, transparent);
+  background: var(--card);
+}
+
+.create__tag-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.875rem;
+  font-weight: 500;
+  outline: none;
+}
+
+.create__tag-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: color-mix(in oklab, var(--foreground) 80%, transparent);
+  cursor: pointer;
+}
+
+.create__tag-add-btn:hover:not(:disabled) {
+  color: var(--foreground);
+}
+
+.create__tag-add-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.create__tag-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+}
+
+.create__tag-suggestion {
+  border-radius: 9999px;
+  border: 1px dashed var(--border);
+  background: transparent;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: color-mix(in oklab, var(--foreground) 70%, transparent);
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s, color 0.15s;
+}
+
+.create__tag-suggestion:hover:not(:disabled) {
+  border-color: color-mix(in oklab, var(--primary) 40%, transparent);
+  background: color-mix(in oklab, var(--primary) 5%, transparent);
+  color: var(--primary);
+}
+
+.create__tag-suggestion:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
 }

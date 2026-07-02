@@ -113,7 +113,60 @@ svg {
   height: 1rem;
 }
 
+.icon--xs {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
 .icon--lg {
   width: 1.5rem;
   height: 1.5rem;
+}
+
+.g-icon {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  font-size: inherit;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 24;
+}
+
+.g-icon.icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  font-size: 1.25rem;
+}
+
+.g-icon.icon--sm {
+  width: 1rem;
+  height: 1rem;
+  font-size: 1rem;
+}
+
+.g-icon.icon--lg {
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: 1.5rem;
+}
+
+.g-icon--filled {
+  font-variation-settings:
+    "FILL" 1,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 24;
 }

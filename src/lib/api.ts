@@ -34,6 +34,7 @@ export interface Trip {
   pendingRequests?: Array<{ user: User; createdAt: string }>;
   description: string;
   info: string;
+  tags?: string[];
 }
 
 export interface Message {
@@ -92,6 +93,24 @@ export const transportLabel: Record<TransportType, string> = {
   bus: "Автобус",
   plane: "Самолёт",
 };
+
+export const suggestedTripTags = [
+  "Природа",
+  "Городской уикенд",
+  "Фестиваль",
+  "Хайкинг",
+  "Пляж",
+  "Гастротур",
+  "Фото",
+  "Спорт",
+  "Йога",
+  "Работа/воркейшн",
+  "С детьми",
+  "С животными",
+  "Бюджетно",
+  "Комфорт",
+  "Ночной выезд",
+] as const;
 
 const TOKEN_KEY = "waymate_token";
 
@@ -222,6 +241,10 @@ export const api = {
     apiFetch<Trip>(`/api/trips/${tripId}/requests/${userId}/decline`, {
       method: "POST",
     }),
+  removeTripParticipant: (tripId: string, userId: string) =>
+    apiFetch<Trip>(`/api/trips/${tripId}/participants/${userId}`, {
+      method: "DELETE",
+    }),
 
   chats: () => apiFetch<ChatThread[]>("/api/chats"),
   startDm: (userId: string) =>
@@ -233,6 +256,10 @@ export const api = {
   markChatRead: (id: string) =>
     apiFetch<ChatThread>(`/api/chats/${id}/read`, {
       method: "POST",
+    }),
+  deleteChat: (id: string) =>
+    apiFetch<{ message: string }>(`/api/chats/${id}`, {
+      method: "DELETE",
     }),
   messages: (chatId: string) => apiFetch<Message[]>(`/api/chats/${chatId}/messages`),
   sendMessage: (chatId: string, payload: { text: string; image?: string }) =>

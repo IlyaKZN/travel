@@ -199,6 +199,11 @@
   color: var(--foreground);
 }
 
+.field__required {
+  margin-left: 0.125rem;
+  color: var(--primary);
+}
+
 .input {
   width: 100%;
   border: 1px solid var(--border);

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
-import { Edit3, MapPin, MessageCircle, Send, Car, Train, Bus, Plane, LogOut } from "lucide-vue-next";
+import { Edit3, MapPin, MessageCircle, Send, Car, Train, Bus, Plane, LogOut, Bell, ChevronRight } from "lucide-vue-next";
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import AppShell from "@/components/AppShell.vue";
@@ -9,6 +9,8 @@ import { api, getToken, transportLabel, type Review, type TransportType } from "
 import { avatarClass, avatarStyle } from "@/lib/avatar";
 import { formatDate } from "@/lib/format";
 import { openPhotoGallery } from "@/lib/photo-gallery";
+import { notify } from "@/lib/notify";
+import { notificationsDialogStore } from "@/lib/dialog-stores";
 
 const props = defineProps<{ userId?: string; owner?: boolean }>();
 
@@ -35,6 +37,12 @@ const userQuery = useQuery({
 });
 const usersQuery = useQuery({ queryKey: ["users"], queryFn: api.users });
 const tripsQuery = useQuery({ queryKey: ["trips"], queryFn: api.trips });
+const notificationsQuery = useQuery({
+  queryKey: ["notifications"],
+  queryFn: api.notifications,
+  enabled: computed(() => Boolean(props.owner && getToken())),
+  retry: false,
+});
 
 const u = computed(() => (props.owner ? meQuery.data.value : userQuery.data.value));
 const profileUserId = computed(() => u.value?.id);
@@ -50,6 +58,13 @@ const reviewText = ref("");
 const reviewError = ref("");
 const showAllTrips = ref(false);
 const isLoggedIn = computed(() => Boolean(getToken()));
+const unreadNotifications = computed(
+  () => (notificationsQuery.data.value ?? []).filter((notification) => !notification.read).length,
+);
+
+function openNotifications() {
+  notificationsDialogStore.open();
+}
 
 const reviewMutation = useMutation({
   mutationFn: () => api.createReview(profileUserId.value!, reviewText.value.trim()),
@@ -60,9 +75,11 @@ const reviewMutation = useMutation({
       newReview,
       ...(old ?? []),
     ]);
+    notify.success("Отзыв опубликован");
   },
   onError: (error: Error) => {
     reviewError.value = error.message;
+    notify.error("Не удалось отправить отзыв", { description: error.message });
   },
 });
 
@@ -77,6 +94,9 @@ const startDmMutation = useMutation({
   mutationFn: () => api.startDm(profileUserId.value!),
   onSuccess: (chat) => {
     router.push({ name: "chats-chat", params: { chatId: chat.id } });
+  },
+  onError: (error: Error) => {
+    notify.error("Не удалось открыть чат", { description: error.message });
   },
 });
 
@@ -205,6 +225,27 @@ function openAvatarGallery(event: MouseEvent) {
           <p v-if="startDmMutation.isError.value" class="profile__review-error">
             {{ startDmMutation.error.value?.message }}
           </p>
+          <button
+            v-if="owner"
+            type="button"
+            class="profile__notifications-card"
+            @click="openNotifications"
+          >
+            <span class="profile__notifications-icon">
+              <Bell class="icon" />
+              <span v-if="unreadNotifications > 0" class="profile__notifications-dot" />
+            </span>
+            <span class="profile__notifications-body">
+              <span class="profile__notifications-title">Уведомления</span>
+              <span class="profile__notifications-subtitle">
+                {{ unreadNotifications > 0 ? `${unreadNotifications} новых` : "Всё прочитано" }}
+              </span>
+            </span>
+            <span v-if="unreadNotifications > 0" class="profile__notifications-count">
+              {{ unreadNotifications }}
+            </span>
+            <ChevronRight class="icon icon--sm profile__notifications-chevron" />
+          </button>
           <p class="profile__bio">{{ u.bio }}</p>
         </div>
 

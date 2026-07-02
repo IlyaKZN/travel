@@ -50,8 +50,6 @@
   border-radius: 9999px;
   background: var(--secondary);
   color: var(--foreground);
-  font-size: 1.25rem;
-  line-height: 1;
   cursor: pointer;
 }
 

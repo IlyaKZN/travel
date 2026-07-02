@@ -18,12 +18,6 @@ const hideChrome = computed(
     route.path === "/register",
 );
 
-const showMobileBell = computed(() => {
-  if (hideChrome.value) return false;
-  if (route.path.startsWith("/chats/") && route.path !== "/chats/") return false;
-  return true;
-});
-
 const meQuery = useQuery({
   queryKey: ["me"],
   queryFn: api.me,
@@ -38,14 +32,27 @@ const notificationsQuery = useQuery({
   retry: false,
 });
 
+const chatsQuery = useQuery({
+  queryKey: ["chats"],
+  queryFn: api.chats,
+  enabled: Boolean(getToken()),
+  retry: false,
+});
+
 const isAuthenticated = computed(() => Boolean(getToken() && meQuery.data.value));
 const initial = computed(() => meQuery.data.value?.firstName?.[0] ?? meQuery.data.value?.nickname?.[0] ?? "?");
 const unread = computed(() => (notificationsQuery.data.value ?? []).filter((n) => !n.read).length);
+const unreadChats = computed(() => (chatsQuery.data.value ?? []).filter((chat) => chat.unread > 0).length);
+
+function bottomBadge(to: string) {
+  if (to === "/chats" && unreadChats.value > 0) return unreadChats.value;
+  if (to === "/profile" && unread.value > 0) return unread.value;
+  return null;
+}
 
 const topLinks = [
   { to: "/", label: "Поездки", exact: true },
   { to: "/chats", label: "Чаты", exact: false },
-  { to: "/profile", label: "Профиль", exact: false },
 ] as const;
 
 const bottomItems = [
@@ -90,9 +97,18 @@ function openNotifications() {
             active-class="app-shell__nav-link--active"
             :exact-active-class="l.exact ? 'app-shell__nav-link--active' : undefined"
           >
-            {{ l.label }}
+            <span class="app-shell__nav-link-inner">
+              {{ l.label }}
+              <span
+                v-if="l.to === '/chats' && unreadChats > 0"
+                class="app-shell__nav-badge"
+              >
+                {{ unreadChats }}
+              </span>
+            </span>
           </RouterLink>
         </nav>
+
         <div class="app-shell__actions">
           <button
             type="button"
@@ -117,17 +133,6 @@ function openNotifications() {
         </div>
       </div>
     </header>
-
-    <button
-      v-if="showMobileBell"
-      type="button"
-      class="app-shell__mobile-bell"
-      aria-label="Уведомления"
-      @click="openNotifications"
-    >
-      <Bell class="icon" />
-      <span v-if="unread > 0" class="app-shell__mobile-bell-badge">{{ unread }}</span>
-    </button>
 
     <main :class="['app-shell__main', { 'app-shell__main--with-nav': !hideChrome }]">
       <slot />
@@ -159,7 +164,15 @@ function openNotifications() {
             active-class="app-shell__bottom-link--active"
             :exact-active-class="item.exact ? 'app-shell__bottom-link--active' : undefined"
           >
-            <component :is="item.icon" class="icon" />
+            <span class="app-shell__bottom-icon-wrap">
+              <component :is="item.icon" class="icon" />
+              <span
+                v-if="bottomBadge(item.to) !== null"
+                class="app-shell__bottom-badge"
+              >
+                {{ bottomBadge(item.to) }}
+              </span>
+            </span>
             <span>{{ item.label }}</span>
           </RouterLink>
         </li>

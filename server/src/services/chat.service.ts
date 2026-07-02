@@ -104,6 +104,36 @@ export async function addUserToTripChat(tripId: string, userId: string) {
   }
 }
 
+export async function removeUserFromTripChat(tripId: string, userId: string) {
+  const conversation = await prisma.conversation.findUnique({
+    where: { tripId },
+  })
+  if (!conversation) return
+
+  await prisma.conversationParticipant.deleteMany({
+    where: { conversationId: conversation.id, userId },
+  })
+}
+
+export async function deleteConversation(conversationId: string, userId: string) {
+  const conversation = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    include: conversationInclude,
+  })
+  if (!conversation || !conversation.participants.some((p) => p.userId === userId)) {
+    throw new Error('NOT_FOUND')
+  }
+
+  if (conversation.type === 'dm') {
+    await prisma.conversation.delete({ where: { id: conversationId } })
+    return
+  }
+
+  await prisma.conversationParticipant.deleteMany({
+    where: { conversationId, userId },
+  })
+}
+
 export async function getOrCreateDm(userId: string, targetUserId: string): Promise<DbConversation> {
   if (userId === targetUserId) {
     throw new Error('SELF_DM')

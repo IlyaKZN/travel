@@ -2,6 +2,7 @@
 import { onMounted, onUnmounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useQueryClient } from "@tanstack/vue-query";
+import ToastHost from "@/components/ToastHost.vue";
 import { getToken } from "@/lib/api";
 import { applyRealtimeEvent, chatWs, ensureChatSocket } from "@/lib/chat-ws";
 import { createDialogStore } from "@/lib/dialog-stores";
@@ -47,4 +48,5 @@ onUnmounted(() => {
 
 <template>
   <RouterView />
+  <ToastHost />
 </template>

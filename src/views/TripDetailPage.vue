@@ -27,6 +27,7 @@ import { api, getToken, transportLabel, type TransportType } from "@/lib/api";
 import { avatarClass, avatarStyle } from "@/lib/avatar";
 import { formatDateTime, formatBudget } from "@/lib/format";
 import { createDialogStore } from "@/lib/dialog-stores";
+import { notify } from "@/lib/notify";
 
 const transportMeta: Record<TransportType, { icon: typeof Car; modifier: string }> = {
   car: { icon: Car, modifier: "transport-icon--car" },
@@ -61,38 +62,98 @@ const invalidateTripQueries = async () => {
 
 const joinMutation = useMutation({
   mutationFn: () => api.joinTrip(tripId.value),
-  onSuccess: invalidateTripQueries,
+  onSuccess: async () => {
+    await invalidateTripQueries();
+    notify.info("Заявка отправлена", {
+      description: organizer.value?.firstName
+        ? `Ждём ответа от ${organizer.value.firstName}`
+        : undefined,
+    });
+  },
+  onError: (error: Error) => {
+    notify.error("Не удалось отправить заявку", { description: error.message });
+  },
 });
 
 const cancelRequestMutation = useMutation({
   mutationFn: () => api.cancelTripRequest(tripId.value),
-  onSuccess: invalidateTripQueries,
+  onSuccess: async () => {
+    await invalidateTripQueries();
+    notify.info("Заявка отменена");
+  },
+  onError: (error: Error) => {
+    notify.error("Не удалось отменить заявку", { description: error.message });
+  },
 });
 
 const approveRequestMutation = useMutation({
   mutationFn: (userId: string) => api.approveTripRequest(tripId.value, userId),
-  onSuccess: invalidateTripQueries,
+  onSuccess: async (_trip, userId) => {
+    await invalidateTripQueries();
+    const user = pendingRequests.value.find((request) => request.user.id === userId)?.user;
+    notify.success("Заявка принята", {
+      description: user ? `${user.firstName} присоединился к поездке` : undefined,
+    });
+  },
+  onError: (error: Error) => {
+    notify.error("Не удалось принять заявку", { description: error.message });
+  },
 });
 
 const declineRequestMutation = useMutation({
   mutationFn: (userId: string) => api.declineTripRequest(tripId.value, userId),
-  onSuccess: invalidateTripQueries,
+  onSuccess: async (_trip, userId) => {
+    await invalidateTripQueries();
+    const user = pendingRequests.value.find((request) => request.user.id === userId)?.user;
+    notify.info("Заявка отклонена", {
+      description: user ? `Вы отклонили заявку от ${user.firstName}` : undefined,
+    });
+  },
+  onError: (error: Error) => {
+    notify.error("Не удалось отклонить заявку", { description: error.message });
+  },
 });
 
 const openTripChatMutation = useMutation({
   mutationFn: () => api.tripChat(tripId.value),
   onSuccess: (chat) => router.push({ name: "chats-chat", params: { chatId: chat.id } }),
+  onError: (error: Error) => {
+    notify.error("Не удалось открыть чат", { description: error.message });
+  },
 });
 
 const deleteMutation = useMutation({
   mutationFn: () => api.deleteTrip(tripId.value),
   onSuccess: async () => {
+    const current = trip.value;
     await queryClient.invalidateQueries({ queryKey: ["trips"] });
+    notify.error("Поездка удалена", {
+      description: current ? `${current.from} → ${current.to} больше недоступна` : undefined,
+    });
     await router.push("/");
+  },
+  onError: (error: Error) => {
+    notify.error("Не удалось удалить поездку", { description: error.message });
+  },
+});
+
+const removeParticipantMutation = useMutation({
+  mutationFn: (userId: string) => api.removeTripParticipant(tripId.value, userId),
+  onSuccess: async (_trip, userId) => {
+    const user = participants.value.find((participant) => participant.id === userId);
+    removeUserId.value = null;
+    await invalidateTripQueries();
+    notify.info("Участник удалён", {
+      description: user ? `${user.firstName} больше не в поездке` : undefined,
+    });
+  },
+  onError: (error: Error) => {
+    notify.error("Не удалось удалить участника", { description: error.message });
   },
 });
 
 const confirmDelete = ref(false);
+const removeUserId = ref<string | null>(null);
 
 const trip = computed(() => tripQuery.data.value);
 const organizer = computed(
@@ -100,6 +161,9 @@ const organizer = computed(
 );
 const participants = computed(
   () => trip.value?.participants?.filter((p) => p.id !== trip.value?.organizerId) ?? [],
+);
+const removeTarget = computed(() =>
+  removeUserId.value ? participants.value.find((p) => p.id === removeUserId.value) : undefined,
 );
 const isOrganizer = computed(() =>
   meQuery.data.value ? trip.value?.organizerId === meQuery.data.value.id : false,
@@ -137,7 +201,9 @@ function handleCta() {
   }
   if (isOrganizer.value || isMember.value) openTripChatMutation.mutate();
   else if (myStatus.value === "pending") cancelRequestMutation.mutate();
-  else if (seatsLeft.value > 0) joinMutation.mutate();
+  else if (seatsLeft.value === 0) {
+    notify.error("Мест больше нет", { description: "Все места в этой поездке уже заняты." });
+  } else if (seatsLeft.value > 0) joinMutation.mutate();
 }
 </script>
 
@@ -254,9 +320,9 @@ function handleCta() {
           </div>
         </div>
 
-        <div class="card trip-detail__card">
+        <div class="card trip-detail__card trip-detail__card--compact">
           <div class="trip-detail__participants-head">
-            <h3 class="title title--sm">Участники</h3>
+            <h3 class="title title--sm trip-detail__section-title">Участники</h3>
             <span class="trip-detail__participants-count">{{ 1 + participants.length }} из {{ trip.seats }}</span>
           </div>
 
@@ -272,29 +338,42 @@ function handleCta() {
                 {{ organizer?.firstName[0] ?? "?" }}
               </span>
               <div style="min-width: 0; flex: 1">
-                <span class="trip-detail__organizer-badge">Организатор</span>
                 <div class="trip-detail__participant-name">
                   {{ organizer?.firstName ?? "Организатор" }} {{ organizer?.lastName ?? "" }}
                 </div>
+                <div class="trip-detail__organizer-badge">Организатор</div>
               </div>
             </RouterLink>
 
-            <RouterLink
+            <div
               v-for="p in participants"
               :key="p.id"
-              :to="{ name: 'profile-user', params: { userId: p.id } }"
-              class="trip-detail__participant"
+              class="trip-detail__participant-wrap"
             >
-              <span
-                :class="['avatar trip-detail__participant-avatar', avatarClass(p)]"
-                :style="avatarStyle(p)"
+              <RouterLink
+                :to="{ name: 'profile-user', params: { userId: p.id } }"
+                class="trip-detail__participant"
               >
-                {{ p.firstName[0] }}
-              </span>
-              <div style="min-width: 0; flex: 1">
-                <div class="trip-detail__participant-name">{{ p.firstName }} {{ p.lastName }}</div>
-              </div>
-            </RouterLink>
+                <span
+                  :class="['avatar trip-detail__participant-avatar', avatarClass(p)]"
+                  :style="avatarStyle(p)"
+                >
+                  {{ p.firstName[0] }}
+                </span>
+                <div style="min-width: 0; flex: 1">
+                  <div class="trip-detail__participant-name">{{ p.firstName }} {{ p.lastName }}</div>
+                </div>
+              </RouterLink>
+              <button
+                v-if="isOrganizer"
+                type="button"
+                class="trip-detail__participant-remove"
+                :aria-label="`Удалить ${p.firstName} из поездки`"
+                @click="removeUserId = p.id"
+              >
+                <X class="icon icon--xs" :stroke-width="2.5" />
+              </button>
+            </div>
 
             <div
               v-for="(_, i) in Math.max(0, trip.seats - 1 - participants.length)"
@@ -302,9 +381,7 @@ function handleCta() {
               class="trip-detail__empty-seat"
             >
               <span class="trip-detail__empty-icon">+</span>
-              <div style="min-width: 0; flex: 1">
-                <div class="trip-detail__empty-label">Свободно</div>
-              </div>
+              <div class="trip-detail__empty-label">Свободно</div>
             </div>
           </div>
         </div>
@@ -312,6 +389,9 @@ function handleCta() {
         <div class="card trip-detail__card">
           <h3 class="title title--sm">О поездке</h3>
           <p class="trip-detail__description">{{ trip.description }}</p>
+          <div v-if="trip.tags?.length" class="trip-detail__tags">
+            <span v-for="tag in trip.tags" :key="tag" class="trip-detail__tag">#{{ tag }}</span>
+          </div>
         </div>
 
         <div v-if="!isOrganizer && myStatus === 'pending'" class="trip-detail__request-status">
@@ -336,9 +416,9 @@ function handleCta() {
           </button>
         </div>
 
-        <div v-if="isOrganizer" class="card trip-detail__card">
+        <div v-if="isOrganizer" class="card trip-detail__card trip-detail__card--compact">
           <div class="trip-detail__requests-head">
-            <h3 class="trip-detail__requests-title">
+            <h3 class="trip-detail__requests-title trip-detail__section-title">
               <UserPlus class="icon icon--sm" :stroke-width="2.25" />
               Заявки на вступление
             </h3>
@@ -374,17 +454,19 @@ function handleCta() {
                   type="button"
                   class="trip-detail__request-decline"
                   :disabled="declineRequestMutation.isPending.value || approveRequestMutation.isPending.value"
+                  :aria-label="`Отклонить заявку от ${request.user.firstName}`"
                   @click="declineRequestMutation.mutate(request.user.id)"
                 >
-                  <X class="icon icon--sm" :stroke-width="2.5" /> Отклонить
+                  <X class="icon icon--xs" :stroke-width="2.5" />
                 </button>
                 <button
                   type="button"
                   class="trip-detail__request-approve"
                   :disabled="seatsLeft === 0 || declineRequestMutation.isPending.value || approveRequestMutation.isPending.value"
+                  :aria-label="`Принять заявку от ${request.user.firstName}`"
                   @click="approveRequestMutation.mutate(request.user.id)"
                 >
-                  <Check class="icon icon--sm" :stroke-width="2.5" /> Принять
+                  <Check class="icon icon--xs" :stroke-width="2.5" />
                 </button>
               </div>
             </li>
@@ -423,6 +505,37 @@ function handleCta() {
       </div>
 
       <Teleport to="body">
+        <div
+          v-if="removeUserId"
+          class="trip-delete"
+          role="dialog"
+          aria-modal="true"
+          @click.self="removeUserId = null"
+        >
+          <div class="trip-delete__panel">
+            <h2 class="trip-delete__title">Удалить участника?</h2>
+            <p class="trip-delete__text">
+              <template v-if="removeTarget">
+                {{ removeTarget.firstName }} {{ removeTarget.lastName }} больше не будет участником поездки.
+              </template>
+              <template v-else>Участник больше не будет участником поездки.</template>
+            </p>
+            <div class="trip-delete__actions">
+              <button type="button" class="btn btn--secondary btn--md" @click="removeUserId = null">
+                Отмена
+              </button>
+              <button
+                type="button"
+                class="btn btn--md trip-delete__confirm"
+                :disabled="removeParticipantMutation.isPending.value"
+                @click="removeUserId && removeParticipantMutation.mutate(removeUserId)"
+              >
+                {{ removeParticipantMutation.isPending.value ? "Удаляем..." : "Удалить" }}
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div
           v-if="confirmDelete"
           class="trip-delete"

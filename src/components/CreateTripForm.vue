@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
-import { ArrowLeftRight } from "lucide-vue-next";
+import { ArrowLeftRight, Plus, X } from "lucide-vue-next";
 import { computed, ref, watch } from "vue";
 import { useRouter } from "vue-router";
-import { api, getToken, transportLabel, type TransportType, type Trip } from "@/lib/api";
+import DateTimePicker from "@/components/DateTimePicker.vue";
+import { api, getToken, suggestedTripTags, transportLabel, type TransportType, type Trip } from "@/lib/api";
+import { notify } from "@/lib/notify";
 
 const props = defineProps<{
   tripId?: string;
@@ -28,26 +30,14 @@ const from = ref("");
 const to = ref("");
 const transport = ref<TransportType>("car");
 const seats = ref(4);
-const startDate = ref("");
-const startTime = ref("");
-const endDate = ref("");
-const endTime = ref("");
+const startAt = ref("");
+const endAt = ref("");
 const description = ref("");
 const budget = ref("");
+const tags = ref<string[]>([]);
+const tagDraft = ref("");
 
-function toDateInput(iso: string) {
-  if (!iso) return "";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toISOString().slice(0, 10);
-}
-
-function toTimeInput(iso: string) {
-  if (!iso) return "";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toISOString().slice(11, 16);
-}
+const TAGS_MAX = 8;
 
 function fillFromTrip() {
   const trip = tripQuery.data.value;
@@ -56,13 +46,45 @@ function fillFromTrip() {
   to.value = trip.to;
   transport.value = trip.transport;
   seats.value = trip.seats;
-  startDate.value = toDateInput(trip.startAt);
-  startTime.value = toTimeInput(trip.startAt);
-  endDate.value = toDateInput(trip.endAt);
-  endTime.value = toTimeInput(trip.endAt);
+  startAt.value = trip.startAt;
+  endAt.value = trip.endAt;
   description.value = trip.description;
   budget.value = String(trip.budget ?? "");
+  tags.value = [...(trip.tags ?? [])];
 }
+
+function isEndDateDisabled(day: Date) {
+  if (!startAt.value) return false;
+  const startDay = new Date(new Date(startAt.value).setHours(0, 0, 0, 0));
+  return day < startDay;
+}
+
+function toggleTag(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return;
+  if (tags.value.includes(trimmed)) {
+    tags.value = tags.value.filter((tag) => tag !== trimmed);
+    return;
+  }
+  if (tags.value.length >= TAGS_MAX) return;
+  tags.value = [...tags.value, trimmed];
+}
+
+function addTagFromDraft() {
+  const trimmed = tagDraft.value.trim();
+  if (!trimmed || tags.value.includes(trimmed) || tags.value.length >= TAGS_MAX) return;
+  tags.value = [...tags.value, trimmed];
+  tagDraft.value = "";
+}
+
+function onTagDraftKeydown(event: KeyboardEvent) {
+  if (event.key === "Enter" || event.key === ",") {
+    event.preventDefault();
+    addTagFromDraft();
+  }
+}
+
+const availableSuggestedTags = computed(() => suggestedTripTags.filter((tag) => !tags.value.includes(tag)));
 
 watch(() => tripQuery.data.value, fillFromTrip, { immediate: true });
 
@@ -73,16 +95,18 @@ function swap() {
 }
 
 function buildPayload() {
+  const now = new Date().toISOString();
   return {
     from: from.value,
     to: to.value,
-    startAt: new Date(`${startDate.value}T${startTime.value || "00:00"}`).toISOString(),
-    endAt: new Date(`${endDate.value || startDate.value}T${endTime.value || startTime.value || "00:00"}`).toISOString(),
+    startAt: startAt.value || now,
+    endAt: endAt.value || startAt.value || now,
     transport: transport.value,
     seats: seats.value,
     budget: Number(budget.value) || 0,
     description: description.value.trim() || `${from.value} → ${to.value}`,
     info: description.value.trim(),
+    tags: tags.value,
   };
 }
 
@@ -90,7 +114,11 @@ const createMutation = useMutation({
   mutationFn: api.createTrip,
   onSuccess: async (trip) => {
     await queryClient.invalidateQueries({ queryKey: ["trips"] });
+    notify.success("Поездка создана", { description: `${trip.from} → ${trip.to} опубликовано` });
     emit("success", trip);
+  },
+  onError: (error: Error) => {
+    notify.error("Не удалось создать поездку", { description: error.message });
   },
 });
 
@@ -99,19 +127,24 @@ const updateMutation = useMutation({
   onSuccess: async (trip) => {
     await queryClient.invalidateQueries({ queryKey: ["trips"] });
     await queryClient.invalidateQueries({ queryKey: ["trip", trip.id] });
+    notify.success("Поездка обновлена", { description: `${trip.from} → ${trip.to}` });
     emit("success", trip);
+  },
+  onError: (error: Error) => {
+    notify.error("Не удалось сохранить изменения", { description: error.message });
   },
 });
 
 const isPending = computed(() => createMutation.isPending.value || updateMutation.isPending.value);
-const errorMessage = computed(
-  () => createMutation.error.value?.message ?? updateMutation.error.value?.message ?? "",
-);
 
 function submit(e: Event) {
   e.preventDefault();
   if (!getToken()) {
     router.push("/auth");
+    return;
+  }
+  if (!from.value.trim() || !to.value.trim()) {
+    notify.error("Заполните маршрут", { description: "Укажите города отправления и назначения." });
     return;
   }
   if (isEdit.value) {
@@ -140,11 +173,15 @@ function submit(e: Event) {
         </div>
         <div class="create__route-fields">
           <div class="field">
-            <label class="field__label field__label--inline">Откуда</label>
+            <label class="field__label field__label--inline">
+              Откуда<span class="field__required" aria-hidden="true">*</span>
+            </label>
             <input v-model="from" class="input input--underline" placeholder="Город выезда" />
           </div>
           <div class="field">
-            <label class="field__label field__label--inline">Куда</label>
+            <label class="field__label field__label--inline">
+              Куда<span class="field__required" aria-hidden="true">*</span>
+            </label>
             <input v-model="to" class="input input--underline" placeholder="Город прибытия" />
           </div>
         </div>
@@ -155,17 +192,21 @@ function submit(e: Event) {
 
       <section class="create__grid-2">
         <div class="field">
-          <label class="field__label field__label--inline">Начало</label>
-          <div class="create__date-row">
-            <input v-model="startDate" type="date" class="create__soft-input" />
-            <input v-model="startTime" type="time" class="create__soft-input" />
+          <label class="field__label field__label--inline">
+            Начало<span class="field__required" aria-hidden="true">*</span>
+          </label>
+          <div class="create__datetime-wrap">
+            <DateTimePicker v-model="startAt" placeholder="Когда выезжаете" />
           </div>
         </div>
         <div class="field">
           <label class="field__label field__label--inline">Окончание</label>
-          <div class="create__date-row">
-            <input v-model="endDate" type="date" class="create__soft-input" />
-            <input v-model="endTime" type="time" class="create__soft-input" />
+          <div class="create__datetime-wrap">
+            <DateTimePicker
+              v-model="endAt"
+              placeholder="Когда прибываете"
+              :disabled-date="isEndDateDisabled"
+            />
           </div>
         </div>
       </section>
@@ -213,6 +254,59 @@ function submit(e: Event) {
       </section>
 
       <section class="field">
+        <div class="create__tags-head">
+          <label class="field__label field__label--inline">Теги</label>
+          <span class="create__tags-count">{{ tags.length }}/{{ TAGS_MAX }}</span>
+        </div>
+        <p class="create__tags-hint">Помогают попутчикам понять настроение поездки</p>
+
+        <div v-if="tags.length > 0" class="create__tags-list">
+          <span v-for="tag in tags" :key="tag" class="create__tag-chip">
+            {{ tag }}
+            <button
+              type="button"
+              class="create__tag-remove"
+              :aria-label="`Удалить тег ${tag}`"
+              @click="toggleTag(tag)"
+            >
+              <X class="icon icon--xs" :stroke-width="2.5" />
+            </button>
+          </span>
+        </div>
+
+        <div class="create__tag-input-wrap">
+          <input
+            v-model="tagDraft"
+            maxlength="24"
+            class="create__tag-input"
+            placeholder="Свой тег и Enter"
+            @keydown="onTagDraftKeydown"
+          />
+          <button
+            type="button"
+            class="create__tag-add-btn"
+            :disabled="!tagDraft.trim() || tags.length >= TAGS_MAX"
+            @click="addTagFromDraft"
+          >
+            <Plus class="icon icon--xs" :stroke-width="2.5" /> Добавить
+          </button>
+        </div>
+
+        <div v-if="availableSuggestedTags.length > 0" class="create__tag-suggestions">
+          <button
+            v-for="tag in availableSuggestedTags"
+            :key="tag"
+            type="button"
+            class="create__tag-suggestion"
+            :disabled="tags.length >= TAGS_MAX"
+            @click="toggleTag(tag)"
+          >
+            + {{ tag }}
+          </button>
+        </div>
+      </section>
+
+      <section class="field">
         <label class="field__label field__label--inline">Комментарий к поездке</label>
         <textarea
           v-model="description"
@@ -226,7 +320,7 @@ function submit(e: Event) {
         <button
           type="submit"
           class="btn btn--hero create__submit"
-          :disabled="isPending || !from.trim() || !to.trim() || !startDate"
+          :disabled="isPending || !from.trim() || !to.trim() || !startAt"
         >
           {{
             isPending
@@ -238,7 +332,6 @@ function submit(e: Event) {
                 : "Опубликовать поездку"
           }}
         </button>
-        <p v-if="errorMessage" class="create__error">{{ errorMessage }}</p>
         <p class="create__legal">Нажимая кнопку, вы соглашаетесь с правилами сервиса ЕдемВместе</p>
       </div>
     </form>

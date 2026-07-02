@@ -5,6 +5,7 @@ import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import { api } from "@/lib/api";
 import { isAllowedAuthContact, validateAuthContact } from "@/lib/contactPolicy";
+import { notify } from "@/lib/notify";
 
 const router = useRouter();
 const queryClient = useQueryClient();
@@ -72,6 +73,9 @@ const registerMutation = useMutation({
   onSuccess: async () => {
     await queryClient.invalidateQueries({ queryKey: ["me"] });
     router.push("/");
+  },
+  onError: (error: Error) => {
+    notify.error("Не удалось зарегистрироваться", { description: error.message });
   },
 });
 

@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { prisma } from '../lib/prisma.js'
 import { conversationInclude, toDbConversation, toDbUser } from '../utils/serializers.js'
 import {
+  deleteConversation,
   enrichConversation,
   enrichMessage,
   getOrCreateDm,
@@ -100,6 +101,30 @@ router.get('/:id', asyncHandler(async (req, res) => {
     return
   }
   res.json(await enrichConversation(toDbConversation(conversation), req.userId!))
+}))
+
+router.delete('/:id', asyncHandler(async (req, res) => {
+  const id = routeParam(req.params.id)
+  const conversation = await prisma.conversation.findUnique({
+    where: { id },
+    include: conversationInclude,
+  })
+  if (!conversation || !conversation.participants.some((p) => p.userId === req.userId!)) {
+    res.status(404).json({ error: 'Чат не найден' })
+    return
+  }
+
+  try {
+    await deleteConversation(id, req.userId!)
+    await emitConversationUpdated(id)
+    res.json({ message: 'Чат удалён' })
+  } catch (e) {
+    if (e instanceof Error && e.message === 'NOT_FOUND') {
+      res.status(404).json({ error: 'Чат не найден' })
+      return
+    }
+    throw e
+  }
 }))
 
 router.post('/:id/read', asyncHandler(async (req, res) => {

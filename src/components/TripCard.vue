@@ -23,6 +23,8 @@ const organizer = computed(
 const seatsLeft = computed(() => Math.max(0, props.trip.seats - props.trip.taken));
 const seatsFresh = computed(() => seatsLeft.value >= 2);
 const seatsLabel = computed(() => (seatsLeft.value === 1 ? "место" : "места"));
+const visibleTags = computed(() => props.trip.tags?.slice(0, 3) ?? []);
+const extraTagsCount = computed(() => Math.max(0, (props.trip.tags?.length ?? 0) - 3));
 </script>
 
 <template>
@@ -39,6 +41,11 @@ const seatsLabel = computed(() => (seatsLeft.value === 1 ? "место" : "ме�
       <div :class="['trip-card__icon-wrap', meta.modifier]">
         <component :is="meta.icon" class="icon" :stroke-width="1.75" />
       </div>
+    </div>
+
+    <div v-if="visibleTags.length > 0" class="trip-card__tags">
+      <span v-for="tag in visibleTags" :key="tag" class="trip-card__tag">{{ tag }}</span>
+      <span v-if="extraTagsCount > 0" class="trip-card__tags-more">и ещё {{ extraTagsCount }}</span>
     </div>
 
     <div class="trip-card__footer">
